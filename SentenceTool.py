@@ -359,7 +359,7 @@ def main():
     # 随机抽取一条记录
     data = raw.random()
     #data["content"] = "“我们上哪儿吃饭？”她问。"
-    data["content"] = "“是啊，这地儿一丢，国内的油价还得涨。”陆臻感觉很新奇，他倒是没顾上想这么远。"
+    #data["content"] = "“是啊，这地儿一丢，国内的油价还得涨。”陆臻感觉很新奇，他倒是没顾上想这么远。"
     # 处理数据
     content = ContentTool.normalize_content(data["content"])
     # 关闭数据库链接
