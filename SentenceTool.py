@@ -22,14 +22,14 @@ class SplitTool :
     # 与引用、释义或对话有关
     _pairs = \
     [
-        # 半角字符对应的全角符号
-        '［', '］', '｛', '｝'
         # 全角符号
         '“', '”', '（', '）', '《', '》',
         '‘', '’', '【', '】', '〈', '〉',
         '「', '」', '『', '』', '〔', '〕',
         '〖', '〗', '〝', '〞', '﹙', '﹚',
         '﹛', '﹜', '﹝', '﹞', '﹤', '﹥',
+        # 半角字符对应的全角符号
+        '［', '］', '｛', '｝'
     ]
     # 分隔模式
     # 对半角英文字符或者分隔符予以忽视
@@ -57,29 +57,41 @@ class SplitTool :
         # 忽略其他标点符号
         return content in SplitTool._majors or content in SplitTool._pairs
 
-    # 检查是否为终结符
-    @staticmethod
-    def _is_end_(content) :
-        # 返回结果
-        return content in ['。', '；', '？', '！', '…']
-
     # 检查是否为非终结符
     @staticmethod
     def _is_not_end_(content) :
+        # 循环处理
+        for char in content :
+            if not char in ['，', '：'] : return False
         # 返回结果
-        return content in ['，', '：']
+        return True
+
+    # 检查是否为终结符
+    @staticmethod
+    def _is_end_(content) :
+        # 循环处理
+        for char in content :
+            if not char in ['。', '；', '？', '！', '…'] : return False
+        # 返回结果
+        return True
 
     # 检查是否为左引号（用于对话内容）
     @staticmethod
     def _is_left_quote_(content) :
+        # 循环处理
+        for char in content :
+            if not char in ['“', '‘', '「', '『', '〝'] : return False
         # 返回结果
-        return content in ['“', '‘', '「', '『', '〝']
+        return True
 
     # 检查是否为右引号（用于对话内容）
     @staticmethod
     def _is_right_quote_(content) :
+        # 循环处理
+        for char in content :
+            if not char in ['”', '’', '」', '』', '〞'] : return False
         # 返回结果
-        return content in ['”', '’', '」', '』', '〞']
+        return True
 
     @staticmethod
     def __split__(content) :
@@ -286,7 +298,7 @@ class SentenceTool(SplitTool) :
             if segments[index][0] != '$' \
                 or segments[index + 1][0] == '$' \
                 or segments[index + 2][0] != '$' \
-                or not SplitTool._is_not_end_(segments[index + 1][0]) :
+                or not SplitTool._is_not_end_(segments[index + 1]) :
                 # 增加到结果集
                 result.append(segments[index]); index += 1 # 额外增加索引
             else :
@@ -326,7 +338,7 @@ class SentenceTool(SplitTool) :
             if segments[index][0] != '$' \
                 or segments[index + 1][0] == '$' \
                 or segments[index + 2][0] != '$' \
-                or not SplitTool._is_end_(segments[index + 1][0]) \
+                or not SplitTool._is_end_(segments[index + 1]) \
                 or not SplitTool._is_left_quote_(segments[index - 1][-1]) :
                 # 增加到结果集
                 result.append(segments[index]); index += 1 # 额外增加索引
@@ -347,6 +359,7 @@ def main():
     # 随机抽取一条记录
     data = raw.random()
     #data["content"] = "“我们上哪儿吃饭？”她问。"
+    data["content"] = "“是啊，这地儿一丢，国内的油价还得涨。”陆臻感觉很新奇，他倒是没顾上想这么远。"
     # 处理数据
     content = ContentTool.normalize_content(data["content"])
     # 关闭数据库链接
