@@ -14,8 +14,8 @@ class TokenItem :
 
     def __init__(self, token):
         # 检查参数
-        if token is not None:
-            assert (isinstance(token, str) and len(token) == 1)
+        assert token is not None
+        assert (isinstance(token, str) and len(token) == 1)
         # 设置字符
         self.token = token
         # 设置Unicode值
@@ -224,18 +224,153 @@ class TokenContent :
                 # 增加字典内容
                 self._tokens[token] = TokenItem(token)
 
+    def save(self, fileName) :
+        # 检查文件名
+        if fileName is None:
+            fileName = "tokens.json"
+        # 打开文件
+        jsonFile = open(fileName, "w", encoding = "utf-8")
+        # 打印信息
+        print("TokenContent.save : file(\"%s\") opened !" % fileName)
+        # 检查文件
+        assert jsonFile is not None
+
+        # 计数器
+        count = 0
+        # 获得总数
+        total = len(self._tokens)
+        # 打印数据总数
+        print("TokenContent.save : try to save %d row(s) !" % total)
+        # 将总数写入文件
+        jsonFile.write(str(total))
+        jsonFile.write("\n")
+
+        # 百分之一
+        percent = 0
+        onePercent = total / 100.0
+        # 检查数据结果
+        for item in self._tokens.values() :
+            # 计数器加1
+            count = count + 1
+            # 写入文件
+            jsonFile.write(json.dumps({"count" : item.count , "token" : item.token}, ensure_ascii = False))
+            jsonFile.write("\n")
+            # 检查结果
+            if count >= (percent + 1) * onePercent:
+                # 增加百分之一
+                percent = percent + 1
+                # 打印进度条
+                print("\r", end="")
+                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
+                sys.stdout.flush()
+        # 打印数据总数
+        print("")
+        print("TokenContent.save : %d row(s) saved !" % total)
+        # 关闭文件
+        jsonFile.close()
+        # 打印信息
+        print("TokenContent.save : file(\"%s\") closed !" % fileName)
+
+    # 加载数据
+    def load(self, fileName):
+        # 检查文件名
+        if fileName is None:
+            fileName = "tokens.json"
+        # 检查文件是否存在
+        if not os.path.isfile(fileName):
+            # 打印信息
+            print("TokenContent.load : invalid file(\"%s\") !" % fileName)
+            return -1
+        # 打开文件
+        jsonFile = open(fileName, "r", encoding = "utf-8")
+        # 打印信息
+        print("TokenContent.load : file(\"%s\") opened !" % fileName)
+        # 检查文件
+        assert jsonFile is not None
+
+        # 计数器
+        count = 0
+        # 获得总数
+        total = 0
+        # 百分之一
+        percent = 0
+        onePercent = total / 100.0
+
+        try:
+            # 按行读取
+            line = jsonFile.readline()
+            # 循环处理
+            while line :
+                # 剪裁字符串
+                line = line.strip()
+                # 检查结果
+                if len(line) <= 0:
+                    # 读取下一行
+                    line = jsonFile.readline()
+                    continue
+
+                # 计数器加1
+                count = count + 1
+                # 检查计数器
+                if count == 1:
+                    # 获得数据总数
+                    total = int(line)
+                    # 检查结果
+                    if total <= 0 :
+                        # 打印信息
+                        print("TokenContent.load : invalid total(\"%s\") !" % line)
+                        break
+                    # 设置百分之一
+                    onePercent = total / 100.0
+                    # 打印数据总数
+                    print("TokenContent.load : try to load %d row(s) !" % total)
+                else:
+                    # 按照json格式解析
+                    jsonItem = json.loads(line)
+                    # 生成原始数据对象
+                    tokenItem = \
+                        TokenItem(jsonItem["content"])
+                    # 设置计数
+                    tokenItem.count = jsonItem["count"]
+
+                    # 检查结果
+                    if (count - 1) >= (percent + 1) * onePercent:
+                        # 增加百分之一
+                        percent = percent + 1
+                        # 打印进度条
+                        print("\r", end="")
+                        print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
+                        sys.stdout.flush()
+                    # 加入字典
+                    self._tokens[tokenItem.token] = tokenItem
+                # 读取下一行
+                line = jsonFile.readline()
+            # 打印信息
+            print("")
+            print("TokenContent.load : %d line(s) processed !" % count)
+        except Exception as e:
+            traceback.print_exc()
+            print("TokenContent.load : ", str(e))
+            print("TokenContent.load : unexpected exit !")
+        # 关闭文件
+        jsonFile.close()
+        # 打印信息
+        print("TokenContent.load : file(\"%s\") closed !" % fileName)
+        print("TokenContent.load : %d item(s) loaded !" % len(self._tokens))
+        return total
+
 def main():
 
     # 建立原始数据
     rawContent = RawContent()
     # 加载数据
-    rawContent.load("raw.json")
+    rawContent.load("normalized.json")
     # 建立字符表
     tokenContent = TokenContent()
     # 加载数据
     rawContent.traverse(tokenContent.add)
-    # 打印例子
-    tokenContent['的'].dump()
+    # 保存文件
+    tokenContent.save("tokens.json")
 
 if __name__ == '__main__':
     try:
