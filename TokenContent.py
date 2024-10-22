@@ -193,19 +193,25 @@ class TokenContent :
         # Hash表
         self._tokens = {}
 
-    def __getitem__(self, token):
+    def __contains__(self, token) :
+        # 检查参数
+        assert token is not None and len(token) == 1
+        # 返回结果
+        return token in self._tokens.keys()
+
+    def __getitem__(self, token) :
         # 检查参数
         assert token is not None and len(token) == 1
         # 返回结果
         return self._tokens[token]
 
-    def __setitem__(self, token, tokenItem):
+    def __setitem__(self, token, tokenItem) :
         # 检查参数
         assert token is not None and len(token) == 1
         # 设置数值
         self._tokens[token] = tokenItem
 
-    def add(self, rawItem):
+    def add(self, rawItem) :
         # 检查参数
         assert rawItem is not None
         assert isinstance(rawItem, RawItem)
@@ -327,7 +333,7 @@ class TokenContent :
                     jsonItem = json.loads(line)
                     # 生成原始数据对象
                     tokenItem = \
-                        TokenItem(jsonItem["content"])
+                        TokenItem(jsonItem["token"])
                     # 设置计数
                     tokenItem.count = jsonItem["count"]
 
