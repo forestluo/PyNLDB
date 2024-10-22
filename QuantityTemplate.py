@@ -221,6 +221,8 @@ class QuantityTemplate(QuantityTool) :
     # 数量词模板
     _templates = \
     [
+        "\\d+", # 编号
+
         "\\d+$v", # 单位符号
         "\\d+$u", # 单位名称
         "\\d+$q", # 量词
