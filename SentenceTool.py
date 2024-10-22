@@ -102,6 +102,74 @@ class SplitTool :
         return SplitTool._is_major_(char) and SplitTool._is_right_quote_(nextChar) \
                 or SplitTool._is_not_end_(char) and SplitTool._is_left_quote_(nextChar)
 
+    # 合并部分标点符号
+    @staticmethod
+    def __merge_combination__(segments) :
+        # 索引
+        index =  0
+        # 结果集
+        result = []
+        # 合并部分标点符号
+        while index < len(segments) - 1:
+            # 获得一个字符
+            char = segments[index][0]
+            # 获得后续字符
+            nextChar = segments[index + 1][0]
+            # 合并部分符合要求的标点符号
+            if not SplitTool.__is_combinable__(char, nextChar) :
+                # 增加到结果集
+                result.append(segments[index]); index += 1 # 额外增加索引
+            else :
+                # 保存合并后的结果
+                result.append(char + nextChar); index += 2 # 额外增加索引
+        # 检查索引值
+        if index < len(segments) : result.append(segments[index])
+        # 返回结果
+        return result
+
+    # 合并分段数字
+    @staticmethod
+    def __merge_digits__(segments) :
+        # 索引
+        index =  0
+        # 结果集
+        result = []
+        # 合并部分标点符号
+        while index < len(segments) - 1:
+            # 获得最后一个字符
+            char = segments[index][-1]
+            # 检查结果
+            if not char.isdigit() :
+                # 增加到结果集
+                result.append(segments[index]); index += 1 # 额外增加索引
+            else :
+                # 计数器
+                end = index + 1
+                # 合并内容
+                combination = ""
+                # 循环处理
+                while end < len(segments) - 1 :
+                    # 检查数据
+                    # 第一段需要是逗号标点
+                    # 第二段的长度不能小于4
+                    # 第二段的前三个字符必须是数字
+                    if not segments[end] in ",，" \
+                        or len(segments[end + 1]) < 4 \
+                        or not segments[end + 1][1:4].isdigit() : break
+                    # 合并内容
+                    combination += "," + segments[end + 1][1:]; end += 2
+                # 检查结果
+                if end <= index + 1 :
+                    # 增加到结果集
+                    result.append(segments[index]); index += 1 # 额外增加索引
+                else :
+                    # 增加到结果集
+                    result.append(segments[index] + combination); index = end
+        # 检查索引值
+        if index < len(segments) : result.append(segments[index])
+        # 返回结果
+        return result
+
     # 将段落内容完全分解
     # 1) 只接受正则处理后的段落内容
     # 2）将内容完全按照标点拆解
@@ -125,27 +193,10 @@ class SplitTool :
             # 前面有标点符号的情况下，可认为省略号属于内容
             if segments[i][0] == '…' and segments[i - 1][0] != '$' : segments[i] = '$' + segments[i]
 
-        # 索引
-        index =  0
-        # 结果集
-        result = []
-        # 合并部分标点符号
-        while index < len(segments) - 1:
-            # 获得一个字符
-            char = segments[index][0]
-            # 获得后续字符
-            nextChar = segments[index + 1][0]
-            # 合并部分符合要求的标点符号
-            if not SplitTool.__is_combinable__(char, nextChar) :
-                # 增加到结果集
-                result.append(segments[index]); index += 1 # 额外增加索引
-            else :
-                # 保存合并后的结果
-                result.append(char + nextChar); index += 2 # 额外增加索引
-        # 检查索引值
-        if index < len(segments) : result.append(segments[index])
+        # 合并数字项目
+        segments = SplitTool.__merge_digits__(segments)
         # 返回结果
-        return result
+        return SplitTool.__merge_combination__(segments)
 
 class SentenceTool(SplitTool) :
     # 合并内容
@@ -356,6 +407,7 @@ def main():
     raw.open()
     # 随机抽取一条记录
     data = raw.random()
+    #data["content"] = "这里有20,000,000.5美元。你还需要9,000美元。不要等到5月。"
     # 处理数据
     content = ContentTool.normalize_content(data["content"])
     # 关闭数据库链接
