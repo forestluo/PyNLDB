@@ -22,6 +22,8 @@
 
  TokenContent.py：用于保存、加载和遍历Token数据。Token是以单个Unicode字符为单位进行处理。除了Token，还有统计计数。main程序将从normalized.json中统计Token的次数。
 
+ WordContent.py：用于保存、加载和遍历Word数据。这里的Word是指由两个相邻Token组成的。（1）main程序通过加载的normalized.json和tokens.json数据，生成单词统计结果，并计算相关系数。最终结果文件保存为words.json；（2）update_gamma函数可以通过Token的统计数据计算gamma数值。
+
 # 参考链接
 
 www.algmain.com
