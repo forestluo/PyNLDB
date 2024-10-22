@@ -8,11 +8,6 @@ class SentenceTemplate :
     # 所有模板（静态）
     _templates = []
 
-    # 原始规则
-    rules = ""
-    # 匹配模板
-    _patterns = []
-
     # 将规则进行预编译
     def __init__(self, rules) :
         # 检查参数

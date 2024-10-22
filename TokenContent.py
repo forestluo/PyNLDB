@@ -5,17 +5,13 @@ import traceback
 from RawContent import *
 
 class TokenItem :
-    # 频次计数器
-    count = 0
-    # 字符
-    token = '\0'
-    # Unicode值
-    unicode = 0
-
+    # 初始化对象
     def __init__(self, token):
         # 检查参数
         assert token is not None
         assert (isinstance(token, str) and len(token) == 1)
+        # 频次计数器
+        self.count = 0
         # 设置字符
         self.token = token
         # 设置Unicode值
@@ -192,8 +188,10 @@ class TokenItem :
         return None
 
 class TokenContent :
-    # Hash表
-    _tokens = {}
+    # 初始化对象
+    def __init__(self) :
+        # Hash表
+        self._tokens = {}
 
     def __getitem__(self, token):
         # 检查参数

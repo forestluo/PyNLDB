@@ -8,16 +8,7 @@ from ContentTool import *
 from SentenceTemplate import *
 
 class SentenceItem:
-    # 长度
-    length = 0
-    # Hash值
-    sha256 = None
-
-    # 计数
-    count = 0
-    # 内容
-    content = None
-
+    # 初始化对象
     def __init__(self, content):
         # 检查参数
         if content is not None:
@@ -43,8 +34,10 @@ class SentenceItem:
             print("\tcontent = \"%s\"" % self.content)
 
 class SentenceContent:
-    # Hash表
-    _sentences = {}
+    # 初始化对象
+    def __init__(self) :
+        # Hash表
+        self._sentences = {}
 
     # 提取句子
     def extract_item(self, item) :

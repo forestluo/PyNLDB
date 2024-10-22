@@ -6,16 +6,7 @@ import hashlib
 from ContentTool import *
 
 class RawItem:
-    # 长度
-    length = 0
-    # Hash值
-    sha256 = None
-
-    # 来源
-    source = None
-    # 内容
-    content = None
-
+    # 初始化对象
     def __init__(self, content, source = None):
         # 检查参数
         if source is not None:
@@ -45,8 +36,10 @@ class RawItem:
             print("\tcontent = \"%s\"" % self.content)
 
 class RawContent:
-    # Hash表
-    _contents = {}
+    # 初始化对象
+    def __init__(self) :
+        # Hash表
+        self._contents = {}
 
     # 遍历处理
     def traverse(self, function):
