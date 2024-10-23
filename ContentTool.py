@@ -3,6 +3,7 @@
 import re
 
 from NLDB3Raw import *
+from SentenceTool import *
 
 class ChineseTool :
 
@@ -367,7 +368,6 @@ class ContentTool :
         # 检查参数
         assert content is not None
         assert isinstance(content, str)
-
         # 微调数据
         content = ContentTool.__adjust(content)
         # 正则化内容
@@ -382,8 +382,8 @@ class ContentTool :
         content = ChineseTool.narrow_convert(content)
         # 部分标点符号转全角
         content = ContentTool.__wide_punctuation(content)
-        # 返回结果
-        return content
+        # 拆分内容
+        return SplitTool.combinate(SplitTool.split(content))
 
     # 正则化
     @staticmethod
@@ -409,7 +409,7 @@ class ContentTool :
         # 检查参数
         assert content is not None
         assert isinstance(content, str)
-
+        # 新内容
         newContent = ""
         # 循环处理
         for char in content :
@@ -428,7 +428,6 @@ class ContentTool :
         # 检查参数
         assert content is not None
         assert isinstance(content, str)
-
         # 循环处理
         while True:
             # 标志位
@@ -455,7 +454,6 @@ class ContentTool :
         # 检查参数
         assert content is not None
         assert isinstance(content, str)
-
         # 调整内容
         content = ContentTool.__adjust__(content, '\"')
         # 调整内容

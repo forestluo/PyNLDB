@@ -86,6 +86,9 @@ class WordContent :
         # 百分之一
         percent = 0
         onePercent = total / 100.0
+
+        # 异常项目
+        items = []
         # 循环处理
         for item in self._words.values() :
             # 计数器加1
@@ -95,13 +98,18 @@ class WordContent :
             # 获得数据
             for token in item.word :
                 # 检查字符
-                if not token in tokens :
+                if not token in tokens \
+                    or tokens[token].count <= 0 :
                     # 设置异常数值
                     item.gamma = -1.0; break
                 # 计算每个分项数值
                 item.gamma += float(item.count) / float(tokens[token].count)
             # 检查分项加和值
-            if item.gamma > 0.0 :
+            if item.gamma <= 0.0 :
+                # 加入异常项
+                # 准备后期删除
+                items.append(item)
+            else :
                 # 求平均值
                 item.gamma /= float(len(item.word))
             # 检查结果
@@ -112,6 +120,8 @@ class WordContent :
                 print("\r", end="")
                 print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
                 sys.stdout.flush()
+        # 删除异常项目
+        for item in items : del self._words[item.word]
         # 打印数据总数
         print("")
         print("WordContent.update_gamma : %d row(s) updated !" % total)

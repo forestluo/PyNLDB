@@ -170,20 +170,34 @@ class SplitTool :
         # 返回结果
         return result
 
+    # 合并分段内容
+    @staticmethod
+    def combinate(segments) :
+        # 检查参数
+        assert segments is not None
+        assert isinstance(segments, list)
+        # 内容
+        content = ""
+        # 循环处理
+        for segment in segments :
+            # 增加内容
+            content += segment if segment[0] != '$' else segment[1:]
+        # 返回结果
+        return content
+
     # 将段落内容完全分解
     # 1) 只接受正则处理后的段落内容
     # 2）将内容完全按照标点拆解
     # 3）合并有关内容引用的标点符号
     # 4）在文字内容前加上标识，以区别标点符号
+    # 5）将分段数字表达与常规标点标识区别开
     @staticmethod
     def split(content) :
         # 检查参数
         assert content is not None
         assert isinstance(content, str)
-
         # 获得经标点分段的结果
         segments = SplitTool.__split__(content)
-
         # 增加标识
         for i in range(0, len(segments)) :
             # 增加内容标识前缀（‘$’符号并不属于分隔符，因此可以完全区别开）
@@ -192,11 +206,8 @@ class SplitTool :
         for i in range(1, len(segments)) :
             # 前面有标点符号的情况下，可认为省略号属于内容
             if segments[i][0] == '…' and segments[i - 1][0] != '$' : segments[i] = '$' + segments[i]
-
-        # 合并数字项目
-        segments = SplitTool.__merge_digits__(segments)
-        # 返回结果
-        return SplitTool.__merge_combination__(segments)
+        # 返回合并结果
+        return SplitTool.__merge_combination__(SplitTool.__merge_digits__(segments))
 
 class SentenceTool(SplitTool) :
     # 合并内容

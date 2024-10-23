@@ -11,7 +11,7 @@ class TokenItem :
         assert token is not None
         assert (isinstance(token, str) and len(token) == 1)
         # 频次计数器
-        self.count = 0
+        self.count = 1.0
         # 设置字符
         self.token = token
         # 设置Unicode值
