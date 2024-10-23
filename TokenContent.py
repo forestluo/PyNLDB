@@ -27,6 +27,17 @@ class TokenItem :
         print("\tremark = \"%s\"" % TokenItem.remark(self.token))
 
     @staticmethod
+    def is_unicode(content) :
+        # 检查参数
+        assert content is not None
+        # 循环处理
+        for token in content :
+            # 检查字符
+            if not 0 <= ord(token) < 65536 : return False
+        # 返回结果
+        return True
+
+    @staticmethod
     def remark(token):
         # 检查参数
         if token is not None:

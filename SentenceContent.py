@@ -5,6 +5,7 @@ import hashlib
 
 from RawContent import *
 from ContentTool import *
+from TokenContent import *
 from SentenceTemplate import *
 
 class SentenceItem:
@@ -47,14 +48,18 @@ class SentenceContent:
         sentences = SentenceTemplate.extract(item.content)
         # 循环处理
         for sentence in sentences :
-            # 生成项目
-            sentenceItem = SentenceItem(sentence)
-            # 查询字典
-            if sentenceItem.sha256 in self._sentences :
-                # 计数器增加
-                sentenceItem.count += 1
-            # 加入字典
-            self._sentences[sentenceItem.sha256] = sentenceItem
+            # 检查句子
+            if TokenItem.is_unicode(sentence) :
+                # 生成项目
+                sentenceItem = SentenceItem(sentence)
+                # 查询字典
+                if sentenceItem.sha256 in self._sentences :
+                    # 计数器增加
+                    sentenceItem.count += 1
+                # 加入字典
+                self._sentences[sentenceItem.sha256] = sentenceItem
+            else :
+                print("SentenceContent.extract_item : invalid sentence(\"%s\")" % sentence)
 
     # 提取句子
     def extract_dict(self, data) :
@@ -64,14 +69,18 @@ class SentenceContent:
         sentences = SentenceTemplate.extract(data["content"])
         # 循环处理
         for sentence in sentences :
-            # 生成项目
-            sentenceItem = SentenceItem(sentence)
-            # 查询字典
-            if sentenceItem.sha256 in self._sentences :
-                # 计数器增加
-                sentenceItem.count += 1
-            # 加入字典
-            self._sentences[sentenceItem.sha256] = sentenceItem
+            # 检查句子
+            if TokenItem.is_unicode(sentence) :
+                # 生成项目
+                sentenceItem = SentenceItem(sentence)
+                # 查询字典
+                if sentenceItem.sha256 in self._sentences :
+                    # 计数器增加
+                    sentenceItem.count += 1
+                # 加入字典
+                self._sentences[sentenceItem.sha256] = sentenceItem
+            else :
+                print("SentenceContent.extract_dict : invalid sentence(\"%s\")" % sentence)
 
     # 遍历处理
     def traverse(self, function) :
