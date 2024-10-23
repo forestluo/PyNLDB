@@ -2,6 +2,7 @@
 
 import os
 
+from ContentTool import *
 from SentenceTool import *
 
 class SentenceTemplate :

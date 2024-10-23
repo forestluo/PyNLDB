@@ -12,6 +12,7 @@ class WordItem :
         # 检查参数
         assert word is not None
         assert isinstance(word, str) and len(word) == 2
+        assert 0 <= ord(word[0]) < 65536 and 0 <= ord(word[1]) < 65536
         # 设置缺省值
         self.count = 1
         self.gamma = 0.0
@@ -67,12 +68,17 @@ class WordContent :
                 # 获得单词
                 word = content[i : i + 2]
                 # 检查结果
-                if word in self._words.keys() :
-                    # 计数器加一
-                    self._words[word].count += 1
+                if 0 <= ord(word[0]) < 65536 \
+                    and 0 <= ord(word[1]) < 65536 :
+                    # 检查结果
+                    if word in self._words.keys() :
+                        # 计数器加一
+                        self._words[word].count += 1
+                    else :
+                        # 增加单词项目
+                        self._words[word] = WordItem(word)
                 else :
-                    # 增加单词项目
-                    self._words[word] = WordItem(word)
+                    print("WordContent.add : invalid word (\"%s\") !" % word)
 
     # 更新Gamma数值
     def update_gamma(self, tokens) :
@@ -236,11 +242,20 @@ class WordContent :
                 else:
                     # 按照json格式解析
                     jsonItem = json.loads(line)
-                    # 生成词汇项目
-                    wordItem = \
-                        WordItem(jsonItem["word"])
-                    wordItem.count = jsonItem["count"]
-                    wordItem.gamma = jsonItem["gamma"]
+                    # 获得词汇
+                    word = jsonItem["word"]
+                    # 检查结果
+                    if 0 <= ord(word[0]) < 65536 \
+                            and 0 <= ord(word[1]) < 65536:
+                        # 生成词汇项目
+                        wordItem = WordItem(word)
+                        wordItem.count = jsonItem["count"]
+                        wordItem.gamma = jsonItem["gamma"]
+                        # 加入字典
+                        self._words[wordItem.word] = wordItem
+                    else:
+                        print("WordContent.add : invalid word (\"%s\") !" % word)
+
                     # 检查结果
                     if (count - 1) >= (percent + 1) * onePercent:
                         # 增加百分之一
@@ -249,8 +264,6 @@ class WordContent :
                         print("\r", end="")
                         print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
                         sys.stdout.flush()
-                    # 加入字典
-                    self._words[wordItem.word] = wordItem
                 # 读取下一行
                 line = jsonFile.readline()
             # 打印信息

@@ -10,6 +10,7 @@ class TokenItem :
         # 检查参数
         assert token is not None
         assert (isinstance(token, str) and len(token) == 1)
+        assert 0 <= ord(token) < 65536
         # 频次计数器
         self.count = 1.0
         # 设置字符
@@ -211,6 +212,11 @@ class TokenContent :
         # 设置数值
         self._tokens[token] = tokenItem
 
+    # 返回所有数据
+    def token_items(self) :
+        # 返回结果
+        return self._tokens.values()
+
     def add(self, rawItem) :
         # 检查参数
         assert rawItem is not None
@@ -218,15 +224,20 @@ class TokenContent :
 
         # 扫描结果
         for token in rawItem.content :
-            # 检查字典
-            if token in self._tokens :
-                # 获得对象
-                tokenItem = self._tokens[token]
-                # 计数器加一
-                tokenItem.count = tokenItem.count + 1
+            # 检查字符
+            # 防止非unicode字符进入词典
+            if 0 <= ord(token) < 65536 :
+                # 检查字典
+                if token in self._tokens :
+                    # 获得对象
+                    tokenItem = self._tokens[token]
+                    # 计数器加一
+                    tokenItem.count = tokenItem.count + 1
+                else :
+                    # 增加字典内容
+                    self._tokens[token] = TokenItem(token)
             else :
-                # 增加字典内容
-                self._tokens[token] = TokenItem(token)
+                print("TokenContent.add : invalid token(\'%c\', 0x%X) !" % (token, ord(token)))
 
     def save(self, fileName) :
         # 检查文件名
@@ -331,11 +342,19 @@ class TokenContent :
                 else:
                     # 按照json格式解析
                     jsonItem = json.loads(line)
-                    # 生成原始数据对象
-                    tokenItem = \
-                        TokenItem(jsonItem["token"])
-                    # 设置计数
-                    tokenItem.count = jsonItem["count"]
+                    # 获得token
+                    token = jsonItem["token"]
+                    # 检查字符
+                    # 防止非unicode字符进入词典
+                    if 0 <= ord(token) < 65536 :
+                        # 生成原始数据对象
+                        tokenItem = TokenItem(token)
+                        # 设置计数
+                        tokenItem.count = jsonItem["count"]
+                        # 加入字典
+                        self._tokens[tokenItem.token] = tokenItem
+                    else :
+                        print("TokenContent.add : invalid token(\'%c\', 0x%X) !" % (token, ord(token)))
 
                     # 检查结果
                     if (count - 1) >= (percent + 1) * onePercent:
@@ -345,8 +364,6 @@ class TokenContent :
                         print("\r", end="")
                         print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
                         sys.stdout.flush()
-                    # 加入字典
-                    self._tokens[tokenItem.token] = tokenItem
                 # 读取下一行
                 line = jsonFile.readline()
             # 打印信息
