@@ -6,6 +6,9 @@ from RawContent import *
 from SentenceTool import *
 
 class WordItem :
+    # 保留数量
+    _keep_count = 5
+
     # 初始化对象
     def __init__(self, word) :
         # 检查参数
@@ -40,7 +43,7 @@ class WordItem :
         # 长度小于2，则返回空
         if len(self.word) < 2 : return
         # 结果
-        self.gammas = {}
+        gammas = {}
         # 循环处理
         for i in range(1, len(self.word)) :
             # 获得gamma数值
@@ -48,7 +51,7 @@ class WordItem :
             # 检查结果
             if gamma <= 0 : continue
             # 移动分隔符
-            self.gammas[self.word[0:i] + '|' + self.word[i:]] = gamma
+            gammas[self.word[0:i] + '|' + self.word[i:]] = gamma
         # 循环处理
         for i in range(1, len(self.word)) :
             for j in range(i + 1, len(self.word)) :
@@ -57,8 +60,7 @@ class WordItem :
                 # 检查结果
                 if gamma <= 0 : continue
                 # 移动分隔符
-                self.gammas[self.word[0:i] + '|' + self.word[i:j] + '|' + self.word[j:]] = gamma
-        """
+                gammas[self.word[0:i] + '|' + self.word[i:j] + '|' + self.word[j:]] = gamma
         # 循环处理
         for i in range(1, len(self.word)) :
             for j in range(i + 1, len(self.word)) :
@@ -68,12 +70,28 @@ class WordItem :
                     # 检查结果
                     if gamma <= 0 : continue
                     # 移动分隔符
-                    self.gammas[self.word[0:i] + '|' + self.word[i:j] + '|' + self.word[j:k] + '|' + self.word[k:]] = gamma
-        """
+                    gammas[self.word[0:i] + '|' + self.word[i:j] + '|' + self.word[j:k] + '|' + self.word[k:]] = gamma
+        # 排序
+        # Gamma数值大的排前面
+        sorted(gammas.items(), key = lambda kv : (kv[1], kv[0]), reverse = True)
+        # 仅保留最大的几个数值，其余部分抛弃
+        index = 0
+        # 初始化字典
+        self.gammas = {}
+        # 循环处理
+        for (key, value) in gammas.items() :
+            # 计数器加一
+            index += 1
+            # 增加到数据记录中
+            self.gammas[key] = value
+            # 检查索引值
+            if index > WordContent._max_length : break
 
 class WordContent :
     # 初始化对象
     def __init__(self) :
+        # 当前长度
+        self.length = 1
         # Hash表
         self._words = {}
 
@@ -133,23 +151,20 @@ class WordContent :
             content = segment[1:]
             # 循环处理
             for i in range(0, len(content) - 1) :
-                # 长度限定在1至8
-                for j in range(1, 9) :
-                    # 检查结果
-                    if i + j > len(content) : break
-                    # 获得单词
-                    word = content[i : i + j]
-                    # 检查结果
-                    if word in self._words.keys():
-                        # 计数器加一
-                        self._words[word].count += 1
-                    else:
-                        # 增加单词项目
-                        self._words[word] = WordItem(word)
-                    # 检查结果
-                    if UnicodeTool.is_rare(word) :
-                        print("")
-                        print("WordContent.add : word (\"%s\") has rare token !" % word)
+                # 长度限定在当前长度
+                # 获得单词
+                word = content[i : i + self.length]
+                # 检查结果
+                if word in self._words.keys():
+                    # 计数器加一
+                    self._words[word].count += 1
+                else:
+                    # 增加单词项目
+                    self._words[word] = WordItem(word)
+                # 检查结果
+                if UnicodeTool.is_rare(word) :
+                    print("")
+                    print("WordContent.add : word (\"%s\") has rare token !" % word)
 
     # 更新Gamma数值
     def update_gammas(self) :
@@ -180,6 +195,11 @@ class WordContent :
         # 打印数据总数
         print("")
         print("WordContent.update_gammas : %d row(s) updated !" % total)
+
+    # 删除计数低于设置的项目
+    def clear_useless(self, count) :
+        # 删除计数器为1的项目
+        self._words = {key : value for (key, value) in self._words.items() if value.count > count}
 
     def save(self, fileName) :
         # 检查文件名
@@ -340,8 +360,18 @@ def main():
 
     # 建立字符表
     wordContent = WordContent()
-    # 加载数据
-    rawContent.traverse(wordContent.add)
+    # 循环处理
+    for i in range(1, 8) :
+        # 打印信息
+        print("WordContent.load : length = %d !" % i)
+        # 设置参数值
+        wordContent.length = i
+        # 加载数据
+        rawContent.traverse(wordContent.add)
+        # 清理项目
+        wordContent.clear_useless(1)
+        # 打印信息
+        print("WordContent.load : clear useless (length <= 1) !")
     # 更新Gamma数值
     wordContent.update_gammas()
     # 保存文件
