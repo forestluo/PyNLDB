@@ -18,9 +18,11 @@
 
  需要注意几点：（1）缺省模板的排序是固定的，不能随意调整。基本是按照最大匹配法的原则排列。如果自己想增加模板，也必须遵守这个原则。（2）对于没有完整标点符号指示的内容，程序会认为不是一个完整的句子。这种标点不全的内容，将会被直接抛弃。
 
- SentenceContent.py：用于保存、加载和遍历句子数据。main程序将利用templates.json指定的模板，从normalized.json中提取句子数据。
+ SentenceContent.py：用于保存、加载和遍历句子数据。main程序将利用templates.json指定的模板，从normalized.json中提取句子数据，并保存至sentences.json文件中。
 
  TokenContent.py：用于保存、加载和遍历Token数据。Token是以单个Unicode字符为单位进行处理。除了Token，还有统计计数。main程序将从normalized.json中统计Token的次数。
+
+ WordContent.py：用于保存、加载和遍历Word数据。这里的Word是指由两个相邻Token组成的。（1）main程序通过加载的normalized.json和tokens.json数据，生成单词统计结果，并计算相关系数。最终结果文件保存为words.json；（2）update_gamma函数可以通过Token的统计数据计算gamma数值。
 
 # 参考链接
 
