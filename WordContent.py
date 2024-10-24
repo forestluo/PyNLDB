@@ -4,27 +4,72 @@ import traceback
 
 from RawContent import *
 from SentenceTool import *
-from TokenContent import *
 
 class WordItem :
     # 初始化对象
     def __init__(self, word) :
         # 检查参数
-        assert word is not None
-        assert isinstance(word, str) and len(word) == 2
-        assert 0 <= ord(word[0]) < 65536 and 0 <= ord(word[1]) < 65536
+        assert isinstance(word, str)
         # 设置缺省值
         self.count = 1
-        self.gamma = 0.0
         # 设置词汇
         self.word = word
+        # 设置gamma表
+        self.gammas = None
+
+    def is_rare(self) :
+        # 返回结果
+        return UnicodeTool.is_rare(self.word)
 
     def dump(self):
         # 打印信息
         print("WordItem.dump : show properties !")
         print("\tword = \'%s\'" % self.word)
         print("\tcount = %d" % self.count)
-        print("\tgamma = %f" % self.gamma)
+        # 检查gammas
+        if self.gammas is not None :
+            # 循环处理
+            for key, value in self.gammas.items() :
+                print("\tgamma(\"%s\") = %f" % (key, value))
+
+    # 更新Gamma数值
+    def update_gammas(self, words) :
+        # 检查参数
+        assert isinstance(self.word, str)
+        assert isinstance(words, WordContent)
+        # 长度小于2，则返回空
+        if len(self.word) < 2 : return
+        # 结果
+        self.gammas = {}
+        # 循环处理
+        for i in range(1, len(self.word)) :
+            # 获得gamma数值
+            gamma = words.get_gamma([self.word[0:i], self.word[i:]])
+            # 检查结果
+            if gamma <= 0 : continue
+            # 移动分隔符
+            self.gammas[self.word[0:i] + '|' + self.word[i:]] = gamma
+        # 循环处理
+        for i in range(1, len(self.word)) :
+            for j in range(i + 1, len(self.word)) :
+                # 部分
+                gamma = words.get_gamma([self.word[0:i], self.word[i:j], self.word[j:]])
+                # 检查结果
+                if gamma <= 0 : continue
+                # 移动分隔符
+                self.gammas[self.word[0:i] + '|' + self.word[i:j] + '|' + self.word[j:]] = gamma
+        """
+        # 循环处理
+        for i in range(1, len(self.word)) :
+            for j in range(i + 1, len(self.word)) :
+                for k in range(j + 1, len(self.word)) :
+                    # 部分
+                    gamma = words.get_gamma([self.word[0:i], self.word[i:j], self.word[j:k], self.word[k:]])
+                    # 检查结果
+                    if gamma <= 0 : continue
+                    # 移动分隔符
+                    self.gammas[self.word[0:i] + '|' + self.word[i:j] + '|' + self.word[j:k] + '|' + self.word[k:]] = gamma
+        """
 
 class WordContent :
     # 初始化对象
@@ -50,9 +95,32 @@ class WordContent :
         # 设置数值
         self._words[word] = wordItem
 
+    def get_gamma(self, parts) :
+        # 检查参数
+        assert isinstance(parts, list)
+        # Gamma数值
+        gamma = 0.0
+        # 内容
+        content = ""
+        # 循环处理
+        for part in parts :
+            # 增加字符
+            content += part
+            # 检查字典
+            if not part in self._words.keys() : return -1.0
+            # 获得计数
+            count = self._words[part].count
+            # 检查结果
+            if count <= 0 : return -1.0
+            # 计算结果
+            gamma += 1.0 / float(count)
+        # 计算总值
+        if not content in self._words.keys() : return 0.0
+        # 返回结果
+        return gamma * float(self._words[content].count) / float(len(parts))
+
     def add(self, rawItem):
         # 检查参数
-        assert rawItem is not None
         assert isinstance(rawItem, RawItem)
 
         # 拆分内容
@@ -65,59 +133,42 @@ class WordContent :
             content = segment[1:]
             # 循环处理
             for i in range(0, len(content) - 1) :
-                # 获得单词
-                word = content[i : i + 2]
-                # 检查结果
-                if 0 <= ord(word[0]) < 65536 \
-                    and 0 <= ord(word[1]) < 65536 :
+                # 长度限定在1至8
+                for j in range(1, 9) :
                     # 检查结果
-                    if word in self._words.keys() :
+                    if i + j > len(content) : break
+                    # 获得单词
+                    word = content[i : i + j]
+                    # 检查结果
+                    if word in self._words.keys():
                         # 计数器加一
                         self._words[word].count += 1
-                    else :
+                    else:
                         # 增加单词项目
                         self._words[word] = WordItem(word)
-                else :
-                    print("WordContent.add : invalid word (\"%s\") !" % word)
+                    # 检查结果
+                    if UnicodeTool.is_rare(word) :
+                        print("")
+                        print("WordContent.add : word (\"%s\") has rare token !" % word)
 
     # 更新Gamma数值
-    def update_gamma(self, tokens) :
+    def update_gammas(self) :
         # 计数器
         count = 0
         # 获得总数
         total = len(self._words)
         # 打印数据总数
-        print("WordContent.update_gamma : try to update %d row(s) !" % total)
+        print("WordContent.update_gammas : try to update %d row(s) !" % total)
 
         # 百分之一
         percent = 0
         onePercent = total / 100.0
-
-        # 异常项目
-        items = []
         # 循环处理
         for item in self._words.values() :
             # 计数器加1
             count = count + 1
-            # 设置初始值
-            item.gamma = 0.0
-            # 获得数据
-            for token in item.word :
-                # 检查字符
-                if not token in tokens \
-                    or tokens[token].count <= 0 :
-                    # 设置异常数值
-                    item.gamma = -1.0; break
-                # 计算每个分项数值
-                item.gamma += float(item.count) / float(tokens[token].count)
-            # 检查分项加和值
-            if item.gamma <= 0.0 :
-                # 加入异常项
-                # 准备后期删除
-                items.append(item)
-            else :
-                # 求平均值
-                item.gamma /= float(len(item.word))
+            # 更新数据
+            item.update_gammas()
             # 检查结果
             if count >= (percent + 1) * onePercent:
                 # 增加百分之一
@@ -126,11 +177,9 @@ class WordContent :
                 print("\r", end="")
                 print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
                 sys.stdout.flush()
-        # 删除异常项目
-        for item in items : del self._words[item.word]
         # 打印数据总数
         print("")
-        print("WordContent.update_gamma : %d row(s) updated !" % total)
+        print("WordContent.update_gammas : %d row(s) updated !" % total)
 
     def save(self, fileName) :
         # 检查文件名
@@ -165,7 +214,7 @@ class WordContent :
                 {
                     "word" : item.word,
                     "count" : item.count,
-                    "gamma" : item.gamma
+                    "gammas" : item.gammas
                 }
             # 写入文件
             jsonFile.write(json.dumps(jsonItem, ensure_ascii = False))
@@ -244,17 +293,14 @@ class WordContent :
                     jsonItem = json.loads(line)
                     # 获得词汇
                     word = jsonItem["word"]
-                    # 检查结果
-                    if 0 <= ord(word[0]) < 65536 \
-                            and 0 <= ord(word[1]) < 65536:
-                        # 生成词汇项目
-                        wordItem = WordItem(word)
-                        wordItem.count = jsonItem["count"]
-                        wordItem.gamma = jsonItem["gamma"]
+                    # 生成词汇项目
+                    wordItem = WordItem(word)
+                    wordItem.count = jsonItem["count"]
+                    wordItem.gammas = jsonItem["gammas"]
+                    # 检查字典
+                    if not word in self._words.keys() :
                         # 加入字典
-                        self._words[wordItem.word] = wordItem
-                    else:
-                        print("WordContent.add : invalid word (\"%s\") !" % word)
+                        self._words[word] = wordItem
 
                     # 检查结果
                     if (count - 1) >= (percent + 1) * onePercent:
@@ -264,6 +310,11 @@ class WordContent :
                         print("\r", end="")
                         print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
                         sys.stdout.flush()
+                    # 检查结果
+                    if UnicodeTool.is_rare(word):
+                        print("")
+                        print("WordContent.add : word (\"%s\") has rare token !" % word)
+
                 # 读取下一行
                 line = jsonFile.readline()
             # 打印信息
@@ -287,17 +338,12 @@ def main():
     # 加载数据
     rawContent.load("normalized.json")
 
-    # 建立单字表
-    tokenContent = TokenContent()
-    # 加载数据
-    tokenContent.load("tokens.json")
-
     # 建立字符表
     wordContent = WordContent()
     # 加载数据
     rawContent.traverse(wordContent.add)
     # 更新Gamma数值
-    wordContent.update_gamma(tokenContent)
+    wordContent.update_gammas()
     # 保存文件
     wordContent.save("words.json")
 

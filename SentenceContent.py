@@ -5,14 +5,13 @@ import hashlib
 
 from RawContent import *
 from ContentTool import *
-from TokenContent import *
 from SentenceTemplate import *
 
 class SentenceItem:
     # 初始化对象
     def __init__(self, content):
         # 检查参数
-        if content is not None:
+        if content is not None :
             assert isinstance(content, str)
         # 设置计数
         self.count = 1
@@ -48,18 +47,19 @@ class SentenceContent:
         sentences = SentenceTemplate.extract(item.content)
         # 循环处理
         for sentence in sentences :
-            # 检查句子
-            if TokenItem.is_unicode(sentence) :
-                # 生成项目
-                sentenceItem = SentenceItem(sentence)
-                # 查询字典
-                if sentenceItem.sha256 in self._sentences :
-                    # 计数器增加
-                    sentenceItem.count += 1
+            # 生成项目
+            sentenceItem = SentenceItem(sentence)
+            # 查询字典
+            if sentenceItem.sha256 in self._sentences :
+                # 计数器增加
+                sentenceItem.count += 1
+            else :
                 # 加入字典
                 self._sentences[sentenceItem.sha256] = sentenceItem
-            else :
-                print("SentenceContent.extract_item : invalid sentence(\"%s\")" % sentence)
+            # 检查句子
+            if UnicodeTool.is_rare(sentence):
+                print("")
+                print("SentenceContent.extract_item : sentence(\"%s\") has rare token !" % sentence)
 
     # 提取句子
     def extract_dict(self, data) :
@@ -69,18 +69,19 @@ class SentenceContent:
         sentences = SentenceTemplate.extract(data["content"])
         # 循环处理
         for sentence in sentences :
-            # 检查句子
-            if TokenItem.is_unicode(sentence) :
-                # 生成项目
-                sentenceItem = SentenceItem(sentence)
-                # 查询字典
-                if sentenceItem.sha256 in self._sentences :
-                    # 计数器增加
-                    sentenceItem.count += 1
+            # 生成项目
+            sentenceItem = SentenceItem(sentence)
+            # 查询字典
+            if sentenceItem.sha256 in self._sentences :
+                # 计数器增加
+                sentenceItem.count += 1
+            else :
                 # 加入字典
                 self._sentences[sentenceItem.sha256] = sentenceItem
-            else :
-                print("SentenceContent.extract_dict : invalid sentence(\"%s\")" % sentence)
+            # 检查句子
+            if UnicodeTool.is_rare(sentence):
+                print("")
+                print("SentenceContent.extract_dict : sentence(\"%s\") has rare token !" % sentence)
 
     # 遍历处理
     def traverse(self, function) :
@@ -98,18 +99,19 @@ class SentenceContent:
         for item in self._sentences.values() :
             # 计数器加1
             count = count + 1
-            # 检查函数
-            if function is not None:
-                # 调用函数处理数据
-                function(item)
             # 检查结果
             if count >= (percent + 1) * onePercent :
+                # 设置标志位
+                newline = True
                 # 增加百分之一
                 percent = percent + 1
                 # 打印进度条
                 print("\r", end = "")
                 print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
                 sys.stdout.flush()
+            # 检查函数
+            # 调用函数处理数据
+            if function is not None : function(item)
         # 打印数据总数
         print("")
         print("SentenceContent.traverse : %d row(s) processed !" % total)
@@ -142,8 +144,14 @@ class SentenceContent:
         for item in self._sentences.values() :
             # 计数器加1
             count = count + 1
+            # 数据项
+            jsonItem = \
+                {
+                    "count": item.count,
+                    "content": item.content
+                }
             # 写入文件
-            jsonFile.write(json.dumps({"count" : item.count , "content" : item.content}, ensure_ascii = False))
+            jsonFile.write(json.dumps(jsonItem, ensure_ascii = False))
             jsonFile.write("\n")
             # 检查结果
             if count >= (percent + 1) * onePercent:
@@ -224,7 +232,7 @@ class SentenceContent:
                     sentenceItem.count = jsonItem["count"]
 
                     # 检查结果
-                    if (count - 1) >= (percent + 1) * onePercent:
+                    if (count - 1) >= (percent + 1) * onePercent :
                         # 增加百分之一
                         percent = percent + 1
                         # 打印进度条
@@ -235,9 +243,10 @@ class SentenceContent:
                     # 查询字典
                     if sentenceItem.sha256 in self._sentences :
                         # 打印信息
-                        sentenceItem.dump()
+                        #sentenceItem.dump()
                         # 打印信息
-                        print("SentenceContent.load : raw item exists !")
+                        print("")
+                        print("SentenceContent.load : raw item(\"%s\") exists !" % line)
                         continue
                     # 加入字典
                     self._sentences[sentenceItem.sha256] = sentenceItem

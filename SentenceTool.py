@@ -174,7 +174,6 @@ class SplitTool :
     @staticmethod
     def combinate(segments) :
         # 检查参数
-        assert segments is not None
         assert isinstance(segments, list)
         # 内容
         content = ""
@@ -194,7 +193,6 @@ class SplitTool :
     @staticmethod
     def split(content) :
         # 检查参数
-        assert content is not None
         assert isinstance(content, str)
         # 获得经标点分段的结果
         segments = SplitTool.__split__(content)
@@ -215,7 +213,6 @@ class SentenceTool(SplitTool) :
     @staticmethod
     def merge(segments) :
         # 检查参数
-        assert segments is not None
         assert isinstance(segments, list)
         # 循环处理
         while True :

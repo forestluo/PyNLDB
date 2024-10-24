@@ -92,8 +92,6 @@ class QuantityTool :
     # 拼合
     @staticmethod
     def __rule__(items) :
-        # 检查参数
-        assert items is not None
         # 规则
         rule = "("
         # 循环处理
@@ -108,8 +106,6 @@ class QuantityTool :
     # 获得规则
     @staticmethod
     def __get_rule__(item) :
-        # 检查参数
-        assert item is not None
         # 检查类型
         if item == "$a" :
             # 返回结果
@@ -192,11 +188,13 @@ class QuantityTool :
             # 返回结果
             # 中文字符串
             return "([\u4E00-\u9FA5]+)"
+        # 返回结果
+        return None
 
     @staticmethod
     def _get_rule_(rule) :
         # 检查参数
-        assert rule is not None
+        assert isinstance(rule, str)
         # 替换参数
         rule = rule.replace("$a", QuantityTool.__get_rule__("$a"))
         rule = rule.replace("$b", QuantityTool.__get_rule__("$b"))
@@ -273,7 +271,6 @@ class QuantityTemplate(QuantityTool) :
     @staticmethod
     def extract(content) :
         # 检查参数
-        assert content is not None
         assert isinstance(content, str)
 
         # 获得所有匹配的段落集合

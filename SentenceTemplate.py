@@ -12,7 +12,6 @@ class SentenceTemplate :
     # 将规则进行预编译
     def __init__(self, rules) :
         # 检查参数
-        assert rules is not None
         assert isinstance(rules, list)
         # 原始规则记录在第一项
         self.rules = rules
@@ -31,7 +30,6 @@ class SentenceTemplate :
     # 是否匹配
     def __is_matched__(self, segments) :
         # 检查参数
-        assert segments is not None
         assert isinstance(segments, list)
         # 检查参数
         # 模板的长度比分段数量多，则肯定无法匹配

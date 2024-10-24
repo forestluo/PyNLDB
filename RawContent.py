@@ -9,11 +9,10 @@ class RawItem:
     # 初始化对象
     def __init__(self, content, source = None):
         # 检查参数
+        assert isinstance(content, str)
         if source is not None:
             assert isinstance(source, str)
-        # 检查参数
-        if content is not None:
-            assert isinstance(content, str)
+
         # 设置来源
         self.source = source
         # 设置内容
@@ -57,10 +56,6 @@ class RawContent:
         for item in self._contents.values() :
             # 计数器加1
             count = count + 1
-            # 检查函数
-            if function is not None:
-                # 调用函数处理数据
-                function(item)
             # 检查结果
             if count >= (percent + 1) * onePercent :
                 # 增加百分之一
@@ -69,6 +64,9 @@ class RawContent:
                 print("\r", end = "")
                 print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
                 sys.stdout.flush()
+            # 检查函数
+            # 调用函数处理数据
+            if function is not None: function(item)
         # 打印数据总数
         print("")
         print("RawContent.traverse : %d row(s) processed !" % total)
@@ -101,8 +99,14 @@ class RawContent:
         for item in self._contents.values() :
             # 计数器加1
             count = count + 1
+            # 数据项
+            jsonItem = \
+                {
+                    "source": item.source,
+                    "content": item.content
+                }
             # 写入文件
-            jsonFile.write(json.dumps({"source" : item.source , "content" : item.content}, ensure_ascii = False))
+            jsonFile.write(json.dumps(jsonItem, ensure_ascii = False))
             jsonFile.write("\n")
             # 检查结果
             if count >= (percent + 1) * onePercent:
@@ -191,9 +195,8 @@ class RawContent:
                     # 查询字典
                     if rawItem.sha256 in self._contents :
                         # 打印信息
-                        rawItem.dump()
-                        # 打印信息
-                        print("RawContent.load : raw item exists !")
+                        print("")
+                        print("RawContent.load : raw item(\"%s\") exists !" % line)
                         continue
                     # 加入字典
                     self._contents[rawItem.sha256] = rawItem

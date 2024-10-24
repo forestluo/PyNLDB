@@ -3,7 +3,6 @@
 import re
 
 class ContentSegment :
-
     # 初始化
     # matched为正则表达式匹配结果
     def __init__(self, matched = None) :
@@ -48,11 +47,9 @@ class ContentSegment :
         self._index[0] = value
 
     # 判断是否相等
-    def equal(self, segment) :
+    def __eq__(self, segment) :
         # 检查参数
-        assert segment is not None
-        assert self.content is not None
-        assert segment.content is not None
+        assert isinstance(segment, ContentSegment)
         # 检查内容
         return self.remark == segment.remark \
                 and self.content == segment.content
@@ -62,7 +59,6 @@ class ContentSegment :
     def empty(self):
         # 返回结果
         return len(self.content) == 0 or self.start >= self.end
-
 
 class SegmentGroup :
     # 初始化
