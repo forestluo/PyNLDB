@@ -85,7 +85,7 @@ class WordItem :
             # 增加到数据记录中
             self.gammas[key] = value
             # 检查索引值
-            if index > WordContent._max_length : break
+            if index > WordItem._keep_count : break
 
 class WordContent :
     # 初始化对象
