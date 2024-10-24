@@ -95,6 +95,10 @@ class WordContent :
         # Hash表
         self._words = {}
 
+    def __len__(self) :
+        # 返回结果
+        return len(self._words)
+
     def __contains__(self, word) :
         # 检查参数
         assert word is not None and len(word) == 1
@@ -368,8 +372,12 @@ def main():
         wordContent.length = i
         # 加载数据
         rawContent.traverse(wordContent.add)
+        # 打印信息
+        print("WordContent.load : %d row(s) !" % len(wordContent))
         # 清理项目
         wordContent.clear_useless(1)
+        # 打印信息
+        print("WordContent.load : %d row(s) !" % len(wordContent))
         # 打印信息
         print("WordContent.load : clear useless (length <= 1) !")
     # 更新Gamma数值
