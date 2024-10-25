@@ -370,16 +370,23 @@ def main():
         print("WordContent.load : length = %d !" % i)
         # 设置参数值
         wordContent.length = i
+
         # 加载数据
         rawContent.traverse(wordContent.add)
         # 打印信息
         print("WordContent.load : %d row(s) !" % len(wordContent))
-        # 清理项目
-        wordContent.clear_useless(1)
-        # 打印信息
-        print("WordContent.load : %d row(s) !" % len(wordContent))
+
         # 打印信息
         print("WordContent.load : clear useless (length <= 1) !")
+        # 清理项目
+        wordContent.clear_useless(1)
+
+        # 保存中间过程数据
+        wordContent.save("words.json")
+        # 打印信息
+        print("WordContent.load : %d row(s) !" % len(wordContent))
+
+
     # 更新Gamma数值
     wordContent.update_gammas()
     # 保存文件
