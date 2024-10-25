@@ -53,6 +53,11 @@ class TokenContent :
         # 设置数值
         self._tokens[token] = tokenItem
 
+    # 清理
+    def clear(self) :
+        # 清理数据
+        self._tokens.clear()
+
     # 返回所有数据
     def token_items(self) :
         # 返回结果

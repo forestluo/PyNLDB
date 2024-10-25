@@ -40,8 +40,13 @@ class RawContent:
         # Hash表
         self._contents = {}
 
+    # 清理
+    def clear(self) :
+        # 清理所有数据
+        self._contents.clear()
+
     # 遍历处理
-    def traverse(self, function):
+    def traverse(self, function) :
         # 计数器
         count = 0
         # 获得总数

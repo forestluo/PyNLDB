@@ -117,6 +117,11 @@ class WordContent :
         # 设置数值
         self._words[word] = wordItem
 
+    # 清理
+    def clear(self) :
+        # 清理数据
+        self._words.clear()
+
     def get_gamma(self, parts) :
         # 检查参数
         assert isinstance(parts, list)
@@ -154,8 +159,10 @@ class WordContent :
             # 获得内容
             content = segment[1:]
             # 循环处理
-            for i in range(0, len(content) - 1) :
+            for i in range(0, len(content)) :
                 # 长度限定在当前长度
+                if i + self.length > len(content) : break
+
                 # 获得单词
                 word = content[i : i + self.length]
                 # 检查结果
@@ -233,6 +240,9 @@ class WordContent :
         for item in self._words.values() :
             # 计数器加1
             count = count + 1
+            # 检查数据
+            # 计数不超过1的不予以保存
+            if item.count <= 1 : continue
             # json项目
             jsonItem = \
                 {
@@ -321,10 +331,13 @@ class WordContent :
                     wordItem = WordItem(word)
                     wordItem.count = jsonItem["count"]
                     wordItem.gammas = jsonItem["gammas"]
-                    # 检查字典
-                    if not word in self._words.keys() :
-                        # 加入字典
-                        self._words[word] = wordItem
+                    # 检查记录数
+                    # 记录数少于1的不予以加载
+                    if wordItem.count > 1 :
+                        # 检查字典
+                        if not word in self._words.keys() :
+                            # 加入字典
+                            self._words[word] = wordItem
 
                     # 检查结果
                     if (count - 1) >= (percent + 1) * onePercent:
@@ -377,7 +390,7 @@ def main():
         print("WordContent.load : %d row(s) !" % len(wordContent))
 
         # 打印信息
-        print("WordContent.load : clear useless (length <= 1) !")
+        print("WordContent.load : clear useless word (count <= 1) !")
         # 清理项目
         wordContent.clear_useless(1)
 
@@ -385,7 +398,6 @@ def main():
         wordContent.save("words.json")
         # 打印信息
         print("WordContent.load : %d row(s) !" % len(wordContent))
-
 
     # 更新Gamma数值
     wordContent.update_gammas()

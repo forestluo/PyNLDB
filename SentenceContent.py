@@ -39,6 +39,11 @@ class SentenceContent:
         # Hash表
         self._sentences = {}
 
+    # 清理
+    def clear(self) :
+        # 清理数据
+        self._sentences.clear()
+
     # 提取句子
     def extract_item(self, item) :
         # 检查参数
