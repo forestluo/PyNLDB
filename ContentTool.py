@@ -343,14 +343,14 @@ class HtmlTool :
         assert isinstance(content, str)
 
         # 将&优先转换，避免后续重复叠加转换
-        content = content.replace( __old = "&", __new = "&amp;")
+        content = content.replace("&","&amp;")
 
         # 替换内容
-        content = content.replace(__old = "<", __new = "&lt;")
-        content = content.replace(__old = ">", __new = "&gt;")
-        content = content.replace(__old = "'", __new = "&apos;")
-        content = content.replace(__old = " ", __new = "&nbsp;")
-        content = content.replace(__old = "\"", __new = "&quot;")
+        content = content.replace("<","&lt;")
+        content = content.replace(">","&gt;")
+        content = content.replace("'","&apos;")
+        content = content.replace(" ","&nbsp;")
+        content = content.replace("\"","&quot;")
 
         # 返回结果
         return content
@@ -390,9 +390,9 @@ class HtmlTool :
                     if not item in escapes : escapes[item] = ''
                 else :
                     # 替换
-                    number = number.replace(__old = "l", __new = "1")
-                    number = number.replace(__old = "o", __new = "0")
-                    number = number.replace(__old = "O", __new = "0")
+                    number = number.replace("l", "1")
+                    number = number.replace("o", "0")
+                    number = number.replace("O", "0")
                     # 转换
                     value = int(number)
                     # 将结果加入字典
