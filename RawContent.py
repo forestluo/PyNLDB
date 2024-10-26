@@ -220,22 +220,3 @@ class RawContent:
         print("RawContent.load : file(\"%s\") closed !" % fileName)
         print("RawContent.load : %d item(s) loaded !" % len(self._contents))
         return total
-
-def main():
-    # 建立数据库链接
-    rawContent = RawContent()
-    # 加载数据
-    rawContent.load("raw.json")
-    # 正则化处理
-    rawContent.traverse(ContentTool.normalize_item)
-    # 保存数据
-    rawContent.save("normalized.json")
-
-if __name__ == '__main__':
-    try:
-        # 调用主函数
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        print("RawContent.main :__main__ : ", str(e))
-        print("RawContent.main :__main__ : unexpected exit !")

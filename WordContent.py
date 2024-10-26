@@ -6,9 +6,6 @@ from RawContent import *
 from SentenceTool import *
 
 class WordItem :
-    # 保留数量
-    _keep_count = 5
-
     # 初始化对象
     def __init__(self, word) :
         # 检查参数
@@ -17,31 +14,47 @@ class WordItem :
         self.count = 1
         # 设置词汇
         self.word = word
-        # 设置gamma表
-        self.gammas = None
+        # 只选取最大gamma值的分解模式
+        # 设置最大值
+        self.gamma = 0.0
+        # 设置分解模式
+        self.pattern = None
 
     def is_rare(self) :
         # 返回结果
         return UnicodeTool.is_rare(self.word)
 
+    def is_valid(self) :
+        # 返回结果
+        return self.count > 1 \
+            and self.gamma > 0.00001 and self.pattern is not None
+
+    def is_useless(self):
+        # 返回结果
+        return self.count <= 1
+
+    def is_chinese(self) :
+        # 返回结果
+        return ChineseTool.is_chinese(self.word)
+
     def dump(self):
         # 打印信息
         print("WordItem.dump : show properties !")
-        print("\tword = \'%s\'" % self.word)
+        print("\tword = \"%s\"" % self.word)
         print("\tcount = %d" % self.count)
-        # 检查gammas
-        if self.gammas is not None :
-            # 循环处理
-            for key, value in self.gammas.items() :
-                print("\tgamma(\"%s\") = %f" % (key, value))
+        print("\tgamma = %f" % self.gamma)
+        print("\tpattern =\"%s\"" % self.pattern)
 
     # 更新Gamma数值
-    def update_gammas(self, words) :
+    def update_gamma(self, words) :
         # 检查参数
         assert isinstance(self.word, str)
         assert isinstance(words, WordContent)
         # 长度小于2，则返回空
         if len(self.word) < 2 : return
+        # 已更新过的内容，则不再更新
+        if self.gamma > 0 and self.pattern is not None : return
+
         # 结果
         gammas = {}
         # 循环处理
@@ -72,20 +85,12 @@ class WordItem :
                     # 移动分隔符
                     gammas[self.word[0:i] + '|' + self.word[i:j] + '|' + self.word[j:k] + '|' + self.word[k:]] = gamma
         # 排序
-        # Gamma数值大的排前面
-        sorted(gammas.items(), key = lambda kv : (kv[1], kv[0]), reverse = True)
-        # 仅保留最大的几个数值，其余部分抛弃
-        index = 0
-        # 初始化字典
-        self.gammas = {}
+        self.gamma = 0.0
         # 循环处理
+        # 选择Gamma值最大的一组数据
         for (key, value) in gammas.items() :
-            # 计数器加一
-            index += 1
-            # 增加到数据记录中
-            self.gammas[key] = value
-            # 检查索引值
-            if index > WordItem._keep_count : break
+            # 检查结果
+            if value > self.gamma : self.gamma = value; self.pattern = key
 
 class WordContent :
     # 初始化对象
@@ -170,12 +175,9 @@ class WordContent :
                     # 计数器加一
                     self._words[word].count += 1
                 else:
-                    # 增加单词项目
-                    self._words[word] = WordItem(word)
-                # 检查结果
-                if UnicodeTool.is_rare(word) :
-                    print("")
-                    print("WordContent.add : word (\"%s\") has rare token !" % word)
+                    # 检查是否为中文
+                    # 如果是纯中文内容，则增加数据项
+                    if ChineseTool.is_chinese(word) : self._words[word] = WordItem(word)
 
     # 更新Gamma数值
     def update_gammas(self) :
@@ -194,7 +196,7 @@ class WordContent :
             # 计数器加1
             count = count + 1
             # 更新数据
-            item.update_gammas()
+            item.update_gamma(self)
             # 检查结果
             if count >= (percent + 1) * onePercent:
                 # 增加百分之一
@@ -207,10 +209,49 @@ class WordContent :
         print("")
         print("WordContent.update_gammas : %d row(s) updated !" % total)
 
+        # 打印信息
+        print("WordContent.update_gammas : clear invalid data !")
+        # 清理无效数据
+        self.__clear_invalid__()
+        # 打印信息
+        print("WordContent.update_gammas : %d row(s) left !" % len(self._words))
+
+    # 删除无效的项目
+    # 使用尽量少的内存予以处理
+    # 在更新Gamma数值之后进行
+    def __clear_invalid__(self) :
+        # 记录
+        items = []
+        # 循环处理
+        for item in self._words.values() :
+            # 检查数据
+            # 将无效部分加入到记录中
+            if not item.is_valid() : items.append(item)
+        # 循环处理
+        # 删除所有不合理项目
+        for item in items : del self._words[item.word]
+
+    # 清理Gamma
+    def clear_gamma(self) :
+        # 循环处理
+        for item in self._words.values() :
+            # 清理Gamma和Pattern
+            item.gamma = 0.0; item.pattern = None
+
     # 删除计数低于设置的项目
-    def clear_useless(self, count) :
-        # 删除计数器为1的项目
-        self._words = {key : value for (key, value) in self._words.items() if value.count > count}
+    # 使用尽量少的内存予以处理
+    # 在更新计数统计数据之后进行
+    def clear_useless(self) :
+        # 记录
+        items = []
+        # 循环处理
+        for item in self._words.values() :
+            # 检查数据
+            # 将无效部分加入到记录中
+            if item.is_useless() : items.append(item)
+        # 循环处理
+        # 删除所有不合理项目
+        for item in items : del self._words[item.word]
 
     def save(self, fileName) :
         # 检查文件名
@@ -248,7 +289,8 @@ class WordContent :
                 {
                     "word" : item.word,
                     "count" : item.count,
-                    "gammas" : item.gammas
+                    "gamma" : item.gamma,
+                    "pattern" : item.pattern,
                 }
             # 写入文件
             jsonFile.write(json.dumps(jsonItem, ensure_ascii = False))
@@ -330,10 +372,11 @@ class WordContent :
                     # 生成词汇项目
                     wordItem = WordItem(word)
                     wordItem.count = jsonItem["count"]
-                    wordItem.gammas = jsonItem["gammas"]
+                    wordItem.gamma = jsonItem["gamma"]
+                    wordItem.pattern = jsonItem["pattern"]
                     # 检查记录数
                     # 记录数少于1的不予以加载
-                    if wordItem.count > 1 :
+                    if not wordItem.is_useless() :
                         # 检查字典
                         if not word in self._words.keys() :
                             # 加入字典
@@ -347,11 +390,6 @@ class WordContent :
                         print("\r", end="")
                         print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
                         sys.stdout.flush()
-                    # 检查结果
-                    if UnicodeTool.is_rare(word):
-                        print("")
-                        print("WordContent.add : word (\"%s\") has rare token !" % word)
-
                 # 读取下一行
                 line = jsonFile.readline()
             # 打印信息
@@ -367,49 +405,3 @@ class WordContent :
         print("WordContent.load : file(\"%s\") closed !" % fileName)
         print("WordContent.load : %d item(s) loaded !" % len(self._words))
         return total
-
-def main():
-
-    # 建立原始数据
-    rawContent = RawContent()
-    # 加载数据
-    rawContent.load("normalized.json")
-
-    # 建立字符表
-    wordContent = WordContent()
-    # 循环处理
-    for i in range(1, 8) :
-        # 打印信息
-        print("WordContent.load : length = %d !" % i)
-        # 设置参数值
-        wordContent.length = i
-
-        # 加载数据
-        rawContent.traverse(wordContent.add)
-        # 打印信息
-        print("WordContent.load : %d row(s) !" % len(wordContent))
-
-        # 打印信息
-        print("WordContent.load : clear useless word (count <= 1) !")
-        # 清理项目
-        wordContent.clear_useless(1)
-
-        # 保存中间过程数据
-        wordContent.save("words.json")
-        # 打印信息
-        print("WordContent.load : %d row(s) !" % len(wordContent))
-
-    # 更新Gamma数值
-    wordContent.update_gammas()
-    # 保存文件
-    wordContent.save("words.json")
-
-if __name__ == '__main__':
-    try:
-        # 调用主函数
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        print("WordContent.main :__main__ : ", str(e))
-        print("WordContent.main :__main__ : unexpected exit !")
-

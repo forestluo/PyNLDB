@@ -1,110 +1,192 @@
+# -*- coding: utf-8 -*-
+
 import traceback
 
-from NLDB3Raw import *
 from RawContent import *
 from WordContent import *
+from ContentTool import *
+from NLDB3Content import *
 from TokenContent import *
-from SentenceTool import *
 from SentenceContent import *
-from SentenceTemplate import *
 
-def main() :
+json_path = ".\\json\\"
 
+def generate_raw() :
+    # 打印信息
+    print("GenerateData.generate_raw : generate raw.json !")
     # 生成对象
-    nldb3 = NLDB3Raw()
-    # 打开数据库链接
-    nldb3.open()
-    # 加载数据
-    nldb3.save("raw.json")
-    # 关闭数据库链接
-    nldb3.close()
+    raw = NLDB3Raw()
+    # 打开数据库
+    raw.open()
+    # 保存数据文件
+    raw.save(json_path + "raw.json")
+    # 关闭数据库
+    raw.close()
+    # 打印信息
+    print("GenerateData.generate_raw : raw.json generated !")
 
+def generate_words(length) :
+    # 建立原始数据
+    raw = RawContent()
+    # 加载数据
+    raw.load(json_path + "normalized.json")
+    # 建立字符表
+    words = WordContent()
+    # 打印信息
+    print("WordContent.load : length = %d !" % length)
+    # 设置参数值
+    words.length = length
+    # 加载数据
+    raw.traverse(words.add)
+    # 打印信息
+    print("WordContent.load : total %d word(s) !" % len(words))
+    print("WordContent.load : clear useless word(s)  !" )
+    # 清理项目
+    words.clear_useless()
+    # 打印信息
+    print("WordContent.load : %d word(s) left !" % len(words))
+    # 保存项目
+    words.save(json_path + "words{}.json".format(length))
+
+def generate_tokens() :
+    # 打印信息
+    print("GenerateData.generate_tokens : generate tokens.json !")
+    # 建立原始数据
+    raw = RawContent()
+    # 加载数据
+    raw.load(json_path + "normalized.json")
+    # 建立字符表
+    tokens = TokenContent()
+    # 加载数据
+    raw.traverse(tokens.add)
+    # 保存文件
+    tokens.save(json_path + "tokens.json")
+    # 打印信息
+    print("GenerateData.generate_tokens : tokens.json generated !")
+
+def generate_sentences() :
+    # 打印信息
+    print("GenerateData.generate_sentences : generate sentences.json !")
     # 生成对象
     raw = RawContent()
     # 加载数据
-    raw.load("raw.json")
-    # 遍历
-    raw.traverse(ContentTool.normalize_item)
-    # 保存数据
-    raw.save("normalized.json")
-
-    # 生成对象
-    tokens = TokenContent()
-    # 遍历
-    raw.traverse(tokens.add)
-    # 保存文件
-    tokens.save("tokens.json")
-    # 抛弃内存数据
-    tokens.clear()
-
-    # 设置缺省数值
-    SentenceTemplate.set_default()
-    # 保存文件
-    SentenceTemplate.save("templates.json")
-
-    # 加载模板文件
-    count = SentenceTemplate.load("templates.json")
-    # 检查结果
-    if count <= 0 :
-        # 设置缺省模板
-        SentenceTemplate.clear(); SentenceTemplate.set_default()
-
+    raw.load(json_path + "normalized.json")
     # 生成对象
     sentences = SentenceContent()
     # 遍历提取
     raw.traverse(sentences.extract_item)
     # 保存数据
-    sentences.save("sentences.json")
-    # 抛弃内存数据
-    sentences.clear()
+    sentences.save(json_path + "sentences.json")
+    # 打印信息
+    print("GenerateData.generate_sentences : sentences.json generated !")
 
+def generate_dictionary() :
+    # 打印信息
+    print("GenerateData.generate_dictionary : generate dictionary.json !")
     # 生成对象
-    words = WordContent()
+    raw = NLDB3Dictionary()
+    # 打开数据库
+    raw.open()
+    # 保存数据文件
+    raw.save(json_path + "dictionary.json")
+    # 关闭数据库
+    raw.close()
+    # 打印信息
+    print("GenerateData.generate_dictionary : dictionary.json generated !")
+
+def generate_normalized() :
+    # 打印信息
+    print("GenerateData.generate_normalized : generate normalized.json !")
+    # 建立数据库链接
+    raw = RawContent()
+    # 加载数据
+    raw.load(json_path + "raw.json")
+    # 正则化处理
+    raw.traverse(ContentTool.normalize_item)
+    # 保存数据
+    raw.save(json_path + "normalized.json")
+    # 打印信息
+    print("GenerateData.generate_normalized : normalized.json generated !")
+
+def main() :
+
+    # 选项
+    options = \
+        [
+            "exit",
+            "raw.json",
+            "dictionary.json",
+            "normalized.json",
+            "all basic json files (raw.json, normalized.json)",
+            "tokens.json", # 包含所有字符
+            "sentences.json",
+            "words[1 - 3].json", # 仅包含常见中文字符
+            "words[4 - 8].json", # 仅包含常见中文字符
+            "all words json files (words[1 - 8].json)"
+        ]
+
+    # 提示信息
+    inputMessage = "Please pick an option :\n"
+    # 打印选项
+    for index, item in enumerate(options) :
+        inputMessage += f"{index}) {item}\n"
+    # 打印提示
+    inputMessage += "Your choice : "
+
     # 循环处理
-    for i in range(1, 8) :
-        # 设置参数值
-        words.length = i
-        # 打印信息
-        print("GenerateData.main : word length = %d !" % i)
-
-        # 加载数据
-        raw.traverse(words.add)
-        # 打印信息
-        print("GenerateData.main : %d row(s) added !" % len(words))
-
-        # 打印信息
-        print("GenerateData.main : clear useless word !")
-        # 清理项目
-        words.clear_useless(1)
-
-        # 保存中间过程数据
-        words.save("words{}.json".format(i))
-        # 打印信息
-        print("GenerateData.main : %d row(s) saved !" % len(words))
-
-        # 清理数据
-        words.clear()
-        # 打印信息
-        print("GenerateData.main : words cleared !")
-
-    # 加载所有数据
-    for i in range(1, 8) :
-        # 加载数据
-        words.load("words{}.json".format(i))
-    # 打印信息
-    print("GenerateData.main : %d row(s) loaded !" % len(words))
-
-    # 清理数据
-    raw.clear()
-    # 打印信息
-    print("GenerateData.main : clear raw data !")
-
-    # 更新Gamma数值
-    words.update_gammas()
-    # 保存文件
-    words.save("words.json")
-    # 打印信息
-    print("GenerateData.main : %d word(s) saved !" % len(words))
+    while True :
+        # 清理输入项目
+        userInput = ""
+        # 循环处理
+        while userInput.lower() \
+                not \
+                in map(str, range(0, len(options))) :
+            # 继续选择输入
+            userInput = input(inputMessage)
+        # 开始执行
+        if userInput == '0' :
+            # 打印信息
+            print("GenerateData.main : user exit !"); break
+        elif userInput == '1' :
+            # 生成raw.json
+            generate_raw()
+        elif userInput == '2' :
+            # 生成dictionary.json
+            generate_dictionary()
+        elif userInput == '3' :
+            # 生成normalized.json
+            generate_normalized()
+        elif userInput == '4' :
+            # 生成raw.json
+            generate_raw()
+            # 生成normalized.json
+            generate_normalized()
+        elif userInput == '5' :
+            # 生成tokens.json
+            generate_tokens()
+        elif userInput == '6' :
+            # 生成sentences.json
+            generate_sentences()
+        elif userInput == '7' :
+            # 生成words1.json
+            generate_words(1)
+            # 生成words2.json
+            generate_words(2)
+            # 生成words3.json
+            generate_words(3)
+        elif userInput == '8' :
+            # 生成words4.json
+            generate_words(4)
+            # 生成words5.json
+            generate_words(5)
+            # 生成words6.json
+            generate_words(6)
+            # 生成words7.json
+            generate_words(7)
+            # 生成words8.json
+            generate_words(8)
+        else :
+            print("GenerateData.main : unknown choice !")
 
 if __name__ == '__main__':
     try:

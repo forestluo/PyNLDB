@@ -58,11 +58,6 @@ class TokenContent :
         # 清理数据
         self._tokens.clear()
 
-    # 返回所有数据
-    def token_items(self) :
-        # 返回结果
-        return self._tokens.values()
-
     def get_gamma(self, tokens) :
         # 检查参数
         assert isinstance(tokens, list)
@@ -99,10 +94,12 @@ class TokenContent :
             else:
                 # 增加字典内容
                 self._tokens[token] = TokenItem(token)
+            """
             # 检查字符
             if UnicodeTool.is_rare(token) :
                 print("")
                 print("TokenContent.add : rare token(\'%c\', 0x%X) !" % (token, ord(token)))
+            """
 
     def save(self, fileName) :
         # 检查文件名
@@ -137,6 +134,7 @@ class TokenContent :
                 {
                     "count": item.count,
                     "token": item.token,
+                    "unicode": item.unicode,
                 }
             # 写入文件
             jsonFile.write(json.dumps(jsonItem, ensure_ascii = False))
@@ -254,25 +252,3 @@ class TokenContent :
         print("TokenContent.load : file(\"%s\") closed !" % fileName)
         print("TokenContent.load : %d item(s) loaded !" % len(self._tokens))
         return total
-
-def main():
-
-    # 建立原始数据
-    rawContent = RawContent()
-    # 加载数据
-    rawContent.load("normalized.json")
-    # 建立字符表
-    tokenContent = TokenContent()
-    # 加载数据
-    rawContent.traverse(tokenContent.add)
-    # 保存文件
-    tokenContent.save("tokens.json")
-
-if __name__ == '__main__':
-    try:
-        # 调用主函数
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        print("TokenContent.main :__main__ : ", str(e))
-        print("TokenContent.main :__main__ : unexpected exit !")

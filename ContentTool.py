@@ -2,7 +2,7 @@
 
 import re
 
-from NLDB3Raw import *
+from NLDB3Content import *
 from SentenceTool import *
 
 class UnicodeTool :
@@ -181,6 +181,16 @@ class UnicodeTool :
 class ChineseTool :
 
     @staticmethod
+    def is_chinese(content) :
+        # 检查参数
+        assert isinstance(content, str)
+        # 循环处理
+        for char in content :
+            if not 0x4E00 <= ord(char) <= 0x9FA5 : return False
+        # 返回结果
+        return True
+
+    @staticmethod
     def wide_convert(content):
         # 检查参数
         assert isinstance(content, str)
@@ -344,14 +354,12 @@ class HtmlTool :
 
         # 将&优先转换，避免后续重复叠加转换
         content = content.replace("&","&amp;")
-
         # 替换内容
         content = content.replace("<","&lt;")
         content = content.replace(">","&gt;")
         content = content.replace("'","&apos;")
         content = content.replace(" ","&nbsp;")
         content = content.replace("\"","&quot;")
-
         # 返回结果
         return content
 
@@ -667,30 +675,3 @@ class ContentTool :
 
         # 返回结果
         return newContent
-
-def main():
-
-    # 建立数据库链接
-    raw = NLDB3Raw()
-    # 打开数据库链接
-    raw.open()
-    # 随机抽取一条记录
-    data = raw.random()
-    # 处理数据
-    content = ContentTool.normalize_content(data["content"])
-    # 关闭数据库链接
-    raw.close()
-
-    # 打印结果
-    print("ContentTool.main : compare data !")
-    print("\toriginal   =\"%s\"" % data["content"])
-    print("\tnormalized =\"%s\"" % content)
-
-if __name__ == '__main__':
-    try:
-        # 调用主函数
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        print("ContentTool.main :__main__ : ", str(e))
-        print("ContentTool.main :__main__ : unexpected exit !")
