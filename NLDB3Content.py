@@ -194,7 +194,7 @@ class NLDB3Raw (NLDB3) :
         percent = 0
         onePercent = total / 100.0
         # 设置SQL语句
-        dbSQL = "SELECT source,content FROM " + self._tableName
+        dbSQL = "SELECT source,content FROM " + NLDB3Raw._tableName
         # 执行语句
         self._dbCursor.execute(dbSQL)
         # 获得返回数据
@@ -316,7 +316,7 @@ class NLDB3Dictionary(NLDB3) :
         percent = 0
         onePercent = total / 100.0
         # 设置SQL语句
-        dbSQL = "SELECT source,content,remark FROM " + self._tableName
+        dbSQL = "SELECT count,source,content,remark FROM " + NLDB3Dictionary._tableName
         # 执行语句
         self._dbCursor.execute(dbSQL)
         # 获得返回数据
