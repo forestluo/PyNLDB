@@ -14,8 +14,6 @@ class TokenItem :
         self.count = 1
         # 设置字符
         self.token = token
-        # 设置Unicode值
-        self.unicode = ord(token)
 
     def is_rare(self) :
         # 返回结果
@@ -25,7 +23,7 @@ class TokenItem :
         # 打印信息
         print("TokenItem.dump : show properties !")
         print("\ttoken = \'%c\'" % self.token)
-        print("\tunicode = 0x%4X" % self.unicode)
+        print("\tunicode = 0x%4X" % ord(self.token))
         print("\tcount = %d" % self.count)
         print("\tremark = \"%s\"" % UnicodeTool.get_remark(self.token))
 
@@ -34,6 +32,8 @@ class TokenContent :
     def __init__(self) :
         # Hash表
         self._tokens = {}
+        # 统计总数
+        self._total_count = 0
 
     def __contains__(self, token) :
         # 检查参数
@@ -52,11 +52,20 @@ class TokenContent :
         assert token is not None and len(token) == 1
         # 设置数值
         self._tokens[token] = tokenItem
-
     # 清理
     def clear(self) :
         # 清理数据
         self._tokens.clear()
+
+    @property
+    def total_count(self) :
+        # 返回结果值
+        return self._total_count
+
+    # 获得指定长度项目
+    def get_items(self) :
+        # 返回结果
+        return [item for item in self._tokens.values()]
 
     def get_gamma(self, tokens) :
         # 检查参数
@@ -82,11 +91,13 @@ class TokenContent :
         # 返回结果
         return gamma * float(self._tokens[content].count) / float(len(tokens))
 
-    def add(self, rawItem) :
+    def add_item(self, rawItem) :
         # 检查参数
         assert isinstance(rawItem, RawItem)
         # 扫描结果
         for token in rawItem.content :
+            # 统计总数加一
+            self._total_count += 1
             # 检查字典
             if token in self._tokens:
                 # 获得对象
@@ -94,12 +105,6 @@ class TokenContent :
             else:
                 # 增加字典内容
                 self._tokens[token] = TokenItem(token)
-            """
-            # 检查字符
-            if UnicodeTool.is_rare(token) :
-                print("")
-                print("TokenContent.add : rare token(\'%c\', 0x%X) !" % (token, ord(token)))
-            """
 
     def save(self, fileName) :
         # 检查文件名
@@ -134,7 +139,7 @@ class TokenContent :
                 {
                     "count": item.count,
                     "token": item.token,
-                    "unicode": item.unicode,
+                    "unicode": ord(item.token),
                 }
             # 写入文件
             jsonFile.write(json.dumps(jsonItem, ensure_ascii = False))
@@ -222,6 +227,8 @@ class TokenContent :
                     if not token in self._tokens.keys() :
                         # 加入字典
                         self._tokens[token] = tokenItem
+                        # 增加统计总数
+                        self._total_count += tokenItem.count
 
                     # 检查结果
                     if (count - 1) >= (percent + 1) * onePercent:
@@ -231,17 +238,12 @@ class TokenContent :
                         print("\r", end="")
                         print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
                         sys.stdout.flush()
-                    # 检查字符
-                    # 防止非unicode字符进入词典
-                    if UnicodeTool.is_rare(token):
-                        print("")
-                        print("TokenContent.add : rare token(\'%c\', 0x%X) !" % (token, ord(token)))
-
                 # 读取下一行
                 line = jsonFile.readline()
             # 打印信息
             print("")
             print("TokenContent.load : %d line(s) processed !" % count)
+            print("\ttotal_count = %d" % self._total_count)
         except Exception as e:
             traceback.print_exc()
             print("TokenContent.load : ", str(e))

@@ -6,9 +6,12 @@ import json
 import random
 import traceback
 
+from CodingTool import *
+from ContentTool import *
+
 class Neuron :
     # 初始化
-    def __init__(self, input_count, output_count, hidden_count, learning_rate = 0.008) :
+    def __init__(self, input_count = 2, output_count = 1, hidden_count = 2, learning_rate = 0.008) :
         # 检查参数
         assert 0.000001 <= learning_rate <= 1.0
         assert input_count > 1 and output_count > 0 and hidden_count > 1
@@ -85,7 +88,7 @@ class Neuron :
     @property
     def inputs(self) :
         # 返回结果
-        return self.__inputs
+        return self.__inputs.copy()
 
     @inputs.setter
     def inputs(self, values) :
@@ -98,7 +101,7 @@ class Neuron :
     @property
     def outputs(self) :
         # 返回结果
-        return self.__outputs
+        return self.__outputs.copy()
 
     @outputs.setter
     def outputs(self, values) :
@@ -106,7 +109,7 @@ class Neuron :
         assert isinstance(values, list)
         assert len(values) == self.__output_count
         # 计算误差
-        for i in range(self.__input_count) : self.__errors[i] = values[i] - self.__outputs[i]
+        for i in range(self.__output_count) : self.__errors[i] = values[i] - self.__outputs[i]
 
     @property
     def error(self) :
@@ -260,8 +263,11 @@ class Neuron :
             # 设置参数
             self.__learning_rate = jsonItem["learning_rate"]
             self.__input_count = jsonItem["input_count"]
+            self.__inputs = [0.0] * self.__input_count
             self.__output_count = jsonItem["output_count"]
+            self.__outputs = [0.0] * self.__output_count
             self.__hidden_count = jsonItem["hidden_count"]
+            self.__hiddens = [0.0] * self.__hidden_count
             self.__input_biases = jsonItem["input_biases"]
             self.__input_weights = jsonItem["input_weights"]
             self.__output_biases = jsonItem["output_biases"]
@@ -307,6 +313,9 @@ class Neuron :
 
     @staticmethod
     def __sigmoid__(x) :
+        # 防止溢出
+        if x > 20 : return 1.0
+        if x < -20 : return 0.0
         # 返回结果
         return 1.0 / (1.0 + math.exp(-x))
 
@@ -319,7 +328,7 @@ class Neuron :
 
     # 设置缺省数值，用于标定程序
     @staticmethod
-    def get_example() :
+    def example_case() :
         # 设置输入参数
         input_biases = [0.55, 0.56]
         input_weights = [[0.1, 0.2],[0.3, 0.4]]
@@ -327,57 +336,98 @@ class Neuron :
         output_biases = [0.66, 0.67]
         output_weights = [[0.5, 0.6],[0.7, 0.8]]
         # 生成对象
-        network = Neuron(2, 2, 2, 0.5)
+        neuron = Neuron(2, 2, 2, 0.5)
         # 设置输入
-        network.set_input_paras(input_biases, input_weights)
+        neuron.set_input_paras(input_biases, input_weights)
         # 设置输出
-        network.set_output_paras(output_biases, output_weights)
+        neuron.set_output_paras(output_biases, output_weights)
+
+        # 设置标定用数值
+        inputs = [0.1, 0.2]
+        expects = [0.01, 0.99]
+
+        # 设置输入值
+        neuron.inputs = inputs
+        # 计算一次正向传播
+        neuron.forward()
+        # 获得输出值
+        outputs = neuron.outputs
+
+        # 打印信息
+        print("BPNetwork.example_case : print results !")
+        # 打印输出值
+        # outputs[0] = 0.7989476413779711
+        # outputs[1] = 0.8390480283342561
+        print("\toutputs[0] = %f" % outputs[0])
+        print("\toutputs[1] = %f" % outputs[1])
+        # 设置预期数值
+        neuron.outputs = expects
+        # 打印误差
+        # error = 0.3226124392928197
+        print("\terror = %f" % neuron.error)
+        # 计算一次反向传播
+        neuron.backward()
+
+class WordCoach :
+
+    @staticmethod
+    def get_neuron(hidden_count, learning_rate = 0.008) :
+        # 返回结果值
+        return Neuron(6, 1, hidden_count, learning_rate)
+
+    # 转换输入项目
+    @staticmethod
+    def transform(inputs) :
+        # 输入项目
+        results = [0.0] * 6
+        # 填充数据
+        results[0] = math.log(HashTool.hash(inputs[0].word))
+        assert inputs[0].count > 0
+        results[1] = inputs[0].count
+        # 填充数据
+        results[2] = math.log(HashTool.hash(inputs[1].word))
+        assert inputs[1].count > 0
+        results[3] = inputs[1].count
+        # 填充数据
+        results[4] = math.log(HashTool.hash(inputs[2].word))
+        assert inputs[2].count > 0
+        results[5] = inputs[2].count
         # 返回结果
-        return network
+        return results
 
-def main() :
-    # 生成对象
-    network = Neuron.get_example()
-    # 打印数据
-    network.dump()
-    # 保存文件
-    network.save("network.json")
-    # 加载文件
-    network.load("network.json")
-    # 打印数据
-    network.dump()
+    # 设置训练数据
+    # 输入数据：["a",F(a),"b",F(b),"ab",F(ab)]
+    # 输出数据：[0, 1]之间的数值
+    # 误差应当小于千分之一
+    # 返回该数据的训练次数
+    @staticmethod
+    def training(neuron, inputs, output, error = 0.001) :
+        # 检查参数
+        assert error > 0
+        assert isinstance(inputs, list)
+        assert isinstance(output, float)
+        assert isinstance(neuron, Neuron)
 
-    # 设置标定用数值
-    inputs = [0.1, 0.2]
-    expects = [0.01, 0.99]
+        # 输出项目
+        _outputs = [output]
+        # 输入项目
+        _inputs = WordCoach.transform(inputs)
 
-    # 设置输入值
-    network.inputs = inputs
-    # 计算一次正向传播
-    network.forward()
-    # 获得输出值
-    outputs = network.outputs
-
-    # 打印信息
-    print("BPNetwork.main : print results !")
-    # 打印输出值
-    # outputs[0] = 0.7989476413779711
-    # outputs[1] = 0.8390480283342561
-    print("\toutputs[0] = %f" % outputs[0])
-    print("\toutputs[1] = %f" % outputs[1])
-    # 设置预期数值
-    network.outputs = expects
-    # 打印误差
-    # error = 0.3226124392928197
-    print("\terror = %f" % network.error)
-    # 计算一次反向传播
-    network.backward()
-
-if __name__ == '__main__':
-    try:
-        # 调用主函数
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        print("GenerateData.main :__main__ : ", str(e))
-        print("GenerateData.main :__main__ : unexpected exit !")
+        # 计数器
+        count = 0
+        # 循环处理
+        while True :
+            # 计数器加一
+            count += 1
+            # 设置输入项目
+            neuron.inputs = _inputs
+            # 前向传播
+            neuron.forward()
+            # 检查输出
+            neuron.outputs = _outputs
+            # 检查误差
+            if neuron.error <= error : break
+            # 逆向传播
+            neuron.backward()
+        # 返回结果
+        return count

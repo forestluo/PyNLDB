@@ -6,7 +6,13 @@ import json
 import hashlib
 import traceback
 
+from RawContent import RawItem
+from SentenceTool import SplitTool
+
 class DictionaryItem :
+    # 最大长度
+    max_length = 8
+
     # 初始化对象
     def __init__(self, content, source = None, remark = None):
         # 检查参数
@@ -18,14 +24,8 @@ class DictionaryItem :
 
         # 设置备注
         self.count = 1
-        # 设置备注
-        self.remark = remark
-        # 设置来源
-        self.source = source
         # 设置内容
         self.content = content
-        # 设置长度
-        self.length = len(content)
 
     @property
     def sha256(self) :
@@ -34,15 +34,15 @@ class DictionaryItem :
         # 返回结果
         return hashlib.sha256(self.content.encode("utf-8"))
 
+    def is_valid(self) :
+        # 返回结果
+        return len(self.content) <= DictionaryItem.max_length
+
     def dump(self):
         # 打印信息
-        print("RawItem.dump : show properties !")
+        print("DictionaryItem.dump : show properties !")
         print("\tcount = %d" % self.count)
-        print("\tlength = %d" % self.length)
-        if self.remark is not None:
-            print("\tremark = \"%s\"" % self.remark)
-        if self.source is not None:
-            print("\tsource = \"%s\"" % self.source)
+        print("\tlength = %d" % len(self.content))
         if self.content is not None:
             print("\tcontent = \"%s\"" % self.content)
 
@@ -52,10 +52,72 @@ class DictionaryContent:
         # Hash表
         self._contents = {}
 
+    def __len__(self) :
+        # 返回结果
+        return len(self._contents)
+
+    def __contains__(self, word) :
+        # 检查参数
+        assert isinstance(word, str)
+        # 返回结果
+        return word in self._contents.keys()
+
+    def __getitem__(self, word):
+        # 检查参数
+        assert isinstance(word, str)
+        # 返回结果
+        return self._contents[word]
+
+    def __setitem__(self, word, item):
+        # 检查参数
+        assert isinstance(word, str)
+        assert isinstance(item, DictionaryItem)
+        # 设置数值
+        self._contents[word] = item
+
     # 清理
     def clear(self) :
         # 清理所有数据
         self._contents.clear()
+
+    # 获得指定长度项目
+    def get_items(self, length = -1) :
+        # 检查参数
+        assert isinstance(length, int)
+        # 检查参数
+        if length <= 0 :
+            # 返回结果
+            return [item for item in self._contents.values()]
+        # 返回结果
+        return [item for item in self._contents.values() if len(item.content) == length]
+
+    def count_item(self, rawItem) :
+        # 检查参数
+        assert isinstance(rawItem, RawItem)
+
+        # 拆分内容
+        segments = SplitTool.split(rawItem.content)
+        # 循环处理
+        for segment in segments :
+            # 检查结果
+            if segment[0] != '$' : continue
+            # 获得内容
+            content = segment[1:]
+            # 循环处理
+            for i in range(len(content)) :
+                # 循环处理
+                for length in range(1, DictionaryItem.max_length) :
+                    # 长度限定在当前长度
+                    if i + length > len(content) : break
+                    # 获得子字符串
+                    value = content[i : i + length]
+                    # 检查结果
+                    if value in self._contents.keys():
+                        # 计数器加一
+                        self._contents[value].count += 1
+                    else:
+                        # 增加元素
+                        self._contents[value] = DictionaryItem(value)
 
     # 遍历处理
     def traverse(self, function) :
@@ -120,8 +182,6 @@ class DictionaryContent:
             jsonItem = \
                 {
                     "count" : item.count,
-                    "remark" : item.remark,
-                    "source" : item.source,
                     "content" : item.content,
                 }
             # 写入文件
@@ -144,7 +204,7 @@ class DictionaryContent:
         print("DictionaryContent.save : file(\"%s\") closed !" % fileName)
 
     # 加载数据
-    def load(self, fileName):
+    def load(self, fileName, neglect = False):
         # 检查文件名
         if fileName is None:
             fileName = "dictionary.json"
@@ -200,11 +260,19 @@ class DictionaryContent:
                     # 按照json格式解析
                     jsonItem = json.loads(line)
                     # 生成原始数据对象
-                    dictionaryItem = DictionaryItem(jsonItem["content"])
-                    # 设置参数
-                    dictionaryItem.count = jsonItem["count"]
-                    dictionaryItem.source = jsonItem["source"]
-                    dictionaryItem.remark = jsonItem["remark"]
+                    dictionaryItem = \
+                        DictionaryItem(jsonItem["content"])
+                    # 检查标志
+                    if not neglect :
+                        # 加载计数器
+                        dictionaryItem.count = jsonItem["count"]
+
+                    # 查询字典
+                    if dictionaryItem.is_valid() :
+                        # 检查内容是否重复
+                        if dictionaryItem.content not in self._contents.keys() :
+                            # 加入字典
+                            self._contents[dictionaryItem.content] = dictionaryItem
 
                     # 检查结果
                     if (count - 1) >= (percent + 1) * onePercent:
@@ -214,15 +282,6 @@ class DictionaryContent:
                         print("\r", end="")
                         print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
                         sys.stdout.flush()
-
-                    # 查询字典
-                    if dictionaryItem.content not in self._contents :
-                        # 加入字典
-                        self._contents[dictionaryItem.content] = dictionaryItem
-                    else :
-                        # 打印信息
-                        print("")
-                        print("DictionaryContent.load : raw item(\"%s\") exists !" % line)
                 # 读取下一行
                 line = jsonFile.readline()
             # 打印信息

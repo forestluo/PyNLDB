@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import re
+import random
 
 from NLDB3Content import *
 from SentenceTool import *
+
 
 class UnicodeTool :
 
@@ -179,6 +181,11 @@ class UnicodeTool :
         return None
 
 class ChineseTool :
+
+    @staticmethod
+    def randchr() :
+        # 返回结果
+        return chr(random.randint(0x4E00, 0x9FA5))
 
     @staticmethod
     def is_chinese(content) :

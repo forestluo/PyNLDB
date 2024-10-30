@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import traceback
+#import traceback
 
-from RawContent import *
+#from RawContent import *
 from WordContent import *
-from ContentTool import *
-from NLDB3Content import *
+#from ContentTool import *
+#from NLDB3Content import *
 from TokenContent import *
 from SentenceContent import *
+from DictionaryContent import *
 
 json_path = ".\\json\\"
 
@@ -37,7 +38,7 @@ def generate_words(length) :
     # 设置参数值
     words.length = length
     # 加载数据
-    raw.traverse(words.add)
+    raw.traverse(words.add_item)
     # 打印信息
     print("WordContent.load : total %d word(s) !" % len(words))
     print("WordContent.load : clear useless word(s)  !" )
@@ -58,7 +59,7 @@ def generate_tokens() :
     # 建立字符表
     tokens = TokenContent()
     # 加载数据
-    raw.traverse(tokens.add)
+    raw.traverse(tokens.add_item)
     # 保存文件
     tokens.save(json_path + "tokens.json")
     # 打印信息
@@ -93,6 +94,24 @@ def generate_dictionary() :
     raw.close()
     # 打印信息
     print("GenerateData.generate_dictionary : dictionary.json generated !")
+
+    # 打印信息
+    print("GenerateData.generate_dictionary : filter dictionary.json !")
+    # 创建对象
+    raw = RawContent()
+    # 加载对象
+    raw.load(json_path + "normalized.json")
+    # 创建对象
+    dictionary = DictionaryContent()
+    # 加载数据
+    # 不加载之前保存的计数器，准备重新生成计数器
+    dictionary.load(json_path + "dictionary.json", True)
+    # 过滤
+    raw.traverse(dictionary.count_item)
+    # 保存数据
+    dictionary.save(json_path + "dictionary.json")
+    # 打印信息
+    print("GenerateData.generate_dictionary : dictionary.json filtered !")
 
 def generate_normalized() :
     # 打印信息
