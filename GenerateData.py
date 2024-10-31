@@ -96,7 +96,7 @@ def generate_dictionary() :
     print("GenerateData.generate_dictionary : dictionary.json generated !")
 
     # 打印信息
-    print("GenerateData.generate_dictionary : filter dictionary.json !")
+    print("GenerateData.generate_dictionary : filter dictionary !")
     # 创建对象
     raw = RawContent()
     # 加载对象
@@ -109,9 +109,9 @@ def generate_dictionary() :
     # 过滤
     raw.traverse(dictionary.count_item)
     # 保存数据
-    dictionary.save(json_path + "dictionary.json")
+    dictionary.save(json_path + "words.json")
     # 打印信息
-    print("GenerateData.generate_dictionary : dictionary.json filtered !")
+    print("GenerateData.generate_dictionary : dictionary filtered !")
 
 def generate_normalized() :
     # 打印信息

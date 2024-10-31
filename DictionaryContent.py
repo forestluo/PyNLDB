@@ -8,6 +8,7 @@ import traceback
 
 from RawContent import RawItem
 from SentenceTool import SplitTool
+from ContentTool import ChineseTool
 
 class DictionaryItem :
     # 最大长度
@@ -36,7 +37,7 @@ class DictionaryItem :
 
     def is_valid(self) :
         # 返回结果
-        return len(self.content) <= DictionaryItem.max_length
+        return 1 <= len(self.content) <= DictionaryItem.max_length
 
     def dump(self):
         # 打印信息
@@ -106,18 +107,19 @@ class DictionaryContent:
             # 循环处理
             for i in range(len(content)) :
                 # 循环处理
-                for length in range(1, DictionaryItem.max_length) :
+                for length in range(1, 1 + DictionaryItem.max_length) :
                     # 长度限定在当前长度
                     if i + length > len(content) : break
                     # 获得子字符串
                     value = content[i : i + length]
-                    # 检查结果
-                    if value in self._contents.keys():
-                        # 计数器加一
-                        self._contents[value].count += 1
-                    else:
-                        # 增加元素
-                        self._contents[value] = DictionaryItem(value)
+                    # 检查内容
+                    if ChineseTool.is_chinese(value) :
+                        # 检查结果
+                        if value in self._contents.keys():
+                            # 计数器加一
+                            self._contents[value].count += 1
+                        else:
+                            self._contents[value] = DictionaryItem(value)
 
     # 遍历处理
     def traverse(self, function) :
@@ -204,7 +206,7 @@ class DictionaryContent:
         print("DictionaryContent.save : file(\"%s\") closed !" % fileName)
 
     # 加载数据
-    def load(self, fileName, neglect = False):
+    def load(self, fileName, neglectCount = False):
         # 检查文件名
         if fileName is None:
             fileName = "dictionary.json"
@@ -263,16 +265,18 @@ class DictionaryContent:
                     dictionaryItem = \
                         DictionaryItem(jsonItem["content"])
                     # 检查标志
-                    if not neglect :
+                    if not neglectCount :
                         # 加载计数器
                         dictionaryItem.count = jsonItem["count"]
 
-                    # 查询字典
-                    if dictionaryItem.is_valid() :
-                        # 检查内容是否重复
-                        if dictionaryItem.content not in self._contents.keys() :
-                            # 加入字典
-                            self._contents[dictionaryItem.content] = dictionaryItem
+                    # 检查内容
+                    if ChineseTool.is_chinese(dictionaryItem.content) :
+                        # 检查有效性
+                        if dictionaryItem.is_valid() :
+                            # 检查内容是否重复
+                            if dictionaryItem.content not in self._contents.keys() :
+                                # 加入字典
+                                self._contents[dictionaryItem.content] = dictionaryItem
 
                     # 检查结果
                     if (count - 1) >= (percent + 1) * onePercent:
