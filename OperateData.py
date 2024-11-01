@@ -4,6 +4,7 @@ import traceback
 
 from Content import *
 from ContentTool import *
+from QuantityTool import *
 from NLDB3Content import *
 
 json_path = ".\\json\\"

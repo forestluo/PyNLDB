@@ -460,7 +460,7 @@ class TokenContent(ContentGroup) :
         # 检查参数
         assert isinstance(content, str)
         # 增加项目
-        self.add_item(TokenItem(item.content))
+        self.add_item(TokenItem(content))
 
     # 增加项目
     # 用于traverse函数调用
@@ -472,7 +472,7 @@ class TokenContent(ContentGroup) :
             # 检查字典
             if token in self :
                 # 增加计数器
-                self[token].count += item.count; return
+                self[token].count += item.count; continue
             # 增加字典内容
             self[token] = TokenItem(token); self[token].count = item.count
 
@@ -552,7 +552,7 @@ class RawContent(ContentGroup) :
         # 检查参数
         assert isinstance(content, str)
         # 增加项目
-        self.add_content(RawItem(item.content))
+        self.add_content(RawItem(content))
 
     # 增加项目
     # 用于traverse函数调用
@@ -566,7 +566,7 @@ class RawContent(ContentGroup) :
             # 增加计数
             self[sha256].count += item.count; return
         # 增加项目
-        self[sha256] = RawItem(content); self[sha256].count = item.count
+        self[sha256] = RawItem(item.content); self[sha256].count = item.count
 
 class DictionaryItem(ContentItem) :
     # 初始化对象
@@ -616,7 +616,6 @@ class DictionaryContent(ContentGroup) :
     def add_item(self, item) :
         # 检查参数
         assert isinstance(item, ContentItem)
-
         # 生成内容
         segments = ['$' + item.content]
         # 检查标志位
@@ -682,7 +681,6 @@ class SegmentContent(ContentGroup) :
     def add_item(self, item) :
         # 检查参数
         assert isinstance(item, ContentItem)
-
         # 生成内容
         segments = ['$' + item.content]
         # 检查标志位
@@ -697,7 +695,8 @@ class SegmentContent(ContentGroup) :
             content = segment[1:]
             # 检查结果
             if content in self:
-                self[content].count += item.count; return
+                # 增加计数
+                self[content].count += item.count; continue
             # 增加项目
             self[content] = SegmentItem(content); self[content].count = item.count
 
@@ -828,12 +827,11 @@ class WordContent(ContentGroup) :
         # 检查参数
         assert isinstance(content, str)
         # 增加项目
-        self.add_content(WordItem(item.content))
+        self.add_content(WordItem(content))
 
     def add_item(self, item) :
         # 检查参数
         assert isinstance(item, ContentItem)
-
         # 生成内容
         segments = ['$' + item.content]
         # 检查标志位
@@ -969,7 +967,7 @@ class SentenceContent(ContentGroup) :
         # 检查参数
         assert isinstance(content, str)
         # 提取句子
-        self.extract_item(SentenceItem(item.content))
+        self.extract_item(SentenceItem(content))
 
     # 提取句子
     # 用于traverse函数

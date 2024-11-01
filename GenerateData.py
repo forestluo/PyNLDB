@@ -65,7 +65,7 @@ def generate_segments() :
     # 加载数据
     raw.traverse(segments.add_item)
     # 打印信息
-    print("GenerateData.generate_segments : total %d word(s) !" % len(segments))
+    print("GenerateData.generate_segments : total %d segment(s) !" % len(segments))
     # 保存项目
     segments.save(json_path + "segments.json")
 
