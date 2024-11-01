@@ -2,10 +2,9 @@
 
 import traceback
 
+from Content import *
 from ContentTool import *
-from WordContent import *
 from NLDB3Content import *
-from SentenceTool import *
 
 json_path = ".\\json\\"
 

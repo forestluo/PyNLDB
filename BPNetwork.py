@@ -6,7 +6,6 @@ import json
 import random
 import traceback
 
-from CodingTool import *
 from ContentTool import *
 
 class Neuron :

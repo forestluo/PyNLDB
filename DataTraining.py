@@ -5,9 +5,8 @@ import ast
 import random
 import traceback
 
+from Content import *
 from BPNetwork import *
-from WordContent import *
-from DictionaryContent import *
 
 # 数据文件
 json_path = ".\\json\\"
