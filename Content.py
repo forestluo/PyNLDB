@@ -278,7 +278,7 @@ class ContentGroup :
                     # 按照json格式解析
                     new_item.json = json.loads(line)
                     # 检查标志位
-                    if neglect_count : new_item.count = 1
+                    if neglect_count : new_item.count = 0
 
                     # 检查标志位
                     if self._use_sha256 :
@@ -605,6 +605,42 @@ class DictionaryContent(ContentGroup) :
 
     # 增加项目
     # 用于traverse函数
+    def count_content(self, content) :
+        # 检查参数
+        assert isinstance(content, str)
+        # 增加项目
+        self.count_item(ContentItem(content))
+
+    # 增加项目
+    # 用于traverse函数
+    def count_item(self, item):
+        # 检查参数
+        assert isinstance(item, ContentItem)
+        # 生成内容
+        segments = ['$' + item.content]
+        # 检查标志位
+        if self.need_split:
+            # 拆分内容
+            segments = SplitTool.split(item.content)
+        # 循环处理
+        for segment in segments:
+            # 检查结果
+            if segment[0] != '$': continue
+            # 获得内容
+            content = segment[1:]
+            # 循环处理
+            for i in range(len(content)) :
+                # 循环处理
+                for length in range(1, 1 + self.max_length):
+                    # 长度限定在当前长度
+                    if i + length > len(content): break
+                    # 获得子字符串
+                    value = content[i: i + length]
+                    # 检查结果
+                    if value in self : self[value].count += item.count
+
+    # 增加项目
+    # 用于traverse函数
     def add_content(self, content) :
         # 检查参数
         assert isinstance(content, str)
@@ -638,6 +674,7 @@ class DictionaryContent(ContentGroup) :
                     value = content[i : i + length]
                     # 检查结果
                     if value in self:
+                        # 增加计数器
                         self[value].count += item.count; continue
                     # 检查内容
                     if ChineseTool.is_chinese(value) :
@@ -851,7 +888,9 @@ class WordContent(ContentGroup) :
                 # 获得单词
                 word = content[i : i + self.limit_length]
                 # 检查结果
-                if word in self: self[word].count += item.count; continue
+                if word in self :
+                    # 增加计数器
+                    self[word].count += item.count; continue
                 # 检查是否为中文
                 # 如果是纯中文内容，则增加数据项
                 if ChineseTool.is_chinese(word) :
@@ -870,7 +909,7 @@ class WordContent(ContentGroup) :
             # 增加字符
             content += part
             # 检查字典
-            if not part in self : return -1.0
+            if part not in self : return -1.0
             # 获得计数
             count = self[part].count
             # 检查结果

@@ -206,7 +206,7 @@ class Neuron :
     def save(self, fileName):
         # 检查文件名
         if fileName is None:
-            fileName = "network.json"
+            fileName = "neuron.json"
         # 打开文件
         jsonFile = open(fileName, "w", encoding = "utf-8")
         # 打印信息
@@ -237,7 +237,7 @@ class Neuron :
     def load(self, fileName):
         # 检查文件名
         if fileName is None:
-            fileName = "network.json"
+            fileName = "neuron.json"
         # 检查文件是否存在
         if not os.path.isfile(fileName):
             # 打印信息

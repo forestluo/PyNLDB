@@ -27,7 +27,7 @@ class WordType(Enum) :
 # 常见动词
 class VerbWord :
     # 动词
-    _verbs = \
+    verbs = \
     [
         "哀求",
         "挨",
@@ -1985,7 +1985,7 @@ class VerbWord :
 # 常见词汇
 class CommonWord :
     # 词汇
-    _words = \
+    words = \
     [
         ["吖", WordType.onomatopoeia, ""],
         ["锕", WordType.noun, ""],
@@ -18251,7 +18251,7 @@ class CommonWord :
 # 位置名称
 class RegionName :
     # 名称
-    _names = \
+    names = \
     [
         "乌拉特中旗",
         "乌拉特后旗",

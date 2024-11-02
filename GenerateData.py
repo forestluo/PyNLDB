@@ -150,7 +150,7 @@ def generate_dictionary() :
     # 设置参数
     dictionary.need_split = False
     # 过滤
-    segments.traverse(dictionary.add_item)
+    segments.traverse(dictionary.count_item)
     # 保存数据
     dictionary.save(json_path + "dictionary.json")
     # 打印信息
