@@ -177,7 +177,7 @@ def generate_core() :
         return
     # 获得所有数据
     # 循环处理
-    for item in dictionary.get_items() :
+    for item in dictionary.values() :
         # 检查数据项目
         if item.count < 10 : continue
         # 检查来源

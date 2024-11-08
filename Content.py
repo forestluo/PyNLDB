@@ -945,8 +945,11 @@ class CoreItem(ContentItem) :
         # 设置参数
         self.count = value["count"]
         self.content = value["content"]
-        self.gamma = value["gamma"]
-        self.pattern = value["pattern"]
+        # 检查数据
+        if "gamma" in value :
+            self.gamma = value["gamma"]
+        if "pattern" in value :
+            self.pattern = value["pattern"]
         # 检查参数
         #assert self.length == value["length"]
 
