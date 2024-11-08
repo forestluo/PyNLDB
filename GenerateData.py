@@ -25,13 +25,13 @@ def generate_dict() :
     # 打印信息
     print("GenerateData.generate_dict : generate dict.json !")
     # 生成对象
-    raw = NLDB3Dictionary()
+    dictionary = NLDB3Dictionary()
     # 打开数据库
-    raw.open()
+    dictionary.open()
     # 保存数据文件
-    raw.save(json_path + "dict.json")
+    dictionary.save(json_path + "dict.json")
     # 关闭数据库
-    raw.close()
+    dictionary.close()
     # 打印信息
     print("GenerateData.generate_dict : dict.json generated !")
 

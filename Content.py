@@ -348,7 +348,6 @@ class RawItem(ContentItem) :
         # 返回结果
         return \
             {
-                "count" : self.count,
                 "length" : self.length,
                 "source" : self.source,
                 "content" : self.content,
@@ -357,7 +356,6 @@ class RawItem(ContentItem) :
     @json.setter
     def json(self, value) :
         # 设置参数
-        self.count = value["count"]
         self.source = value["source"]
         self.content = value["content"]
         # 检查参数
