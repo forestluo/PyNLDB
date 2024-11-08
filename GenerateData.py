@@ -151,7 +151,7 @@ def generate_dictionary() :
         print("GenerateData.generate_dictionary : fail to load file !")
         return
     # 复位计数器
-    dictionary.reset()
+    dictionary.reset_count()
     # 从Segments加载的数据无需分割
     dictionary.need_split = False
     # 过滤
