@@ -356,9 +356,10 @@ class RawItem(ContentItem) :
     @json.setter
     def json(self, value) :
         # 设置参数
-        self.source = value["source"]
         self.content = value["content"]
         # 检查参数
+        if "source" in value :
+            self.source = value["source"]
         #assert self.length == value["length"]
 
     def dump(self):
@@ -518,8 +519,9 @@ class DictionaryItem(ContentItem) :
         # 设置参数
         self.count = value["count"]
         self.content = value["content"]
-        self.sources = value["sources"]
         # 检查参数
+        if "sources" in value :
+            self.sources = value["sources"]
         #assert self.length == value["length"]
 
     # 打印信息
@@ -711,8 +713,9 @@ class SegmentItem(ContentItem) :
         # 设置参数
         self.count = value["count"]
         self.content = value["content"]
-        self.sources = value["sources"]
         # 检查参数
+        if "sources" in value :
+            self.sources = value["sources"]
         #assert self.length == value["length"]
 
     # 是否为其来源
@@ -864,9 +867,10 @@ class SentenceItem(ContentItem) :
     def json(self, value) :
         # 设置参数
         self.count = value["count"]
-        self.source = value["source"]
         self.content = value["content"]
         # 检查参数
+        if "source" in value :
+            self.source = value["source"]
         #assert self.length == value["length"]
 
     # 打印信息
