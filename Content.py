@@ -374,7 +374,7 @@ class RawItem(ContentItem) :
 
 class RawContent(ContentGroup) :
     # 生成新的对象
-    def new_item(self, content) :
+    def new_item(self, content = None) :
         # 返回结果
         return RawItem(content)
 
@@ -437,7 +437,7 @@ class TokenItem(ContentItem) :
 
 class TokenContent(ContentGroup) :
     # 生成新的对象
-    def new_item(self, content) :
+    def new_item(self, content = None) :
         # 返回结果
         return TokenItem(content)
 
@@ -543,7 +543,7 @@ class DictionaryContent(ContentGroup) :
         self.need_split = True
 
     # 新对象
-    def new_item(self, content) :
+    def new_item(self, content = None) :
         # 返回结果
         return DictionaryItem(content)
 
@@ -743,7 +743,7 @@ class SegmentItem(ContentItem) :
 
 class SegmentContent(ContentGroup) :
     # 新对象
-    def new_item(self, content) :
+    def new_item(self, content = None) :
         # 返回结果
         return SegmentItem(content)
 
@@ -802,7 +802,7 @@ class WordContent(ContentGroup) :
         self.need_split = True
 
     # 新对象
-    def new_item(self, content) :
+    def new_item(self, content = None) :
         # 返回结果
         return WordItem(content)
 
@@ -883,7 +883,7 @@ class SentenceItem(ContentItem) :
 
 class SentenceContent(ContentGroup) :
     # 新对象
-    def new_item(self, content) :
+    def new_item(self, content = None) :
         # 返回结果
         return SentenceItem(content)
 
@@ -1029,7 +1029,7 @@ class CoreContent(ContentGroup) :
         self.need_split = True
 
     # 新对象
-    def new_item(self, content) :
+    def new_item(self, content = None) :
         # 返回结果
         return CoreItem(content)
 
