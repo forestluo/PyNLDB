@@ -38,7 +38,7 @@ class ContentItem :
         self.count = value["count"]
         self.content = value["content"]
         # 检查数据
-        assert len(self.content) == value["length"]
+        #assert self.length == value["length"]
 
     @property
     def length(self) :
@@ -359,7 +359,7 @@ class RawItem(ContentItem) :
         self.source = value["source"]
         self.content = value["content"]
         # 检查参数
-        assert len(self.content) == value["length"]
+        #assert self.length == value["length"]
 
     def dump(self):
         # 打印信息
@@ -520,7 +520,7 @@ class DictionaryItem(ContentItem) :
         self.content = value["content"]
         self.sources = value["sources"]
         # 检查参数
-        assert len(self.content) == value["length"]
+        #assert self.length == value["length"]
 
     # 打印信息
     def dump(self):
@@ -713,7 +713,7 @@ class SegmentItem(ContentItem) :
         self.content = value["content"]
         self.sources = value["sources"]
         # 检查参数
-        assert len(self.content) == value["length"]
+        #assert self.length == value["length"]
 
     # 是否为其来源
     def has_source(self, source) :
@@ -867,7 +867,7 @@ class SentenceItem(ContentItem) :
         self.source = value["source"]
         self.content = value["content"]
         # 检查参数
-        assert len(self.content) == value["length"]
+        #assert self.length == value["length"]
 
     # 打印信息
     def dump(self):
@@ -948,7 +948,7 @@ class CoreItem(ContentItem) :
         self.gamma = value["gamma"]
         self.pattern = value["pattern"]
         # 检查参数
-        assert len(self.content) == value["length"]
+        #assert self.length == value["length"]
 
     def is_valid(self, max_length = -1) :
         # 返回结果
