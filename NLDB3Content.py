@@ -227,11 +227,11 @@ class NLDB3Raw (NLDB3) :
 
     def save(self, file_name) :
         # 调用父类函数
-        self._save("SELECT length, content, count, source FROM " + NLDB3Raw._tableName, file_name)
+        self._save("SELECT length, content, source FROM " + NLDB3Raw._tableName, file_name)
 
     def traverse(self, function) :
         # 调用父类函数
-        self._traverse("SELECT length, content, count, source FROM " + NLDB3Raw._tableName, function)
+        self._traverse("SELECT length, content, source FROM " + NLDB3Raw._tableName, function)
 
 class NLDB3Dictionary(NLDB3) :
     # 数据表名

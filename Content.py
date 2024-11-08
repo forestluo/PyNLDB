@@ -131,7 +131,7 @@ class ContentGroup :
         self._contents.clear()
 
     # 生成新的对象
-    def new_item(self, content) :
+    def new_item(self, content = None) :
         # 返回结果
         return ContentItem(content)
 
