@@ -18,7 +18,7 @@ class SentenceTemplate :
         # 设置匹配模板
         # 必须使用空对象初始化
         # 否则后续len函数判断长度会失误
-        self._patterns = \
+        self.patterns = \
             [re.compile("^\\$")] * len(rules)
         # 循环处理
         for i in range(0, len(rules)) :
@@ -27,7 +27,7 @@ class SentenceTemplate :
             # 检查起始符
             if rules[i][0] != '$' :
                 # 设置匹配模式
-                self._patterns[i] = re.compile(rules[i])
+                self.patterns[i] = re.compile(rules[i])
 
     # 是否匹配
     def __is_matched__(self, segments) :
@@ -35,14 +35,14 @@ class SentenceTemplate :
         assert isinstance(segments, list)
         # 检查参数
         # 模板的长度比分段数量多，则肯定无法匹配
-        if len(self._patterns) > len(segments) : return False
+        if len(self.patterns) > len(segments) : return False
         # 循环处理
-        for i in range(0, len(self._patterns)) :
+        for i in range(0, len(self.patterns)) :
             # 检查参数
             assert isinstance(segments[i], str)
-            assert self._patterns[i] is not None
+            assert self.patterns[i] is not None
             # 匹配
-            matched = self._patterns[i].match(segments[i])
+            matched = self.patterns[i].match(segments[i])
             # 检查结果
             if not matched or matched.start() != 0 : return False
         # 返回结果
@@ -105,7 +105,7 @@ class SentenceTemplate :
             # 句子内容
             sentence = ""
             # 获得长度
-            length = len(template._patterns)
+            length = len(template.patterns)
             # 组织内容
             for i in range(0, length) :
                 # 检查内容

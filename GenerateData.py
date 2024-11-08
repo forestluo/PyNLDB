@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from Common import *
 from Content import *
 from NLDB3Content import *
 from SentenceTool import *
@@ -60,9 +60,9 @@ def generate_segments() :
         return
     # 建立分段表
     segments = SegmentContent()
-    # 设置参数值
+    # 需要对原内容进行分割处理
     segments.need_split = True
-    # 加载数据
+    # 遍历数据，并进行分割处理
     raw.traverse(segments.add_item)
     # 打印信息
     print("GenerateData.generate_segments : total %d segment(s) !" % len(segments))
@@ -80,7 +80,7 @@ def generate_sentences() :
         return
     # 生成对象
     sentences = SentenceContent()
-    # 遍历提取
+    # 遍历数据，并提取句子
     raw.traverse(sentences.extract_item)
     # 保存数据
     sentences.save(json_path + "sentences.json")
@@ -98,7 +98,7 @@ def generate_tokens() :
         return
     # 建立字符表
     tokens = TokenContent()
-    # 加载数据
+    # 遍历数据，并提取符号
     raw.traverse(tokens.add_item)
     # 保存文件
     tokens.save(json_path + "tokens.json")
@@ -117,8 +117,10 @@ def generate_words(length) :
     # 打印信息
     print("GenerateData.generate_words : length = %d !" % length)
     # 设置参数值
-    words.length = length
+    # 从segments加载，所以不需要切分
     words.need_split = False
+    # 设定数据处理的限定长度，仅加载指定长度的数据
+    words.limit_length = length
     # 加载数据
     segments.traverse(words.add_item)
     # 打印信息
@@ -134,83 +136,90 @@ def generate_words(length) :
 def generate_dictionary() :
     # 打印信息
     print("GenerateData.generate_dictionary : filter dictionary !")
+    # 从原始数据加载字典
+    dictionary = DictionaryContent.load_dict(json_path + "dict.json")
+    # 检查结果
+    if len(dictionary) <= 0 :
+        print("GenerateData.generate_dictionary : fail to load file !")
+        return
+    # 保存重新组织后的数据
+    dictionary.save(json_path + "dictionary.json")
     # 创建对象
     segments = SegmentContent()
     # 加载数据
     if segments.load(json_path + "segments.json") <= 0 :
         print("GenerateData.generate_dictionary : fail to load file !")
         return
-    # 创建对象
-    dictionary = DictionaryContent()
-    # 加载数据
-    # 不加载之前保存的计数器，准备重新生成计数器
-    if dictionary.load(json_path + "dict.json", True) <= 0 :
-        print("GenerateData.generate_dictionary : fail to load file !")
-        return
-    # 设置参数
+    # 复位计数器
+    dictionary.reset()
+    # 从Segments加载的数据无需分割
     dictionary.need_split = False
     # 过滤
     segments.traverse(dictionary.count_item)
-    # 保存数据
+    # 再次保存数据
     dictionary.save(json_path + "dictionary.json")
     # 打印信息
     print("GenerateData.generate_dictionary : dictionary filtered !")
 
-def random_quantity() :
-    # 建立数据库链接
-    raw = NLDB3Raw()
-    # 打开数据库链接
-    raw.open()
-    # 随机抽取一条记录
-    data = raw.random()
-    # 关闭数据库链接
-    raw.close()
-    # 处理数据
-    content = ContentTool.normalize_content(data["content"])
-    # 打印结果
-    print("GenerateData.random_quantity : normalized result !")
-    print("\t"); print("original   =\"%s\"" % data["content"])
-    print("\t"); print("normalized =\"%s\"" % content)
+def generate_core() :
+    # 生成对象
+    cores = CoreContent()
+    # 生成对象
+    # 加载数据
+    if cores.load(json_path + "words1.json") <= 0 :
+        print("GenerateData.generate_core : fail to load file !")
+        return
+    # 生成对象
+    dictionary = DictionaryContent()
+    # 加载数据
+    if dictionary.load(json_path + "dictionary.json") <= 0 :
+        print("GenerateData.generate_core : fail to load file !")
+        return
+    # 获得所有数据
+    # 循环处理
+    for item in dictionary.get_items() :
+        # 检查数据项目
+        if item.count < 10 : continue
+        # 检查来源
+        if (item.has_source("成语") and item.length == 4) \
+            or (item.has_source("地理信息") and item.length > 1) \
+            or (item.has_source("现代汉语词典") and item.length > 1) \
+            or (item.has_source("新华字典") and item.length in [3, 4]) :
+            # 检查数据
+            if item.content not in cores :
+                # 增加数据
+                cores[item.content] = CoreItem(item.content)
+    # 加入内置数据
+    # 加入常用动词
+    for verb in VerbWord.verbs :
+        # 检查数据
+        if verb not in cores : cores[verb] = CoreItem(verb)
+    # 加入地理位置
+    for name in RegionName.names :
+        # 检查数据
+        if name not in cores : cores[name] = CoreItem(name)
+    # 加入常用词汇
+    for word in CommonWord.words :
+        # 检查数据
+        if word[0] not in cores : cores[word[0]] = CoreItem(word[0])
 
-    # 提取数量词
-    group = QuantityTemplate.extract(content)
-    # 检查结果
-    if group is not None :
-        # 打印信息
-        group.dump()
-    else :
-        # 打印信息
-        print("GenerateData.random_quantity : no matched !")
-
-def random_sentences() :
-    # 建立数据库链接
-    raw = NLDB3Raw()
-    # 打开数据库链接
-    raw.open()
-    # 随机抽取一条记录
-    data = raw.random()
-    # 关闭数据库链接
-    raw.close()
-    # 处理数据
-    content = ContentTool.normalize_content(data["content"])
-    # 打印结果
-    print("GenerateData.random_sentence : normalized result !")
-    print("\toriginal   =\"%s\"" % data["content"])
-    print("\tnormalized =\"%s\"" % content)
-
-    # 打散和标记
-    segments = SentenceTool.split(content)
-    # 打印结果
-    print("GenerateData.random_sentence : split result !")
-    # 打印结果
-    for segment in segments : print("\t%s" % segment)
-
-    # 合并
-    segments = SentenceTool.merge(segments)
-    # 打印结果
-    print("GenerateData.random_sentence : merged result !")
-    # 打印结果
-    for segment in segments : print("\t%s" % segment)
+    # 创建对象
+    segments = SegmentContent()
+    # 加载数据
+    if segments.load(json_path + "segments.json") <= 0 :
+        print("GenerateData.generate_core : fail to load file !")
+        return
+    # 复位计数器
+    cores.reset_count()
+    # 更新长度
+    cores.update_max_length()
+    # 设置参数
+    # 加载segments数据，不需要再次切分
+    cores.need_split = False
+    # 重新计数
+    segments.traverse(cores.count_item)
+    # 保存数据
+    cores.save(json_path + "cores.json")
 
 def main() :
 
@@ -221,14 +230,15 @@ def main() :
             "raw.json",
             "dict.json",
             "normalized.json",
-            "tokens.json", # 包含所有字符
+            # tokens.json包含所有字符
+            # words1.json仅包含常用中文字符
+            "tokens.json & words1.json",
             "segments.json",
             "sentences.json",
             "dictionary.json",
-            "words[1 - 3].json", # 仅包含常见中文字符
-            "words[4 - 8].json", # 仅包含常见中文字符
-            "random quantity",
-            "random sentences",
+            "cores.json",
+            "words[2 - 8].json", # 仅包含常见中文字符
+            "all basic json files", # 所有基础数据文件
         ]
 
     # 提示信息
@@ -265,6 +275,8 @@ def main() :
         elif user_input == '4' :
             # 生成tokens.json
             generate_tokens()
+            # 生成words1.json
+            generate_words(1)
         elif user_input == '5' :
             # 生成segments.json
             generate_segments()
@@ -275,13 +287,13 @@ def main() :
             # 生成dictionary.json
             generate_dictionary()
         elif user_input == '8' :
-            # 生成words1.json
-            generate_words(1)
+            # 生成核心数据
+            generate_core()
+        elif user_input == '9' :
             # 生成words2.json
             generate_words(2)
             # 生成words3.json
             generate_words(3)
-        elif user_input == '9' :
             # 生成words4.json
             generate_words(4)
             # 生成words5.json
@@ -292,12 +304,25 @@ def main() :
             generate_words(7)
             # 生成words8.json
             generate_words(8)
-        elif user_input == '10':
-            # 提取数量词测试
-            random_quantity()
-        elif user_input == '11':
-            # 提取句子测试
-            random_sentences()
+        elif user_input == '10' :
+            # 生成raw.json
+            generate_raw()
+            # 生成dict.json
+            generate_dict()
+            # 生成normalized.json
+            generate_normalized()
+            # 生成tokens.json
+            generate_tokens()
+            # 生成segments.json
+            generate_segments()
+            # 生成words1.json
+            generate_words(1)
+            # 生成sentences.json
+            generate_sentences()
+            # 生成dictionary.json
+            generate_dictionary()
+            # 生成核心数据
+            generate_core()
         else :
             print("GenerateData.main : unknown choice !")
 

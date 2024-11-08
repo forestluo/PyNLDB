@@ -217,8 +217,6 @@ class MatchedSegment :
         # 设置缺省值
         # 计数
         self.count = 0
-        # 备注
-        self.remark = None
         # 检查参数
         if matched is None:
             # 内容
@@ -259,8 +257,7 @@ class MatchedSegment :
         # 检查参数
         assert isinstance(segment, MatchedSegment)
         # 检查内容
-        return self.remark == segment.remark \
-                and self.content == segment.content
+        return self.content == segment.content
 
     # 是否为空
     @property
@@ -430,13 +427,9 @@ class QuantityTemplate(QuantityTool) :
 
     @staticmethod
     def set_default() :
-        # 声明
-        QuantityTemplate._patterns = [None] * len(QuantityTemplate._templates)
-        # 循环处理
-        for i in range(0, len(QuantityTemplate._templates)) :
-            # 设置元素
-            QuantityTemplate._patterns[i] = \
-                re.compile(QuantityTool._get_rule_(QuantityTemplate._templates[i]))
+        # 获得预编译模板
+        QuantityTemplate._patterns = \
+            [re.compile(QuantityTool._get_rule_(template)) for template in QuantityTemplate._templates]
 
 # 设置缺省提取模板
 QuantityTemplate.set_default()

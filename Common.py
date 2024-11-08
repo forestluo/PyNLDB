@@ -24,6 +24,43 @@ class WordType(Enum) :
     exclamation = "感叹词"
     onomatopoeia = "拟声词"
 
+# 地理名词
+class LocationName :
+    # 名称
+    names = \
+    [
+        # 行政区划
+        "域", "洲", "州", "国", "省", "市", "区", "乡", "镇", "村", "街", "屯", "郡", "坊", "坂", "畈", "巷", "片",
+        # 高地
+        "山", "丘", "岭", "崖", "台", "峰", "墩", "岗", "陂",
+        # 岩石
+        "岩", "界", "石", "角", "壁", "岚",
+        # 沟壑
+        "峪", "谷", "峡", "咀", "窝", "坑", "坳", "埚", "塆", "围", "川", "口", "垴", "槽",
+        # 道路
+        "路", "道", "门", "场", "桥", "站", "磜",
+        # 水体
+        "海", "湖", "江", "河", "溪", "泉", "沟", "水", "滩", "港", "湾", "沼", "泽", "池", "荡", "洼", "井", "闸", "涧", "塘", "潭", "畔",
+        # 岛屿
+        "岛", "屿", "港", "堤", "坞", "码头", "岸",
+        # 洞穴
+        "洞", "穴", "窟", "峒", "窑",
+        # 建筑
+        "城", "堡", "楼", "所", "苑", "库", "店", "墙", "坛", "馆", "庐", "垒", "关",
+        # 社团
+        "庄", "社", "家", "厂", "校", "营", "旗", "庄", "寨", "社", "院", "队", "斋", "处",
+        # 房屋
+        "府", "园", "屋", "堂", "室", "厅", "亭", "台", "阁", "庭", "房", "栈", "舱", "间", "厦", "寓",
+        # 宗教
+        "寺", "庙", "观", "庵", "陵", "塔", "坟", "祠", "碑", "祉", "冢",
+        # 草木
+        "地", "林", "田", "坡", "埂", "垄", "垅",
+        # 广场
+        "场", "原", "郊", "坪",
+        # 南方地点
+        "岌", "崀", "冚", "岽", "畲", "芨", "尾", "背", "头", "里", "冲",
+    ]
+    
 # 常见动词
 class VerbWord :
     # 动词
@@ -4686,7 +4723,7 @@ class CommonWord :
         ["懂事", WordType.verb, ""],
         ["动", WordType.verb, ""],
         ["动产", WordType.noun, ""],
-        [WordType.verb, WordType.noun, ""],
+        ["动词", WordType.noun, ""],
         ["动弹", WordType.verb, ""],
         ["动荡", WordType.adjective, ""],
         ["动机", WordType.noun, ""],
@@ -10034,7 +10071,7 @@ class CommonWord :
         ["名", WordType.quantifier, ""],
         ["名", WordType.adjective, ""],
         ["名称", WordType.noun, ""],
-        [WordType.noun, WordType.noun, ""],
+        ["名词", WordType.noun, ""],
         ["名单", WordType.noun, ""],
         ["名额", WordType.noun, ""],
         ["名贵", WordType.adjective, ""],
@@ -12811,7 +12848,7 @@ class CommonWord :
         ["数", WordType.numeral, ""],
         ["数额", WordType.noun, ""],
         ["数据", WordType.noun, ""],
-        [WordType.quantity, WordType.noun, ""],
+        ["数量词", WordType.noun, ""],
         ["数目", WordType.noun, ""],
         ["数学", WordType.noun, ""],
         ["数学家", WordType.noun, ""],
@@ -15160,7 +15197,7 @@ class CommonWord :
         ["形而上学", WordType.idiom, ""],
         ["形而上学", WordType.noun, ""],
         ["形容", WordType.verb, ""],
-        [WordType.adjective, WordType.noun, ""],
+        ["形容词", WordType.noun, ""],
         ["形式", WordType.noun, ""],
         ["形式化", WordType.verb, ""],
         ["形式上", WordType.noun, "处所"],

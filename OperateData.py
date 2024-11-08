@@ -5,120 +5,96 @@ import traceback
 from Content import *
 from ContentTool import *
 from QuantityTool import *
-from NLDB3Content import *
+from SentenceTool import *
 
 json_path = ".\\json\\"
 
-def update_gammas_13() :
-    # 加载数据
-    words = WordContent()
-    # 加载words1.json
-    words.load(json_path + "words1.json")
-    # 加载words2.json
-    words.load(json_path + "words2.json")
-    # 更新Gamma数值
-    words.update_gammas()
-    # 加载words3.json
-    words.load(json_path + "words3.json")
-    # 更新Gamma数值
-    words.update_gammas()
-    # 保存文件
-    words.save(json_path + "words13.json")
-
-def update_gammas_18() :
-    # 加载数据
-    words = WordContent()
-    # 加载words1.json
-    words.load(json_path + "words13.json")
-    # 加载words4.json
-    words.load(json_path + "words4.json")
-    # 更新Gamma数值
-    words.update_gammas()
-    # 加载words5.json
-    words.load(json_path + "words5.json")
-    # 更新Gamma数值
-    words.update_gammas()
-    # 加载words6.json
-    words.load(json_path + "words6.json")
-    # 更新Gamma数值
-    words.update_gammas()
-    # 加载words7.json
-    words.load(json_path + "words7.json")
-    # 更新Gamma数值
-    words.update_gammas()
-    # 加载words7.json
-    words.load(json_path + "words8.json")
-    # 更新Gamma数值
-    words.update_gammas()
-    # 保存文件
-    words.save(json_path + "words18.json")
+# 数据项目
+raw_items = []
+# 生成对象
+raw = RawContent()
+# 加载数据
+if raw.load(json_path + "raw.json") > 0 :
+    # 获得所有项目
+    raw_items = raw.get_items()
+else :
+    print("OperateData.random_quantity : fail to load file !")
 
 def random_quantity() :
-    # 建立数据库链接
-    raw = NLDB3Raw()
-    # 打开数据库链接
-    raw.open()
-    # 随机抽取一条记录
-    data = raw.random()
-    # 关闭数据库链接
-    raw.close()
-    # 处理数据
-    content = ContentTool.normalize_content(data["content"])
-    # 打印结果
-    print("OperateData.random_quantity : normalized result !")
-    print("\toriginal   =\"%s\"" % data["content"])
-    print("\tnormalized =\"%s\"" % content)
-
-    # 提取数量词
-    group = QuantityTemplate.extract(content)
-    # 检查结果
-    if group is not None :
-        # 打印信息
-        group.dump()
-    else :
-        # 打印信息
-        print("OperateData.random_quantity : no matched !")
+    # 清理输入项目
+    user_input = ""
+    # 循环处理
+    while user_input.lower() != '0':
+        # 获得随机数
+        index = random.randint(0, len(raw_items))
+        # 获得内容
+        original = raw_items[index].content
+        normalized = ContentTool.normalize_content(original)
+        # 打印结果
+        print("OperateData.random_quantity : normalized result !")
+        print("\t", end = ""); print("original   =\"%s\"" % original)
+        print("\t", end = ""); print("normalized =\"%s\"" % normalized)
+        # 提取数量词
+        group = QuantityTemplate.extract(normalized)
+        # 检查结果
+        if group is not None :
+            # 打印信息
+            group.dump()
+        else :
+            # 打印信息
+            print("OperateData.random_quantity : no matched !")
+        # 继续选择输入
+        user_input = input("Enter '0' to exit : ")
 
 def random_sentence() :
-    # 建立数据库链接
-    raw = NLDB3Raw()
-    # 打开数据库链接
-    raw.open()
-    # 随机抽取一条记录
-    data = raw.random()
-    # 关闭数据库链接
-    raw.close()
-    # 处理数据
-    content = ContentTool.normalize_content(data["content"])
-    # 打印结果
-    print("OperateData.random_sentence : normalized result !")
-    print("\toriginal   =\"%s\"" % data["content"])
-    print("\tnormalized =\"%s\"" % content)
+    # 清理输入项目
+    user_input = ""
+    # 循环处理
+    while user_input.lower() != '0':
+        # 获得随机数
+        index = random.randint(0, len(raw_items))
+        # 获得内容
+        original = raw_items[index].content
+        normalized = ContentTool.normalize_content(original)
+        # 打印结果
+        print("OperateData.random_sentence : normalized result !")
+        print("\t", end = ""); print("original   =\"%s\"" % original)
+        print("\t", end = ""); print("normalized =\"%s\"" % normalized)
+        # 打散和标记
+        segments = SentenceTool.split(normalized)
+        # 打印结果
+        print("OperateData.random_sentence : split result !")
+        # 打印结果
+        for segment in segments: print("\t%s" % segment)
+        # 合并
+        segments = SentenceTool.merge(segments)
+        # 打印结果
+        print("OperateData.random_sentence : merged result !")
+        # 打印结果
+        for segment in segments: print("\t%s" % segment)
+        # 继续选择输入
+        user_input = input("Enter '0' to exit : ")
 
-    # 打散和标记
-    segments = SentenceTool.split(content)
-    # 打印结果
-    print("OperateData.random_sentence : split result !")
-    # 打印结果
-    for segment in segments : print("\t%s" % segment)
-
-    # 合并
-    segments = SentenceTool.merge(segments)
-    # 打印结果
-    print("OperateData.random_sentence : merged result !")
-    # 打印结果
-    for segment in segments : print("\t%s" % segment)
+def update_core_gammas() :
+    # 生成对象
+    cores = CoreContent()
+    # 加载数据
+    if cores.load(json_path + "cores.json") <= 0 :
+        print("OperateData.update_core_gammas : fail to load file !")
+    # 更新数据
+    cores.update_gammas()
+    # 保存数据
+    cores.save(json_path + "cores.json")
 
 def main() :
-
     # 选项
     options = \
         [
             "exit",
             "random quantity",
             "random sentence",
-            "update gammas words[1 - 3]",
-            "update gammas words[1 - 8]",
+            "update core gammas",
+            "get gamma by words",
         ]
 
     # 提示信息
@@ -151,10 +127,7 @@ def main() :
             random_sentence()
         elif userInput == '3' :
             # 更新Gamma数值
-            update_gammas_13()
-        elif userInput == '4':
-            # 更新Gamma数值
-            update_gammas_18()
+            update_core_gammas()
         else :
             print("OperateData.main : unknown choice !")
 
