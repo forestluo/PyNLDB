@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import re
+import curses
 
-from Common import WordType
+from Common import *
 
 class QuantityTool :
     # 单位标识
@@ -48,22 +49,29 @@ class QuantityTool :
         "茬", "场", "车", "车皮", "匙", "池", "出", "处", "船", "串", "床", "丛", "簇",
         "沓", "代", "袋", "担", "刀", "道", "等", "滴", "点", "碟", "叠", "顶", "锭", "栋",
         "兜", "蔸", "堵", "段", "堆", "对", "队", "墩", "囤", "朵", "垛", "驮", "发", "番",
-        "方", "房", "份", "封", "幅", "副", "服", "竿", "杆", "缸", "格", "根",
+        #"方",
+        "房", "份", "封", "幅", "副", "服", "竿", "杆", "缸", "格", "根",
         "钩", "股", "挂", "管", "罐", "贯", "桄", "锅", "行", "号", "盒", "痕", "泓", "壶",
         "户", "环", "伙", "辑", "集", "级", "剂", "季", "家", "夹", "架", "驾", "间", "肩",
         "件", "角", "窖", "截", "节", "介", "届", "进", "茎", "局", "具", "句", "卷", "开",
         "窠", "棵", "颗", "孔", "口", "块", "筐", "捆", "栏", "篮", "揽子", "粒", "例", "辆",
-        "列", "领", "流", "绺", "溜", "笼", "垄", "篓", "炉", "路", "缕", "轮", "箩", "摞",
+        "列",
+        #"领",
+        "流", "绺", "溜", "笼", "垄", "篓", "炉", "路", "缕", "轮", "箩", "摞",
         "码", "脉", "毛", "枚", "门", "面", "名", "抹", "幕", "年", "排", "派", "盘", "泡",
         "盆", "棚", "捧", "批", "匹", "篇", "片", "瓢", "撇", "瓶", "期", "畦", "起", "腔",
         "墙", "锹", "丘", "曲", "阕", "群", "任", "色", "扇", "勺", "哨", "身", "声", "乘",
         "首", "手", "树", "束", "双", "丝", "艘", "所", "台", "抬", "滩", "摊", "坛", "潭",
         "塘", "堂", "樘", "套", "提", "屉", "挑", "条", "贴", "帖", "听", "挺", "通", "筒",
         "头", "团", "坨", "弯", "丸", "汪", "网", "尾", "味", "位", "瓮", "窝", "握", "席",
-        "袭", "匣", "线", "箱", "项", "些", "宿", "眼", "页", "叶", "印张", "羽", "园", "员",
+        "袭", "匣", "线", "箱", "项", "些", "宿",
+        "眼",
+        "页", "叶", "印张", "羽", "园", "员",
         "扎", "则", "盏", "章", "张", "着", "折", "针", "帧", "支", "枝", "纸", "盅", "站",
         "轴", "株", "注", "炷", "柱", "桩", "幢", "桌", "宗", "组", "嘴", "尊", "樽", "撮",
-        "座", "平", "次", "重", "居", "个", "只", "岁", "种", "档", "类", "天", "日", "倍",
+        "座",
+        #"平",
+        "次", "重", "居", "个", "只", "岁", "种", "档", "类", "天", "日", "倍",
         "界", "周", "挡"
     ]
     # 货币符号
@@ -252,6 +260,25 @@ class MatchedSegment :
         # 设置数值
         self._index[0] = value
 
+    # 是否有效
+    def is_valid(self) :
+        # 检查数据
+        # 不检查长度大于2的项目
+        if len(self.content) > 2 :
+            return True
+        # 检查数据
+        # 含有ASC字符的，基本都是正确的
+        for char in self.content :
+            if char.isascii() : return True
+        # 检查数据
+        # 序数词不检查
+        if self.content[0] in ("每", "第") : return True
+        # 检查数据
+        if CommonWord.is_quantity(self.content) : return True
+        # 返回结果
+        # 其余的应按照中文处理
+        return False if self.content[0] == "一" else True
+
     # 判断是否相等
     def __eq__(self, segment) :
         # 检查参数
@@ -311,14 +338,19 @@ class MatchedGroup :
         # 返回空
         return None
 
+    # 清理无效数据
+    def clear_invalid(self) :
+        # 重新组织数据
+        self._segments = [item for item in self._segments if item.is_valid()]
+
     def dump(self) :
         # 打印信息
         print("MatchedGroup.dump : show segments !")
-        for i in range(0, len(self._segments)) :
+        for i in range(len(self._segments)) :
             # 获得段落
             segment = self._segments[i]
             # 打印信息
-            print("\tsegment[%d](%d,%d) = \"%s\"" % (i, segment.start, segment.end, segment.content))
+            print("\t", end = ""); print("segment[%d](%d,%d) = \"%s\"" % (i, segment.start, segment.end, segment.content))
 
 class QuantityTemplate(QuantityTool) :
     # 匹配模板
@@ -357,9 +389,10 @@ class QuantityTemplate(QuantityTool) :
         "[百]?分之$c+",
         "[\\d+|$c+]个百分点", # 百分点
         # 时间
-        "[上|中|下]午",
+        #"[上|中|下]午",
         "(\\d+|$c+)个(月|小时)",
-        "(\\d+|$c+)(周|年|季度|刻钟)"
+        "(\\d+|$c+)(周|年|季度|刻钟)",
+        "([\\?|\\d+]\\s[-|—|~|～|－]\\s[\\?|\\d+][年]?)"
     ]
 
     @staticmethod
@@ -412,16 +445,21 @@ class QuantityTemplate(QuantityTool) :
                 # 获得当前字符
                 value = group.get_char(j)
                 # 检查结果
-                if value is None: break
+                if value is None : break
                 # 增加内容
                 segment.content += value
-
-            # 设置索引
-            index = segment.end + 1
             # 检查结果
-            assert not segment.empty
-            # 增加段落
-            new_group.add_segment(segment)
+            if not segment.empty :
+                # 增加段落
+                new_group.add_segment(segment)
+            # 检查索引
+            if index + 1 < len(content) :
+                # 设置索引
+                index = segment.end + 1
+            # 已经是结尾
+            else : segment.end = index + 1
+        # 清理无效数据
+        new_group.clear_invalid()
         # 检查结果
         return None if new_group.empty else new_group
 

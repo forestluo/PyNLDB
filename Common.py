@@ -15807,6 +15807,7 @@ class CommonWord :
         ["一个", WordType.quantity, ""],
         ["一个", WordType.numeral, ""],
         ["一个劲", WordType.adverb, ""],
+        ["一件", WordType.quantity, ""],
         ["一共", WordType.adverb, ""],
         ["一贯", WordType.adverb, ""],
         ["一号", WordType.noun, ""],
@@ -18284,6 +18285,44 @@ class CommonWord :
         ["做为", WordType.verb, ""],
     ]
 
+    # 分类
+    _classes = {}
+
+    @staticmethod
+    def set_default() :
+        # 循环处理
+        for item in CommonWord.words :
+            # 获得关键字
+            key = item[0]
+            word_type = item[1]
+            # 检查数据
+            if key not in \
+                    CommonWord._classes.keys() :
+                # 加入新项目
+                CommonWord._classes[key] = [word_type]
+            else :
+                # 检查数据
+                if word_type not in CommonWord._classes[key] : \
+                    # 增加项目
+                    CommonWord._classes[key].append(word_type)
+
+    @staticmethod
+    def is_quantity(content) :
+        # 检查参数
+        assert isinstance(content, str)
+        # 检查数据
+        if content not in CommonWord._classes.keys() : return False
+        # 获得列表
+        word_types = CommonWord._classes[content]
+        # 检查结果
+        for item in word_types :
+            # 检查类型
+            if item in (WordType.verb,
+                WordType.adverb,
+                WordType.adjective,
+                WordType.conjunction) : return False
+        # 返回结果
+        return True
 
 # 位置名称
 class RegionName :
@@ -63278,3 +63317,8 @@ class RegionName :
         "沟口街道",
         "长兴街道"
     ]
+
+# 设置缺省提取模板
+CommonWord.set_default()
+# 打印信息
+print("Common.CommonWord : default classes were set !")

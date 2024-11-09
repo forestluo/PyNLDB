@@ -16,7 +16,7 @@ raw = RawContent()
 # 加载数据
 if raw.load(json_path + "raw.json") > 0 :
     # 获得所有项目
-    raw_items = raw.get_items()
+    raw_items = [item for item in raw.values()]
 else :
     print("OperateData.random_quantity : fail to load file !")
 
@@ -29,6 +29,7 @@ def random_quantity() :
         index = random.randint(0, len(raw_items))
         # 获得内容
         original = raw_items[index].content
+        #original = "中国奥运代表团旗手仍定男篮 王治郅易建联２选１"
         normalized = ContentTool.normalize_content(original)
         # 打印结果
         print("OperateData.random_quantity : normalized result !")
