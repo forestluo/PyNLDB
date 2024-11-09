@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+
 from Common import *
 from Content import *
-from NLDB3Content import *
 from SentenceTool import *
 from QuantityTool import *
+from NLDB3SQLServer import *
 
 json_path = ".\\json\\"
 
@@ -11,7 +12,7 @@ def generate_raw() :
     # 打印信息
     print("GenerateData.generate_raw : generate raw.json !")
     # 生成对象
-    raw = NLDB3Raw()
+    raw = SQLServerRaw()
     # 打开数据库
     raw.open()
     # 保存数据文件
@@ -25,7 +26,7 @@ def generate_dict() :
     # 打印信息
     print("GenerateData.generate_dict : generate dict.json !")
     # 生成对象
-    dictionary = NLDB3Dictionary()
+    dictionary = SQLServerDictionary()
     # 打开数据库
     dictionary.open()
     # 保存数据文件
