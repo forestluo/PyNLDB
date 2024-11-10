@@ -2,9 +2,9 @@
 
 from Common import *
 from Content import *
+from SQLite3 import *
 from SentenceTool import *
 from QuantityTool import *
-from SQLite3 import *
 
 json_path = ".\\json\\"
 
