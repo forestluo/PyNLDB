@@ -216,7 +216,7 @@ def upload_words() :
             print("SQLite3Operator.upload_words : fail to load file !")
             return
         # 遍历
-        words.traverse(nldb3.insert)
+        words.traverse(nldb3.insert_table)
     # 关闭数据库
     nldb3.close()
     # 打印信息
