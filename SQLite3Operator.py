@@ -4,7 +4,7 @@ from Common import *
 from Content import *
 from SentenceTool import *
 from QuantityTool import *
-from NLDB3SQLite3 import *
+from SQLite3 import *
 
 json_path = ".\\json\\"
 
@@ -14,29 +14,29 @@ def upload_raw() :
     # 加载文件
     if raw.load(json_path + "raw.json") <= 0 :
         # 打印信息
-        print("SQLite3Upload.upload_raw : fail to load file !")
+        print("SQLite3Operator.upload_raw : fail to load file !")
         return
     # 生成对象
     nldb3 = NLDB3Raw()
     # 打开数据库
     if not nldb3.open() :
         # 打印信息
-        print("SQLite3Upload.upload_raw : fail to open database !")
+        print("SQLite3Operator.upload_raw : fail to open database !")
         return
     # 删除原数据表
-    nldb3.drop()
+    nldb3.drop_table()
     # 打印信息
-    print("SQLite3Upload.upload_raw : previous table dropped !")
+    print("SQLite3Operator.upload_raw : previous table dropped !")
     # 创建新数据表
-    nldb3.create()
+    nldb3.create_table()
     # 打印信息
-    print("SQLite3Upload.upload_raw : new table created !")
+    print("SQLite3Operator.upload_raw : new table created !")
     # 遍历
-    raw.traverse(nldb3.insert)
+    raw.traverse(nldb3.insert_table)
     # 关闭数据库
     nldb3.close()
     # 打印信息
-    print("SQLite3Upload.upload_raw : database closed !")
+    print("SQLite3Operator.upload_raw : database closed !")
 
 def upload_normalized() :
     # 生成对象
@@ -44,29 +44,29 @@ def upload_normalized() :
     # 加载文件
     if raw.load(json_path + "normalized.json") <= 0 :
         # 打印信息
-        print("SQLite3Upload.upload_normalized : fail to load file !")
+        print("SQLite3Operator.upload_normalized : fail to load file !")
         return
     # 生成对象
-    nldb3 = NLDB3Normalized()
+    nldb3 = NLDB3Raw()
     # 打开数据库
     if not nldb3.open() :
         # 打印信息
-        print("SQLite3Upload.upload_normalized : fail to open database !")
+        print("SQLite3Operator.upload_normalized : fail to open database !")
         return
     # 删除原数据表
-    nldb3.drop()
+    nldb3.drop_table()
     # 打印信息
-    print("SQLite3Upload.upload_normalized : previous table dropped !")
+    print("SQLite3Operator.upload_normalized : previous table dropped !")
     # 创建新数据表
-    nldb3.create()
+    nldb3.create_table()
     # 打印信息
-    print("SQLite3Upload.upload_normalized : new table created !")
+    print("SQLite3Operator.upload_normalized : new table created !")
     # 遍历
-    raw.traverse(nldb3.insert)
+    raw.traverse(nldb3.insert_table)
     # 关闭数据库
     nldb3.close()
     # 打印信息
-    print("SQLite3Upload.upload_normalized : database closed !")
+    print("SQLite3Operator.upload_normalized : database closed !")
 
 def upload_tokens() :
     # 生成对象
@@ -74,29 +74,29 @@ def upload_tokens() :
     # 加载文件
     if tokens.load(json_path + "tokens.json") <= 0 :
         # 打印信息
-        print("SQLite3Upload.upload_tokens : fail to load file !")
+        print("SQLite3Operator.upload_tokens : fail to load file !")
         return
     # 生成对象
     nldb3 = NLDB3Tokens()
     # 打开数据库
     if not nldb3.open() :
         # 打印信息
-        print("SQLite3Upload.upload_tokens : fail to open database !")
+        print("SQLite3Operator.upload_tokens : fail to open database !")
         return
     # 删除原数据表
-    nldb3.drop()
+    nldb3.drop_table()
     # 打印信息
-    print("SQLite3Upload.upload_tokens : previous table dropped !")
+    print("SQLite3Operator.upload_tokens : previous table dropped !")
     # 创建新数据表
-    nldb3.create()
+    nldb3.create_table()
     # 打印信息
-    print("SQLite3Upload.upload_tokens : new table created !")
+    print("SQLite3Operator.upload_tokens : new table created !")
     # 遍历
-    tokens.traverse(nldb3.insert)
+    tokens.traverse(nldb3.insert_table)
     # 关闭数据库
     nldb3.close()
     # 打印信息
-    print("SQLite3Upload.upload_tokens : database closed !")
+    print("SQLite3Operator.upload_tokens : database closed !")
 
 def upload_segments() :
     # 生成对象
@@ -104,29 +104,29 @@ def upload_segments() :
     # 加载文件
     if segments.load(json_path + "segments.json") <= 0 :
         # 打印信息
-        print("SQLite3Upload.upload_segments : fail to load file !")
+        print("SQLite3Operator.upload_segments : fail to load file !")
         return
     # 生成对象
     nldb3 = NLDB3Segments()
     # 打开数据库
     if not nldb3.open() :
         # 打印信息
-        print("SQLite3Upload.upload_segments : fail to open database !")
+        print("SQLite3Operator.upload_segments : fail to open database !")
         return
     # 删除原数据表
-    nldb3.drop()
+    nldb3.drop_table()
     # 打印信息
-    print("SQLite3Upload.upload_segments : previous table dropped !")
+    print("SQLite3Operator.upload_segments : previous table dropped !")
     # 创建新数据表
-    nldb3.create()
+    nldb3.create_table()
     # 打印信息
-    print("SQLite3Upload.upload_segments : new table created !")
+    print("SQLite3Operator.upload_segments : new table created !")
     # 遍历
-    segments.traverse(nldb3.insert)
+    segments.traverse(nldb3.insert_table)
     # 关闭数据库
     nldb3.close()
     # 打印信息
-    print("SQLite3Upload.upload_segments : database closed !")
+    print("SQLite3Operator.upload_segments : database closed !")
 
 def upload_sentences() :
     # 生成对象
@@ -134,29 +134,29 @@ def upload_sentences() :
     # 加载文件
     if sentences.load(json_path + "sentences.json") <= 0 :
         # 打印信息
-        print("SQLite3Upload.upload_sentences : fail to load file !")
+        print("SQLite3Operator.upload_sentences : fail to load file !")
         return
     # 生成对象
     nldb3 = NLDB3Sentences()
     # 打开数据库
     if not nldb3.open() :
         # 打印信息
-        print("SQLite3Upload.upload_sentences : fail to open database !")
+        print("SQLite3Operator.upload_sentences : fail to open database !")
         return
     # 删除原数据表
-    nldb3.drop()
+    nldb3.drop_table()
     # 打印信息
-    print("SQLite3Upload.upload_sentences : previous table dropped !")
+    print("SQLite3Operator.upload_sentences : previous table dropped !")
     # 创建新数据表
-    nldb3.create()
+    nldb3.create_table()
     # 打印信息
-    print("SQLite3Upload.upload_sentences : new table created !")
+    print("SQLite3Operator.upload_sentences : new table created !")
     # 遍历
-    sentences.traverse(nldb3.insert)
+    sentences.traverse(nldb3.insert_table)
     # 关闭数据库
     nldb3.close()
     # 打印信息
-    print("SQLite3Upload.upload_sentences : database closed !")
+    print("SQLite3Operator.upload_sentences : database closed !")
 
 def upload_dictionary() :
     # 生成对象
@@ -164,29 +164,29 @@ def upload_dictionary() :
     # 加载文件
     if dictionary.load(json_path + "dictionary.json") <= 0 :
         # 打印信息
-        print("SQLite3Upload.upload_dictionary : fail to load file !")
+        print("SQLite3Operator.upload_dictionary : fail to load file !")
         return
     # 生成对象
     nldb3 = NLDB3Dictionary()
     # 打开数据库
     if not nldb3.open() :
         # 打印信息
-        print("SQLite3Upload.upload_dictionary : fail to open database !")
+        print("SQLite3Operator.upload_dictionary : fail to open database !")
         return
     # 删除原数据表
-    nldb3.drop()
+    nldb3.drop_table()
     # 打印信息
-    print("SQLite3Upload.upload_dictionary : previous table dropped !")
+    print("SQLite3Operator.upload_dictionary : previous table dropped !")
     # 创建新数据表
-    nldb3.create()
+    nldb3.create_table()
     # 打印信息
-    print("SQLite3Upload.upload_dictionary : new table created !")
+    print("SQLite3Operator.upload_dictionary : new table created !")
     # 遍历
     dictionary.traverse(nldb3.insert)
     # 关闭数据库
     nldb3.close()
     # 打印信息
-    print("SQLite3Upload.upload_dictionary : database closed !")
+    print("SQLite3Operator.upload_dictionary : database closed !")
 
 def upload_words() :
     # 生成对象
@@ -194,16 +194,16 @@ def upload_words() :
     # 打开数据库
     if not nldb3.open() :
         # 打印信息
-        print("SQLite3Upload.upload_words : fail to open database !")
+        print("SQLite3Operator.upload_words : fail to open database !")
         return
     # 删除原数据表
-    nldb3.drop()
+    nldb3.drop_table()
     # 打印信息
-    print("SQLite3Upload.upload_words : previous table dropped !")
+    print("SQLite3Operator.upload_words : previous table dropped !")
     # 创建新数据表
-    nldb3.create()
+    nldb3.create_table()
     # 打印信息
-    print("SQLite3Upload.upload_words : new table created !")
+    print("SQLite3Operator.upload_words : new table created !")
     # 循环处理
     for i in range(1, 9) :
         # 设置参数
@@ -213,14 +213,14 @@ def upload_words() :
         # 加载文件
         if words.load(json_path + "words{}.json".format(i)) <= 0:
             # 打印信息
-            print("SQLite3Upload.upload_words : fail to load file !")
+            print("SQLite3Operator.upload_words : fail to load file !")
             return
         # 遍历
         words.traverse(nldb3.insert)
     # 关闭数据库
     nldb3.close()
     # 打印信息
-    print("SQLite3Upload.upload_words : database closed !")
+    print("SQLite3Operator.upload_words : database closed !")
 
 def main() :
 
@@ -260,7 +260,7 @@ def main() :
         # 开始执行
         if user_input == '0' :
             # 打印信息
-            print("SQLite3Upload.main : user exit !"); break
+            print("SQLite3Operator.main : user exit !"); break
         elif user_input == '1' :
             # 上传raw.json
             upload_raw()
@@ -292,7 +292,7 @@ def main() :
             # 上传words[1-3].json
             upload_words()
         else :
-            print("SQLite3Upload.main : unknown choice !")
+            print("SQLite3Operator.main : unknown choice !")
 
 if __name__ == '__main__':
     try:
@@ -300,5 +300,5 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         traceback.print_exc()
-        print("SQLite3Upload.main :__main__ : ", str(e))
-        print("SQLite3Upload.main :__main__ : unexpected exit !")
+        print("SQLite3Operator.main :__main__ : ", str(e))
+        print("SQLite3Operator.main :__main__ : unexpected exit !")

@@ -87,57 +87,6 @@ def update_core_gammas() :
     # 保存数据
     cores.save(json_path + "cores.json")
 
-def upload_words_to_sqlite3() :
-    try:
-        # 链接数据库
-        dbConn = sqlite3.connect("nldb3.db")
-        # 打开数据库
-        dbCursor = dbConn.cursor()
-        # 打印信息
-        print("OperateData.upload_words_to_sqlite3 : database connected !")
-        # 循环加载
-        for i in range(1, 9):
-            # 生成对象
-            words = WordContent()
-            # 加载数据
-            if words.load(json_path + "words{}.json".format(i)) <= 0:
-                print("OperateData.get_gamma_by_words : fail to load words{}.json !".format(i))
-                break
-
-            # 计数器
-            count = 0
-            # 获得总数
-            total = len(words)
-            # 百分之一
-            percent = 0
-            one_percent = total / 100.0
-            # 循环处理
-            for item in words.values() :
-                # 计数器加1
-                count = count + 1
-                # 将数据插入数据库
-                dbCursor.execute("INSERT INTO words (content, count, length) " + \
-                    "VALUES (\"{0}\", {1}, {2})".format(item.content, item.count, item.length))
-                # 检查结果
-                if (count - 1) >= (percent + 1) * one_percent:
-                    # 增加百分之一
-                    percent = percent + 1
-                    # 打印进度条
-                    print("\r", end = "")
-                    print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
-                    sys.stdout.flush()
-            print("")
-            print("OperateData.get_gamma_by_words : words{}.json loaded !".format(i))
-        # 关闭数据库
-        dbCursor.close()
-        dbConn.close()
-        # 打印信息
-        print("OperateData.upload_words_to_sqlite3 : database closed !")
-    except Exception as e:
-        traceback.print_exc()
-        print("OperateData.upload_words_to_sqlite3 : ", str(e))
-        print("OperateData.upload_words_to_sqlite3 : unexpected exit !")
-
 def main() :
     # 选项
     options = \
@@ -146,7 +95,6 @@ def main() :
             "random quantity",
             "random sentence",
             "update core gammas",
-            "upload words to sqlite3",
         ]
 
     # 提示信息
@@ -163,8 +111,7 @@ def main() :
         user_input = ""
         # 循环处理
         while user_input.lower() \
-                not \
-                in map(str, range(0, len(options))) :
+                not in map(str, range(0, len(options))) :
             # 继续选择输入
             user_input = input(input_message)
         # 开始执行
@@ -180,9 +127,6 @@ def main() :
         elif user_input == '3' :
             # 更新Gamma数值
             update_core_gammas()
-        elif user_input == '4' :
-            # 获得Gamma数值
-            upload_words_to_sqlite3()
         else :
             print("OperateData.main : unknown choice !")
 
