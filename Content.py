@@ -1245,16 +1245,3 @@ class CoreContent(ContentGroup) :
         # 打印数据总数
         print("")
         print("CoreContent.update_gammas : %d row(s) updated !" % total)
-
-class HuffmanNode :
-    # 初始化
-    def __init__(self, symbol = None, frequency = None) :
-        # 设置参数
-        self.symbol = symbol
-        self.frequency = frequency
-        # 子节点
-        self.left = None
-        self.right = None
-
-    def __lt__(self, other):
-        return self.frequency < other.frequency
