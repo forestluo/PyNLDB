@@ -366,3 +366,37 @@ class Neuron :
         print("\terror = %f" % neuron.error)
         # 计算一次反向传播
         neuron.backward()
+
+def main() :
+
+    # 创建对象
+    neuron = Neuron()
+    # 执行标定例程
+    neuron.example_case()
+    # 打印信息
+    neuron.dump()
+    """
+    Neuron.dump : print properties !
+        __input_count = 2
+        __output_count = 1
+        __hidden_count = 2
+        __learning_rate = 0.008000
+        __input_biases[0] = 0.000000
+        __input_biases[1] = 0.000000
+        __input_weights[0][0] = 0.093242
+        __input_weights[0][1] = 0.060770
+        __input_weights[1][0] = 0.966417
+        __input_weights[1][1] = 0.869598
+        __output_biases[0] = 0.000000
+        __output_weights[0][0] = 0.033377
+        __output_weights[0][1] = 0.693605
+    """
+
+if __name__ == '__main__':
+    try:
+        # 调用主函数
+        main()
+    except Exception as e:
+        traceback.print_exc()
+        print("OperateData.main :__main__ : ", str(e))
+        print("OperateData.main :__main__ : unexpected exit !")
