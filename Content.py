@@ -157,13 +157,69 @@ class ContentGroup :
     # 使用尽量少的内存予以处理
     # 在更新计数统计数据之后进行
     def clear_useless(self) :
-        # 清理无效数据
-        self._contents = {key : item for (key, item) in self._contents.items() if not item.is_useless()}
+        # 计数器
+        count = 0
+        # 获得总数
+        total = len(self._contents)
+        # 打印数据总数
+        print("ContentGroup.clear_useless : try to process %d row(s) !" % total)
+        # 结果数据
+        contents = {}
+        # 百分之一
+        percent = 0
+        one_percent = total / 100.0
+        # 检查数据结果
+        for (key, item) in self._contents.items() :
+            # 检查参数
+            if not item.is_useless() : contents[key] = item
+            # 计数器加1
+            count = count + 1
+            # 检查结果
+            if count >= (percent + 1) * one_percent :
+                # 增加百分之一
+                percent = percent + 1
+                # 打印进度条
+                print("\r", end = "")
+                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
+                sys.stdout.flush()
+        # 设置结果
+        self._contents.clear(); self._contents = contents
+        # 打印数据总数
+        print("")
+        print("ContentGroup.clear_useless : %d row(s) processed !" % total)
 
     # 删除无效项目
     def clear_invalid(self, max_length = -1) :
-        # 清理无效数据
-        self._contents = {key : item for (key, item) in self._contents.items() if item.is_valid(max_length)}
+        # 计数器
+        count = 0
+        # 获得总数
+        total = len(self._contents)
+        # 打印数据总数
+        print("ContentGroup.clear_invalid : try to process %d row(s) !" % total)
+        # 结果数据
+        contents = {}
+        # 百分之一
+        percent = 0
+        one_percent = total / 100.0
+        # 检查数据结果
+        for (key, item) in self._contents.items() :
+            # 检查参数
+            if item.is_valid(max_length) : contents[key] = item
+            # 计数器加1
+            count = count + 1
+            # 检查结果
+            if count >= (percent + 1) * one_percent :
+                # 增加百分之一
+                percent = percent + 1
+                # 打印进度条
+                print("\r", end = "")
+                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
+                sys.stdout.flush()
+        # 设置结果
+        self._contents.clear(); self._contents = contents
+        # 打印数据总数
+        print("")
+        print("ContentGroup.clear_invalid : %d row(s) processed !" % total)
 
     # 遍历处理
     def traverse(self, function) :
