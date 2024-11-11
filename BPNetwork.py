@@ -203,18 +203,18 @@ class Neuron :
                 # 与学习率有关
                 self.__input_weights[i][j] -= self.__learning_rate * delta * self.__inputs[j]
 
-    def save(self, fileName):
+    def save(self, file_name):
         # 检查文件名
-        if fileName is None:
-            fileName = "neuron.json"
+        if file_name is None:
+            file_name = "neuron.json"
         # 打开文件
-        jsonFile = open(fileName, "w", encoding = "utf-8")
+        json_file = open(file_name, "w", encoding = "utf-8")
         # 打印信息
-        print("Neuron.save : file(\"%s\") opened !" % fileName)
+        print("Neuron.save : file(\"%s\") opened !" % file_name)
         # 检查文件
-        assert jsonFile is not None
+        assert json_file is not None
         # 数据项
-        jsonItem = \
+        item = \
             {
                 "learning_rate" : self.__learning_rate,
                 "input_count" : self.__input_count,
@@ -226,59 +226,59 @@ class Neuron :
                 "output_weights" : self.__output_weights,
             }
         # 写入文件
-        jsonFile.write(json.dumps(jsonItem, ensure_ascii = False))
-        jsonFile.write("\n")
+        json_file.write(json.dumps(item, ensure_ascii = False))
+        json_file.write("\n")
         # 关闭文件
-        jsonFile.close()
+        json_file.close()
         # 打印信息
-        print("Neuron.save : file(\"%s\") closed !" % fileName)
+        print("Neuron.save : file(\"%s\") closed !" % file_name)
 
     # 加载数据
-    def load(self, fileName):
+    def load(self, file_name):
         # 检查文件名
-        if fileName is None:
-            fileName = "neuron.json"
+        if file_name is None:
+            file_name = "neuron.json"
         # 检查文件是否存在
-        if not os.path.isfile(fileName):
+        if not os.path.isfile(file_name):
             # 打印信息
-            print("Neuron.load : invalid file(\"%s\") !" % fileName)
+            print("Neuron.load : invalid file(\"%s\") !" % file_name)
             return -1
         # 打开文件
-        jsonFile = open(fileName, "r", encoding = "utf-8")
+        json_file = open(file_name, "r", encoding = "utf-8")
         # 打印信息
-        print("Neuron.load : file(\"%s\") opened !" % fileName)
+        print("Neuron.load : file(\"%s\") opened !" % file_name)
         # 检查文件
-        assert jsonFile is not None
+        assert json_file is not None
 
         try:
             # 按行读取
-            line = jsonFile.readline()
+            line = json_file.readline()
             # 剪裁字符串
             line = line.strip()
             # 检查结果
             if len(line) <= 0: return False
             # 按照json格式解析
-            jsonItem = json.loads(line)
+            item = json.loads(line)
             # 设置参数
-            self.__learning_rate = jsonItem["learning_rate"]
-            self.__input_count = jsonItem["input_count"]
+            self.__learning_rate = item["learning_rate"]
+            self.__input_count = item["input_count"]
             self.__inputs = [0.0] * self.__input_count
-            self.__output_count = jsonItem["output_count"]
+            self.__output_count = item["output_count"]
             self.__outputs = [0.0] * self.__output_count
-            self.__hidden_count = jsonItem["hidden_count"]
+            self.__hidden_count = item["hidden_count"]
             self.__hiddens = [0.0] * self.__hidden_count
-            self.__input_biases = jsonItem["input_biases"]
-            self.__input_weights = jsonItem["input_weights"]
-            self.__output_biases = jsonItem["output_biases"]
-            self.__output_weights = jsonItem["output_weights"]
+            self.__input_biases = item["input_biases"]
+            self.__input_weights = item["input_weights"]
+            self.__output_biases = item["output_biases"]
+            self.__output_weights = item["output_weights"]
         except Exception as e:
             traceback.print_exc()
             print("Neuron.load : ", str(e))
             print("Neuron.load : unexpected exit !")
         # 关闭文件
-        jsonFile.close()
+        json_file.close()
         # 打印信息
-        print("Neuron.load : file(\"%s\") closed !" % fileName)
+        print("Neuron.load : file(\"%s\") closed !" % file_name)
 
     def dump(self) :
         # 检查参数
@@ -293,22 +293,37 @@ class Neuron :
         assert self.__output_weights is not None
 
         print("Neuron.dump : print properties !")
-        print("\t__input_count = %d" % self.__input_count)
-        print("\t__output_count = %d" % self.__output_count)
-        print("\t__hidden_count = %d" % self.__hidden_count)
-        print("\t__learning_rate = %f" % self.__learning_rate)
+        print("\t", end = "")
+        print("__input_count = %d" % self.__input_count)
+        print("\t", end = "")
+        print("__output_count = %d" % self.__output_count)
+        print("\t", end = "")
+        print("__hidden_count = %d" % self.__hidden_count)
+        print("\t", end = "")
+        print("__learning_rate = %f" % self.__learning_rate)
         # 打印输入端数据
         for i in range(self.__hidden_count) :
-            print("\t__input_biases[%d] = %f" % (i, self.__input_biases[i]))
+            print("\t", end = "")
+            print("__input_biases[%d] = %f" % (i, self.__input_biases[i]))
         for i in range(self.__hidden_count) :
             for j in range(self.__input_count) :
-                print("\t__input_weights[%d][%d] = %f" % (i,j, self.__input_weights[i][j]))
+                print("\t", end = "")
+                print("__input_weights[%d][%d] = %f" % (i,j, self.__input_weights[i][j]))
         # 打印输出端数据
         for i in range(self.__output_count) :
-            print("\t__output_biases[%d] = %f" % (i, self.__output_biases[i]))
+            print("\t", end = "")
+            print("__output_biases[%d] = %f" % (i, self.__output_biases[i]))
         for i in range(self.__output_count) :
             for j in range(self.__hidden_count) :
-                print("\t__output_weights[%d][%d] = %f" % (i, j, self.__output_weights[i][j]))
+                print("\t", end = "")
+                print("__output_weights[%d][%d] = %f" % (i, j, self.__output_weights[i][j]))
+
+    @staticmethod
+    def __delta_sigmoid__(x) :
+        # 计算数值
+        value = Neuron.__sigmoid__(x)
+        # 返回结果
+        return value * (1.0 - value)
 
     @staticmethod
     def __sigmoid__(x) :
@@ -317,13 +332,6 @@ class Neuron :
         if x < -20 : return 0.0
         # 返回结果
         return 1.0 / (1.0 + math.exp(-x))
-
-    @staticmethod
-    def __delta_sigmoid__(x) :
-        # 计算数值
-        value = Neuron.__sigmoid__(x)
-        # 返回结果
-        return value * (1.0 - value)
 
     # 设置缺省数值，用于标定程序
     @staticmethod
@@ -357,15 +365,36 @@ class Neuron :
         # 打印输出值
         # outputs[0] = 0.7989476413779711
         # outputs[1] = 0.8390480283342561
-        print("\toutputs[0] = %f" % outputs[0])
-        print("\toutputs[1] = %f" % outputs[1])
+        print("\t", end = "")
+        print("outputs[0] = %f" % outputs[0])
+        print("\t", end = "")
+        print("outputs[1] = %f" % outputs[1])
         # 设置预期数值
         neuron.outputs = expects
         # 打印误差
         # error = 0.3226124392928197
-        print("\terror = %f" % neuron.error)
+        print("\t", end = "")
+        print("error = %f" % neuron.error)
         # 计算一次反向传播
         neuron.backward()
+        # 打印信息
+        # neuron.dump()
+        """
+        Neuron.dump : print properties !
+            __input_count = 2
+            __output_count = 1
+            __hidden_count = 2
+            __learning_rate = 0.008000
+            __input_biases[0] = 0.000000
+            __input_biases[1] = 0.000000
+            __input_weights[0][0] = 0.093242
+            __input_weights[0][1] = 0.060770
+            __input_weights[1][0] = 0.966417
+            __input_weights[1][1] = 0.869598
+            __output_biases[0] = 0.000000
+            __output_weights[0][0] = 0.033377
+            __output_weights[0][1] = 0.693605
+        """
 
 def main() :
 
@@ -375,22 +404,6 @@ def main() :
     neuron.example_case()
     # 打印信息
     neuron.dump()
-    """
-    Neuron.dump : print properties !
-        __input_count = 2
-        __output_count = 1
-        __hidden_count = 2
-        __learning_rate = 0.008000
-        __input_biases[0] = 0.000000
-        __input_biases[1] = 0.000000
-        __input_weights[0][0] = 0.093242
-        __input_weights[0][1] = 0.060770
-        __input_weights[1][0] = 0.966417
-        __input_weights[1][1] = 0.869598
-        __output_biases[0] = 0.000000
-        __output_weights[0][0] = 0.033377
-        __output_weights[0][1] = 0.693605
-    """
 
 if __name__ == '__main__':
     try:
