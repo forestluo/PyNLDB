@@ -1,6 +1,6 @@
-/db
-/json
+/db/
+/tmp/
+/json/
 /*.json
 /*.db
 /*.db-journal
-

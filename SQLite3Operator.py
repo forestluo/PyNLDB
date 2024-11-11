@@ -289,7 +289,7 @@ def main() :
             upload_sentences()
             # 上传segments.json
             upload_segments()
-            # 上传words[1-3].json
+            # 上传words[1-8].json
             upload_words()
         else :
             print("SQLite3Operator.main : unknown choice !")
