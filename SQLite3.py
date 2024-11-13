@@ -183,7 +183,7 @@ class SQLite3 :
         # 打印信息
         print("SQLite3.save : file(\"%s\") closed !" % file_name)
 
-    def _execute(self, sql, parameters = None) :
+    def _execute(self, sql, parameters = None, commit = False) :
         # 检查数据库链接及游标
         assert self._dbConn is not None
         assert self._dbCursor is not None
@@ -195,6 +195,8 @@ class SQLite3 :
                 self._dbCursor.execute(sql)
             # 执行
             else : self._dbCursor.execute(sql, parameters)
+            # 提交
+            if commit : self._dbConn.commit()
             # 返回结果
             return True
         except Exception as e:
@@ -208,7 +210,7 @@ class SQLite3 :
         # 检查数据
         assert isinstance(table_name, str)
         # 返回结果
-        return self._execute("DROP TABLE IF EXISTS {};".format(table_name))
+        return self._execute("DROP TABLE IF EXISTS {};".format(table_name), commit = True)
 
     def _insert_table(self, table_name, sql, parameters) :
         # 检查数据
@@ -222,7 +224,7 @@ class SQLite3 :
         assert isinstance(rows, list)
         assert isinstance(table_name, str)
         # 返回结果
-        return self._execute("CREATE TABLE IF NOT EXISTS {} (".format(table_name) + ",".join(rows) + ");")
+        return self._execute("CREATE TABLE IF NOT EXISTS {} (".format(table_name) + ",".join(rows) + ");", commit = True)
 
 class NLDB3Content(SQLite3) :
     # 初始化函数

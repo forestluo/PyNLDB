@@ -3,7 +3,6 @@
 import os
 import sys
 import json
-import heapq
 import traceback
 
 from ContentTool import *
@@ -435,7 +434,7 @@ class RawContent(ContentGroup) :
         # 检查参数
         assert isinstance(content, str)
         # 增加项目
-        self.add_content(RawItem(content))
+        self.add_content(ContentItem(content))
 
     # 增加项目
     # 用于traverse函数调用
@@ -498,7 +497,7 @@ class TokenContent(ContentGroup) :
         # 检查参数
         assert isinstance(content, str)
         # 增加项目
-        self.add_item(TokenItem(content))
+        self.add_item(ContentItem(content))
 
     # 增加项目
     # 用于traverse函数调用
@@ -804,7 +803,7 @@ class SegmentContent(ContentGroup) :
         # 检查参数
         assert isinstance(content, str)
         # 增加项目
-        self.add_content(SegmentItem(content))
+        self.add_content(ContentItem(content))
 
     def add_item(self, item) :
         # 检查参数
@@ -836,7 +835,7 @@ class WordItem(ContentItem) :
         # 调用父类初始化函数
         super().__init__(content)
 
-    def dump(self):
+    def dump(self) :
         # 打印信息
         print("WordItem.dump : show properties !")
         print("\t", end = ""); print("length = %d" % self.length)
