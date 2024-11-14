@@ -50,6 +50,8 @@ class VectorItem(ContentItem) :
     def __init__(self, content = None) :
         # 调用父类初始化函数
         super().__init__(content)
+        # 索引
+        self.index = -1
         # 半维度
         self.__half__ = 2
         # 全维度（偶数）
@@ -238,7 +240,7 @@ class VectorGroup(ContentGroup) :
                 percent = percent + 1
                 # 打印进度条
                 print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
+                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
                 sys.stdout.flush()
             # 打印数据总数
         print("")
@@ -267,7 +269,7 @@ class VectorGroup(ContentGroup) :
                 percent = percent + 1
                 # 打印进度条
                 print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
+                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
                 sys.stdout.flush()
             # 打印数据总数
         print("")
@@ -295,7 +297,7 @@ class VectorGroup(ContentGroup) :
                 percent = percent + 1
                 # 打印进度条
                 print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
+                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
                 sys.stdout.flush()
             # 打印数据总数
         print("")
@@ -358,7 +360,7 @@ class VectorGroup(ContentGroup) :
                 percent = percent + 1
                 # 打印进度条
                 print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
+                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
                 sys.stdout.flush()
             # 打印数据总数
         print("")
@@ -390,7 +392,7 @@ class VectorGroup(ContentGroup) :
                 percent = percent + 1
                 # 打印进度条
                 print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
+                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
                 sys.stdout.flush()
             # 打印数据总数
         print("")
@@ -429,7 +431,7 @@ class VectorGroup(ContentGroup) :
                     percent = percent + 1
                     # 打印进度条
                     print("\r", end = "")
-                    print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end="")
+                    print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
                     sys.stdout.flush()
             # 打印数据总数
         print("")
@@ -573,13 +575,20 @@ class Word2Vector :
                 content = t1.content + t2.content
                 # 检查结果
                 if content in self._words :
-                    # 获得词频
-                    frequency = self._words[content].count
-                    # 检查结果
-                    if t1.count > 0 and t2.count > 0 and frequency > 0 :
-                        # 计算相关系数
-                        gamma = (0.5 * float(frequency) *
-                            (1.0 / float(t1.count) + 1.0 / float(t2.count)))
+                    # 检查数据
+                    if self._words[content].gamma >= 0 :
+                        # 设置相关系数
+                        gamma = self._words[content].gamma
+                    else :
+                        # 获得词频
+                        frequency = self._words[content].count
+                        # 检查结果
+                        if t1.count > 0 and t2.count > 0 and frequency > 0 :
+                            # 计算相关系数
+                            gamma = (0.5 * float(frequency) *
+                                (1.0 / float(t1.count) + 1.0 / float(t2.count)))
+                        # 设置相关系数
+                        self._words[content].gamma = gamma
                 # 检查相关系数
                 assert gamma >= 0
 
@@ -654,13 +663,14 @@ class Word2Vector :
             if (flag & 0x01) != 0x01 :
                 # 设置循环次数，要求重置数据
                 loop_count = max_loop
+            # 检查矢量的分量
+            elif self._vectors.reset_useless() :
+                # 打印信息
+                print("Word2Vector.solving : component is small !")
             # 检查矢量间的距离是否在范围内
             elif self._vectors.get_max_dist() > 1.0e2 :
                 # 打印信息
                 print("Word2Vector.solving : distance is too large !")
-            elif self._vectors.reset_useless() :
-                # 打印信息
-                print("Word2Vector.solving : too small vector component !")
             else:
                 # 打印信息
                 print("Word2Vector.solving : all vectors have been properly set !")

@@ -764,9 +764,7 @@ class SegmentItem(ContentItem) :
         # 设置参数
         self.count = value["count"]
         self.content = value["content"]
-        # 检查参数
-        if "sources" in value :
-            self.sources = value["sources"]
+        self.sources = value["sources"]
         #assert self.length == value["length"]
 
     # 是否为其来源
@@ -834,12 +832,16 @@ class WordItem(ContentItem) :
     def __init__(self, content = None) :
         # 调用父类初始化函数
         super().__init__(content)
+        # 设置相关系数
+        # 主要用于临时计算
+        self.gamma = -1.0
 
     def dump(self) :
         # 打印信息
         print("WordItem.dump : show properties !")
         print("\t", end = ""); print("length = %d" % self.length)
         print("\t", end = ""); print("count = %d" % self.count)
+        print("\t", end = ""); print("gamma = %f" % self.gamma)
         print("\t", end = ""); print("content = \"%s\"" % self.content)
         print("\t", end = ""); print("sha256 = 0x%s" % self.sha256.hexdigest())
 
