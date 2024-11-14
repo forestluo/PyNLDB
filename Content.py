@@ -895,39 +895,6 @@ class WordContent(ContentGroup) :
                     # 增加项目
                     self[word] = WordItem(word); self[word].count = item.count
 
-    def get_gamma(self, content) :
-        # 检查参数
-        assert isinstance(content, str)
-        # 检查参数
-        if len(content) < 1 : return -1.0
-        if len(content) == 1 : return 1.0
-        # 检查内容是否在集合内
-        if content not in self : return 0.0
-        # 获得总数
-        total = self[content].count
-        # Gamma数值
-        gammas = [0.0] * (len(content) - 1)
-        # 循环处理
-        for i in range(1, len(content)) :
-            # 循环处理
-            for j in range(len(content) - i) :
-                # 子段落
-                segment = content[j : j + i]
-                # 检查数据
-                if segment not in self :
-                    # 无效的数据
-                    gammas[i] = -1.0; break
-                # 检查计数
-                if self[segment].count <= 0 :
-                    # 无效的数据
-                    gammas[i] = -1.0; break
-                # 计算gamma数值
-                gammas[i] += 1.0 / self[segment]
-            # 计算总数值
-            if gammas > 0 : gammas = total * gammas[i] / i
-        # 返回结果
-        return gammas
-
 class SentenceItem(ContentItem) :
     # 初始化对象
     def __init__(self, content = None, source = None) :
