@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-
 import math
 import numpy
 
+from numba import jit
 from Content import *
 
 class VectorItem(ContentItem) :
@@ -70,41 +70,6 @@ class VectorItem(ContentItem) :
         t.index = value
 
     # 遍历函数
-    # 相当于矩阵无穷范数
-    @staticmethod
-    def max_delta(t, p) :
-        # 获得数据
-        value = t.__delta.max()
-        # 检查数据
-        if value > p[0] : p[0] = value
-
-    # 遍历函数
-    # 相当于矩阵无穷范数
-    @staticmethod
-    def max_matrix(t, p) :
-        # 获得数据
-        value = t.__matrix.max()
-        # 检查数据
-        if value > p[0] : p[0] = value
-
-    # 遍历函数
-    @staticmethod
-    def min_matrix(t, p) :
-        # 获得数据
-        value = t.__matrix.min()
-        # 检查数据
-        if value < p[0] : p[0] = value
-
-    # 遍历函数
-    # 初始化误差矩阵
-    # 将误差值设置为零
-    @staticmethod
-    def init_delta(t, p = None) :
-        # 设置初始值
-        t.__delta = \
-            numpy.zeros(t.__delta.shape)
-
-    # 遍历函数
     # 加和误差
     @staticmethod
     def add_delta(t, p = None) :
@@ -118,6 +83,16 @@ class VectorItem(ContentItem) :
         # 矩阵加和
         t.__delta = \
             numpy.dot(value, t.__delta)
+
+    # 遍历函数
+    # 初始化误差矩阵
+    # 将误差值设置为零
+    @staticmethod
+
+    def init_delta(t, p = None) :
+        # 设置初始值
+        t.__delta = \
+            numpy.zeros(t.__delta.shape)
 
     @staticmethod
     def norm_delta(t, p) :
@@ -156,6 +131,7 @@ class VectorItem(ContentItem) :
     def solving(t1, t2, gamma) :
         # 拷贝原始矩阵
         matrix1 = t1.__matrix.copy()
+        # 拷贝原始矩阵
         matrix2 = t2.__matrix.copy()
         # 获得相关系数误差（快捷处置）
         delta = gamma - \
@@ -167,6 +143,7 @@ class VectorItem(ContentItem) :
         value = delta / (_Bj + _Ai)
         # 计算分量（快捷处置）加和误差分量
         t1.__delta[0] += numpy.dot(value, matrix2[1])
+        # 计算分量（快捷处置）加和误差分量
         t2.__delta[1] += numpy.dot(value, matrix1[0])
         # 返回结果
         return numpy.abs(delta)
@@ -221,12 +198,12 @@ class VectorGroup(ContentGroup) :
         # 设置词汇组
         self._words = WordContent()
 
-    # 清理
-    def clear(self) :
-        # 调用父类函数
+    # 加载数据
+    def load(self, file_name):
+        # 清理矢量
         super().clear()
-        # 清理词汇
-        self._words.clear()
+        # 再调用父类加载数据
+        super().load(file_name)
 
     # 维度
     @property
@@ -435,6 +412,48 @@ class VectorGroup(ContentGroup) :
             for t2 in self.values() :
                 # 获得内容
                 c2 = t2.content
+                # 相关系数
+                gamma = 0.0
+                # 获得拼接内容
+                c = c1 + c2
+                # 检查数据
+                if c in self._words :
+                    # 设置相关系数
+                    gamma = self._words[c].gamma
+                # 增加计数
+                pb.increase()
+                # 增加处理过程
+                delta = \
+                    VectorItem.solving(t1, t2, gamma)
+                # 检查结果
+                if delta > max_delta : max_delta = delta
+        # 打印信息
+        pb.end()
+        #pb.end(f"Word2Vector._solving : {total} relations(s) processed !")
+        # 返回结果
+        return max_delta
+
+    """
+    # 完成一次全量计算
+    def _solving(self) :
+        # 获得总数
+        total = len(self) * len(self)
+        # 进度条
+        pb = ProgressBar(total)
+        # 打印信息
+        pb.begin()
+        #pb.begin(f"Word2Vector._solving : try to process {total} relation(s) !")
+
+        # 最大误差
+        max_delta = 0.0
+        # 循环处理
+        for t1 in self.values():
+            # 获得内容
+            c1 = t1.content
+            # 循环处理
+            for t2 in self.values() :
+                # 获得内容
+                c2 = t2.content
 
                 # 相关系数
                 gamma = 0.0
@@ -458,6 +477,7 @@ class VectorGroup(ContentGroup) :
         #pb.end(f"Word2Vector._solving : {total} relations(s) processed !")
         # 返回结果
         return max_delta
+    """
 
 # 路径
 json_path = ".\\json\\"

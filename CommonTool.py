@@ -4,7 +4,7 @@ import sys
 
 class ProgressBar :
     # 初始化
-    def __init__(self, total) :
+    def __init__(self, total = 0) :
         # 检查参数
         assert total >= 0
         # 设置计数
@@ -21,12 +21,15 @@ class ProgressBar :
 
     @count.setter
     def count(self, value) :
+        # 检查参数
+        assert total >= 0
         # 增加数值
         self.__count += value
 
     def increase(self) :
         # 计数器加1
-        self.__count += 1; self.update()
+        self.__count += 1
+        self.update()
 
     def begin(self, line = None) :
         # 检查参数
@@ -60,4 +63,3 @@ class ProgressBar :
             print("Progress({}%) :" \
                 .format(self.__percent), "▓" * (self.__percent * 3 // 5), end = "")
             sys.stdout.flush()
-
