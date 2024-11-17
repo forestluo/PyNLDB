@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from Common import *
 from Content import *
 from SQLServer import *
+from CommonWord import *
 from SentenceTool import *
 from QuantityTool import *
 

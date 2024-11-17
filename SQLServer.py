@@ -5,6 +5,8 @@ import json
 import pymssql
 import traceback
 
+from CommonTool import *
+
 class SQLServer :
     # 数据库服务器
     server = "localhost"
@@ -47,7 +49,7 @@ class SQLServer :
             exist_flag = True
 
         # 使用nldb3
-        self._dbCursor.execute("USE SQLServer")
+        self._dbCursor.execute("USE nldb3")
 
         # 打印数据记录
         if exist_flag:
@@ -123,39 +125,26 @@ class SQLServer :
         assert self._dbConn is not None
         assert self._dbCursor is not None
 
-        # 计数器
-        count = 0
         # 获得总数
         total = self.total()
+        # 进度条
+        pb = ProgressBar(total)
         # 打印数据总数
-        print("SQLServer.traverse : try to process %d row(s) !" % total)
-
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
+        pb.begin(f"SQLServer.traverse : try to process {total} row(s) !")
         # 执行语句
         self._dbCursor.execute(sql)
         # 获得返回数据
         data = self._dbCursor.fetchone()
         # 检查数据结果
         while data :
-            # 计数器加1
-            count = count + 1
+            # 进度条
+            pb.increase()
             # 检查函数
             if function is not None: function(data)
-            # 检查结果
-            if count >= (percent + 1) * one_percent :
-                # 增加百分之一
-                percent = percent + 1
-                # 打印进度条
-                print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                sys.stdout.flush()
             # 取得下一行数据
             data = self._dbCursor.fetchone()
         # 打印数据总数
-        print("")
-        print("SQLServer.traverse : %d row(s) processed !" % total)
+        pb.end(f"SQLServer.traverse : {total} row(s) processed !")
 
     def _save(self, sql, file_name) :
         # 检查文件名
@@ -171,19 +160,15 @@ class SQLServer :
         assert self._dbConn is not None
         assert self._dbCursor is not None
 
-        # 计数器
-        count = 0
         # 获得总数
         total = self.total()
+        # 进度条
+        pb = ProgressBar(total)
         # 打印数据总数
-        print("SQLServer.save : try to save %d row(s) !" % total)
+        pb.begin(f"SQLServer.save : try to save {total} row(s) !")
         # 将总数写入文件
         json_file.write(str(total))
         json_file.write("\n")
-
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
         # 执行语句
         self._dbCursor.execute(sql)
         # 获得返回数据
@@ -191,23 +176,14 @@ class SQLServer :
         # 检查数据结果
         while data:
             # 计数器加1
-            count = count + 1
+            pb.increase()
             # 写入文件
             json_file.write(json.dumps(data, ensure_ascii = False))
             json_file.write("\n")
-            # 检查结果
-            if count >= (percent + 1) * one_percent:
-                # 增加百分之一
-                percent = percent + 1
-                # 打印进度条
-                print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                sys.stdout.flush()
             # 取得下一行数据
             data = self._dbCursor.fetchone()
         # 打印数据总数
-        print("")
-        print("SQLServer.save : %d row(s) saved !" % total)
+        pb.end(f"SQLServer.save : {total} row(s) saved !")
         # 关闭文件
         json_file.close()
         # 打印信息

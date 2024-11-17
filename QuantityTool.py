@@ -3,7 +3,7 @@
 import re
 import curses
 
-from Common import *
+from CommonWord import *
 
 class QuantityTool :
     # 单位标识

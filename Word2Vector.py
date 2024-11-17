@@ -1,81 +1,34 @@
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-import json
 import math
-import traceback
+import numpy
 
 from Content import *
 
-# 求模长
-def norm(v) :
-    # 距离
-    value = 0.0
-    # 循环处理
-    for p in v:
-        # 求值，并加和
-        value += p * p
-    # 返回结果
-    return math.sqrt(value)
-
-# 求距离
-def dist(v1, v2) :
-    # 返回结果
-    return norm(sub(v1, v2))
-
-# 常数乘以矢量
-def kdot(k, v) :
-    # 返回结果
-    return [k * p for p in v]
-
-def add(v1, v2) :
-    # 返回结果
-    return [p + q for p, q in zip(v1, v2)]
-
-def sub(v1, v2) :
-    # 返回结果
-    return [p - q for p, q in zip(v1, v2)]
-
-def dot(v1, v2) :
-    # 初始值
-    value = 0.0
-    # 同时遍历两个对象
-    for p, q in zip(v1, v2) : value += p * q
-    # 返回结果
-    return value
-
 class VectorItem(ContentItem) :
     # 初始化对象
-    def __init__(self, content = None) :
+    def __init__(self, dimension, content = None) :
         # 调用父类初始化函数
         super().__init__(content)
+        # 检查参数
+        assert dimension >= 2
         # 索引
         self.index = -1
-        # 半维度
-        self.__half__ = 2
-        # 全维度（偶数）
-        self.__dimension__ = 4
         # 增量
-        self.delta = [0.0] * self.__dimension__
-        # 矢量
-        self.vector = \
-            [random.random() for i in range(self.__dimension__)]
+        self.__delta = numpy.zeros((2, dimension))
+        # 矩阵
+        self.__matrix = numpy.zeros((2, dimension))
 
-    # 设置维度
-    def initialize(self, dimension) :
-        # 检查参数
-        assert dimension >= 4
-        assert dimension & 0x01 == 0
-        # 设置参数
-        self.__half__ = dimension // 2
-        self.__dimension__ = dimension
-        # 增量
-        self.delta = [0.0] * dimension
-        # 矢量
-        self.vector = [random.random() for i in range(dimension)]
-        # 返回结果
-        return self
+    # 是否无用
+    def is_useless(self) :
+        # 调用父类函数
+        if super().is_useless() :
+            # 返回结果
+            return True
+        # 获得矩阵最大值
+        value = self.__matrix.max()
+        # 检查结果
+        return not (1.0e-5 < value < 10)
 
     @property
     def json(self) :
@@ -85,7 +38,7 @@ class VectorItem(ContentItem) :
                 "count" : self.count,
                 "length" : self.length,
                 "content" : self.content,
-                "vector" : self.vector,
+                "matrix" : self.__matrix.tolist(),
             }
 
     @json.setter
@@ -93,42 +46,12 @@ class VectorItem(ContentItem) :
         # 设置参数
         self.count = value["count"]
         self.content = value["content"]
-        # 设置矢量
-        self.vector = value["vector"]
         # 检查长度
         #assert self.length == value["length"]
-        # 设置正确的维度值
-        dimension = len(self.vector)
-        # 检查参数
-        assert dimension >= 4
-        assert dimension & 0x01 == 0
-        # 设置参数
-        self.__half__ = dimension // 2
-        self.__dimension__ = dimension
-        # 增量
-        self.delta = [0.0] * dimension
-
-    # 检查各个分量，应当大于一定数值
-    def is_useless(self) :
-        # 循环处理
-        for v in self.vector :
-            # 检查每个分量
-            if math.fabs(v) < 1.0e-5 :
-                return True
-        # 返回结果
-        return super().is_useless()
-
-    # 随机矢量
-    def random(self) :
-        # 循环处理
-        for i in range(self.__dimension__) :
-            # 设置随机数值
-            self.vector[i] = random.random()
-
-    # 将误差值设置为零
-    def zero(self) :
-        # 设置初始值
-        self.delta = [0.0] * self.__dimension__
+        # 设置举着
+        self.__matrix = numpy.array(value["matrix"])
+        # 设置误差
+        self.__delta = numpy.zeros(self.__matrix.shape)
 
     def dump(self):
         # 打印信息
@@ -136,41 +59,155 @@ class VectorItem(ContentItem) :
         print("\t", end = ""); print("length = %d" % self.length)
         print("\t", end = ""); print("count = %d" % self.count)
         print("\t", end = ""); print("content = \"%s\"" % self.content)
-        print("\t[", end = "")
-        for i in range(len(self.vector)) :
-            print("%f" % self.vector[i], end = "")
-            if i < len(self.vector) - 1 : print(" ", end = "")
-        print("]")
+        print("matrix : ")
+        print(self.__matrix)
 
-    # 求相关系数
+    # 遍历函数
+    # 初始化索引
     @staticmethod
-    def dot(item1, item2) :
-        # 检查参数
-        assert isinstance(item1, VectorItem)
-        assert isinstance(item2, VectorItem)
-        assert item1.__dimension__ == item2.__dimension__
-        # 返回结果值
-        return dot(item1.vector[: item1.__half__], item2.vector[: -item2.__half__])
+    def set_index(t, value) :
+        # 设置初始值
+        t.index = value
+
+    # 遍历函数
+    # 相当于矩阵无穷范数
+    @staticmethod
+    def max_delta(t, p) :
+        # 获得数据
+        value = t.__delta.max()
+        # 检查数据
+        if value > p[0] : p[0] = value
+
+    # 遍历函数
+    # 相当于矩阵无穷范数
+    @staticmethod
+    def max_matrix(t, p) :
+        # 获得数据
+        value = t.__matrix.max()
+        # 检查数据
+        if value > p[0] : p[0] = value
+
+    # 遍历函数
+    @staticmethod
+    def min_matrix(t, p) :
+        # 获得数据
+        value = t.__matrix.min()
+        # 检查数据
+        if value < p[0] : p[0] = value
+
+    # 遍历函数
+    # 初始化误差矩阵
+    # 将误差值设置为零
+    @staticmethod
+    def init_delta(t, p = None) :
+        # 设置初始值
+        t.__delta = \
+            numpy.zeros(t.__delta.shape)
+
+    # 遍历函数
+    # 加和误差
+    @staticmethod
+    def add_delta(t, p = None) :
+        # 矩阵加和
+        t.__matrix += t.__delta
+
+    # 遍历函数
+    # 缩放误差
+    @staticmethod
+    def mul_delta(t, value) :
+        # 矩阵加和
+        t.__delta = \
+            numpy.dot(value, t.__delta)
 
     @staticmethod
-    def delta(item1, item2, delta) :
-        # 检查参数
-        assert isinstance(item1, VectorItem)
-        assert isinstance(item2, VectorItem)
-        assert item1.__dimension__ == item2.__dimension__
-        # 获得前置矢量
-        v3 = item1.vector[: item1.__half__]
-        # 获得后置矢量
-        v4 = item2.vector[: -item2.__half__]
-        # 计算数据
-        value = dot(v3, v3) + dot(v4, v4)
-        # 检查数值（防止除法溢出）
-        if value < 1.0e-10 : value = 1.0
-        # 求各个分量
-        dv1 = kdot(delta / value, v4); dv1.extend([0.0] * (len(item1.vector) - item1.__half__))
-        dv2 = [0.0] * (len(item2.vector) - item2.__half__); dv2.extend(kdot(delta / value, v3))
+    def norm_delta(t, p) :
         # 返回结果
-        return dv1, dv2
+        # 1: 列和范数
+        # inf : 行和范数
+        value = numpy.linalg.\
+            norm(t.__delta, numpy.inf)
+        # 检查结果
+        if value > p[0] : p[0] = value
+
+    # 遍历函数
+    # 初始化矢量矩阵
+    # 给矩阵赋予随机数值
+    @staticmethod
+    def init_matrix(t, p = None) :
+        # 设置矩阵
+        t.__matrix = \
+            numpy.random.random(t.__matrix.shape)
+
+    # 遍历函数
+    # 重新计算无效的数据
+    @staticmethod
+    def reset_useless(t, p = None) :
+        # 检查数据
+        if not t.is_useless() : return
+        # 设置初始值
+        t.__delta = \
+            numpy.zeros(t.__delta.shape)
+        # 设置矩阵
+        t.__matrix = \
+            numpy.random.random(t.__matrix.shape)
+
+    # 快速处置数据
+    @staticmethod
+    def solving(t1, t2, gamma) :
+        # 拷贝原始矩阵
+        matrix1 = t1.__matrix.copy()
+        matrix2 = t2.__matrix.copy()
+        # 获得相关系数误差（快捷处置）
+        delta = gamma - \
+            numpy.dot(matrix1[0], matrix2[1]) # Ai.Bj
+        # 计算模长
+        _Bj = numpy.dot(matrix2[1], matrix2[1])
+        _Ai = numpy.dot(matrix1[0], matrix1[0])
+        # 计算数据
+        value = delta / (_Bj + _Ai)
+        # 计算分量（快捷处置）加和误差分量
+        t1.__delta[0] += numpy.dot(value, matrix2[1])
+        t2.__delta[1] += numpy.dot(value, matrix1[0])
+        # 返回结果
+        return numpy.abs(delta)
+
+    """
+    # 求相关系数
+    # 按照公式正常处置
+    @staticmethod
+    def dot(t1, t2) :
+        # Ti = (Ai, Bi)'
+        # Tj = (Aj, Bj)'
+        # G = [1, 0].(Ti.Tj').[0, 1]'
+        # 获得矩阵（2x2）
+        # Ti * Tj = Ti.Tj' = (Ai, Bi)'.(Aj, Bj)
+        # | Ai.Aj Ai.Bj |
+        # | Bi.Aj Bi.Bj |
+        result = numpy.matmul(t1.__matrix, t2.__matrix.T)
+        # 正常处置
+        result = numpy.matmul(numpy.array([[1, 0]]), result)
+        result = numpy.matmul(result, numpy.array([[0, 1]]).T)
+        # 返回结果
+        return result[0][0]
+    """
+
+    """
+    # 按照公式正常处置
+    @staticmethod
+    def delta(t1, t2, delta) :
+        # Ti = (Ai, Bi)'
+        # Tj = (Aj, Bj)'
+        # 计算模长
+        _Bj = numpy.dot(t2.__matrix[1], t2.__matrix[1]) # |Bj| * |Bj|
+        _Ai = numpy.dot(t1.__matrix[0], t1.__matrix[0]) # |Ai| * |Ai|
+        # 计算数据
+        value = delta / (_Bj + _Ai)
+        # 计算delta
+        # | 0, value | | Aj |   | 0    , 0 | | Ai |
+        # | 0    , 0 |.| Bj | , | value, 0 |.| Bi |
+        return numpy.matmul(numpy.array([[value, 0],[0, 0]]), t2.__matrix), \
+                    numpy.matmul(numpy.array([[0, 0],[0, value]]), t1.__matrix)
+    """
 
 class VectorGroup(ContentGroup) :
     # 初始化
@@ -178,10 +215,18 @@ class VectorGroup(ContentGroup) :
         # 调用父类初始化
         super().__init__()
         # 检查参数
-        assert dimension >= 4
-        assert dimension & 0x01 == 0
+        assert dimension >= 2
         # 设置维度
         self._dimension = dimension
+        # 设置词汇组
+        self._words = WordContent()
+
+    # 清理
+    def clear(self) :
+        # 调用父类函数
+        super().clear()
+        # 清理词汇
+        self._words.clear()
 
     # 维度
     @property
@@ -189,23 +234,32 @@ class VectorGroup(ContentGroup) :
         # 返回结果
         return self._dimension
 
+    # 获得词汇描述
+    def get_word(self, value) :
+        # 检查数据
+        if value in self._words :
+            # 返回结果
+            return self._words[value]
+        # 返回结果
+        return None
+
+    # 增加词汇
+    def add_word(self, content, count) :
+        # 生成词汇
+        item = WordItem(content)
+        # 增加词汇
+        self._words[content] = item
+        # 设置词频
+        self._words[content].count = count
+
     # 生成新的对象
     def new_item(self, content = None) :
         # 返回结果
-        return VectorItem(content) \
-            .initialize(self._dimension)
+        return VectorItem(self._dimension, content)
 
     # 增加项目
     # 用于traverse函数调用
-    def add_content(self, content) :
-        # 检查参数
-        assert isinstance(content, str)
-        # 增加项目
-        self.add_content(ContentItem(content))
-
-    # 增加项目
-    # 用于traverse函数调用
-    def add_item(self, item) :
+    def add_item(self, item, parameter = None) :
         # 检查参数
         assert isinstance(item, ContentItem)
         # 获得内容
@@ -217,473 +271,202 @@ class VectorGroup(ContentGroup) :
         # 增加项目
         self[content] = self.new_item(item.content); self[content].count = item.count
 
-    # 随机赋值
-    def random(self) :
-        # 计数器
-        count = 0
-        # 获得总数
-        total = len(self)
-        # 打印数据总数
-        print("VectorGroup.random : try to process %d vector(s) !" % total)
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
-        # 循环处理
-        for item in self.values():
-            # 清零
-            item.random()
-            # 计数器加1
-            count = count + 1
-            # 检查结果
-            if count >= (percent + 1) * one_percent:
-                # 增加百分之一
-                percent = percent + 1
-                # 打印进度条
-                print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                sys.stdout.flush()
-            # 打印数据总数
-        print("")
-        print("VectorGroup.random : %d vector(s) processed !" % total)
-
-    # 清理增量
-    def zero_delta(self) :
-        # 计数器
-        count = 0
-        # 获得总数
-        total = len(self)
-        # 打印数据总数
-        print("VectorGroup.zero_delta : try to process %d vector(s) !" % total)
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
-        # 循环处理
-        for item in self.values():
-            # 清零
-            item.zero()
-            # 计数器加1
-            count = count + 1
-            # 检查结果
-            if count >= (percent + 1) * one_percent:
-                # 增加百分之一
-                percent = percent + 1
-                # 打印进度条
-                print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                sys.stdout.flush()
-            # 打印数据总数
-        print("")
-        print("VectorGroup.zero_delta : %d vector(s) processed !" % total)
-
-    def add_delta(self) :
-        # 计数器
-        count = 0
-        # 获得总数
-        total = len(self)
-        # 打印数据总数
-        print("VectorGroup.add_delta : try to process %d vector(s) !" % total)
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
-        # 循环处理
-        for item in self.values() :
-            # 加和
-            item.vector = add(item.vector, item.delta)
-            # 计数器加1
-            count = count + 1
-            # 检查结果
-            if count >= (percent + 1) * one_percent:
-                # 增加百分之一
-                percent = percent + 1
-                # 打印进度条
-                print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                sys.stdout.flush()
-            # 打印数据总数
-        print("")
-        print("VectorGroup.add_delta : %d vector(s) processed !" % total)
-
-    # 重置无用的数据
-    def reset_useless(self) :
-        # 标志位
-        flag = False
-        # 计数器
-        count = 0
-        # 获得总数
-        total = len(self._contents)
-        # 打印数据总数
-        print("VectorGroup.reset_useless : try to process %d row(s) !" % total)
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
-        # 检查数据结果
-        for item in self.vales() :
-            # 检查参数
-            if item.is_useless() :
-                # 设置标志位，并重置数据
-                flag = True; item.random()
-            # 计数器加1
-            count = count + 1
-            # 检查结果
-            if count >= (percent + 1) * one_percent :
-                # 增加百分之一
-                percent = percent + 1
-                # 打印进度条
-                print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                sys.stdout.flush()
-        # 打印数据总数
-        print("")
-        print("VectorGroup.reset_useless : %d row(s) processed !" % total)
-        # 返回结果
-        return flag
-
-    def average_delta(self) :
-        # 计数器
-        count = 0
-        # 获得总数
-        total = len(self)
-        # 打印数据总数
-        print("VectorGroup.average_delta : try to process %d vector(s) !" % total)
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
-        # 循环处理
-        for item in self.values():
-            # 求均值
-            item.delta = kdot(1.0 / float(total), item.delta)
-            # 计数器加1
-            count = count + 1
-            # 检查结果
-            if count >= (percent + 1) * one_percent:
-                # 增加百分之一
-                percent = percent + 1
-                # 打印进度条
-                print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                sys.stdout.flush()
-            # 打印数据总数
-        print("")
-        print("VectorGroup.average_delta : %d vector(s) processed !" % total)
-
-    def get_max_delta(self) :
-        # 计数器
-        count = 0
-        # 获得总数
-        total = len(self)
-        # 打印数据总数
-        print("VectorGroup.get_max_delta : try to process %d vector(s) !" % total)
-        # 最大误差值
-        max_value = 0.0
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
-        # 循环处理
-        for item in self.values():
-            # 获得模长
-            value = norm(item.delta)
-            # 检查数据
-            if value > max_value : max_value = value
-            # 计数器加1
-            count = count + 1
-            # 检查结果
-            if count >= (percent + 1) * one_percent:
-                # 增加百分之一
-                percent = percent + 1
-                # 打印进度条
-                print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                sys.stdout.flush()
-            # 打印数据总数
-        print("")
-        print("VectorGroup.get_max_delta : %d vector(s) processed !" % total)
-        # 返回结果
-        return max_value
-
-    def get_max_dist(self) :
-        # 获得所有项目
-        items = [item for item in self.values()]
-
-        # 计数器
-        count = 0
-        # 获得总数
-        total = len(items)
-        # 打印数据总数
-        print("VectorGroup.add_delta : try to process %d vector(s) !" % total)
-        # 最大误差值
-        max_value = 0.0
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
-        # 循环处理
-        for i in range(len(items)) :
-            # 循环处理
-            for j in range(i + 1, len(items)) :
-                # 获得距离
-                value = dist(items[i].vector, items[j].vector)
-                # 检查结果
-                if value > max_value : max_value = value
-                # 计数器加1
-                count = count + 1
-                # 检查结果
-                if count >= (percent + 1) * one_percent:
-                    # 增加百分之一
-                    percent = percent + 1
-                    # 打印进度条
-                    print("\r", end = "")
-                    print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                    sys.stdout.flush()
-            # 打印数据总数
-        print("")
-        print("VectorGroup.get_max_dist : %d vector(s) processed !" % total)
-        # 返回结果
-        return max_value
-
-class Word2Vector :
-    # 初始化
-    def __init__(self, dimension) :
-        # 检查参数
-        assert dimension >= 4
-        assert dimension & 0x01 == 0
-        # 生成对象
-        self._words = WordContent()
-        # 生成对象
-        self._vectors = VectorGroup(dimension)
-
-    # 保存数据
-    def save(self, path) :
-        # 保存数据
-        self._vectors.save(path + "vectors.json")
-        # 打印信息
-        print("Word2Vector.save : vectors.json saved !")
-
-    # 加载数据
-    def load(self, path) :
-        # 加载数据
-        if self._vectors.load(path + "vectors.json") <= 0 :
-            # 打印信息
-            print("Word2Vector.save : fail to load vectors.json !")
-        else :
-            # 打印信息
-            print("Word2Vector.save : vectors.json has been loaded !")
-
     # 加载数据
     def init(self, path) :
         # 清理
-        self._words.clear()
+        self.clear()
         # 加载数据
         if self._words.load(path + "words1.json") <= 0 :
             # 打印信息
-            print("Word2Vector.init : fail to load words1.json !")
+            print("VectorGroup.init : fail to load words1.json !")
             return False
-
-        # 清理
-        self._vectors.clear()
         # 生成数据
         # 自动设置元素的维度
-        self._words.traverse(self._vectors.add_item)
+        self._words.traverse(self.add_item)
         # 打印信息
-        print("Word2Vector.init : all vectors initialized !")
-
+        print("VectorGroup.init : all vectors added !")
         # 清理
         self._words.clear()
         # 加载数据
         if self._words.load(path + "words2.json") <= 0 :
             # 打印信息
-            print("Word2Vector.init : fail to load words2.json !")
+            print("VectorGroup.init : fail to load words2.json !")
             return False
+        # 打印信息
+        print("VectorGroup.init : all vectors initialized !")
         # 返回结果
         return True
 
-    def get_count(self, t) :
-        # 检查结果
-        if t in self._vectors :
-            # 返回数据
-            return self._vectors[t].count
-        # 返回数据
-        return -1
+    # 初始化相关系数
+    def init_gammas(self) :
+        # 清理索引
+        self._traverse(VectorItem.set_index, 0)
+        # 打印信息
+        print("VectorGroup.init : index of all words initialized !")
+        # 初始化相关系数
+        self._init_gammas()
+        # 打印信息
+        print("VectorGroup.init : gammas of all words initialized !")
+        # 交叉检查，清理无用的矢量
+        self._contents = \
+            {key : item for (key, item)
+             in self._contents.items() if item.index > 0}
+        # 打印信息
+        print("VectorGroup.init : %d row(s) left !" % len(self))
+        print("VectorGroup.init : useless vectors have been removed !")
 
-    def distance(self, t1, t2) :
-        # 检查结果
-        if t1 not in self._vectors : return -1.0
-        # 获得数据
-        item1 = self._vectors[t1]
-        # 检查结果
-        if t2 not in self._vectors :
-            return -1.0
-        # 获得数据
-        item2 = self._vectors[t2]
+    # 初始化相关系数
+    def _init_gammas(self) :
+        # 初始化相关系数
+        for item in self._words.values() :
+            # 获得内容
+            f = item.count
+            c = item.content
+            # 检查数值
+            if f <= 0 :
+                item.gamma = 0.0; continue
+
+            # 检查数据
+            assert len(c) == 2
+
+            # 获得单词
+            c1 = c[:1]
+            # 检查数据
+            if c1 not in self :
+                # 设置为无效值
+                item.gamma = 0.0; continue
+            # 获得频次
+            f1 = self[c1].count
+            # 检查数据
+            if f1 <= 0 :
+                item.gamma = 0.0; continue
+
+            # 获得单词
+            c2 = c[-1]
+            # 检查数据
+            if c2 not in self :
+                # 设置为无效值
+                item.gamma = 0.0; continue
+            # 获得频次
+            f2 = self[c2].count
+            # 检查数据
+            if f2 <= 0 :
+                item.gamma = 0.0; continue
+
+            # 设置标记位
+            self[c1].index |= 0x01
+            self[c2].index |= 0x02
+            # 计算相关系数
+            item.gamma = 0.5 * float(f) \
+                * (1.0 / float(f1) + 1.0 / float(f2))
+
+    # 完成一次全量计算
+    def solving(self, max_loop = 20, error = 1.0e-5) :
+        # 检查参数
+        assert 0 < error < 1.0
+        # 总数
+        count = len(self)
+        # 检查内容
+        if count < 2 :
+            print("VectorGroup.solving : insufficient vectors !")
+            return
+        # 求倒数
+        value = 1.0 / float(count)
+
+        # 初始化相关系数
+        self.init_gammas()
+        # 初始化矩阵
+        self._traverse(VectorItem.init_matrix)
+
+        # 循环计数
+        i = 0; j = 0
+        # 最大行和范数
+        last_delta = 1.0e5
+        # 循环直至误差符合要求，或者收敛至最小误差
+        while i < max_loop :
+            # 计数器加一
+            i += 1; j += 1
+            # 设置初始误差矩阵
+            self._traverse(VectorItem.init_delta)
+            # 进行一次全量计算，累积误差数值
+            delta = self._solving()
+            # 打印信息
+            print("")
+            print("VectorGroup.solving : ΔG[%d] = %f !" % (j, delta))
+            # 检查结果
+            if last_delta > delta :
+                # 呈下降趋势
+                i = 0; last_delta = delta
+            # 检查结果
+            if delta > error :
+                # 求平均值
+                self._traverse(VectorItem.mul_delta, value)
+                # 进行加和计算
+                self._traverse(VectorItem.add_delta)
+                # 重置无效的数据
+                self._traverse(VectorItem.reset_useless)
+            else :
+                # 最大行和范数
+                max_norm = [0]
+                # 获得误差矩阵的最大行和范数
+                self._traverse(VectorItem.norm_delta, max_norm)
+                # 打印结果
+                print("VectorGroup.solving : norm[%d] = %f !" % (j, max_norm[0])); break
         # 返回结果
-        return dist(item1.vector, item2.vector)
-
-    def dot_gamma(self, t1, t2) :
-        # 检查结果
-        if t1 not in self._vectors :
-            return 0.0
-        # 获得数据
-        item1 = self._vectors[t1]
-        # 检查结果
-        if t2 not in self._vectors :
-            return 0.0
-        # 获得数据
-        item2 = self._vectors[t2]
-        # 返回结果
-        return VectorItem.dot(item1, item2)
-
-    def get_gamma(self, t1, t2) :
-        # 检查结果
-        if t1 not in self._vectors :
-            return 0.0
-        # 获得数据
-        item1 = self._vectors[t1]
-        # 检查结果
-        if t2 not in self._vectors :
-            return 0.0
-        # 获得数据
-        item2 = self._vectors[t2]
-        # 检查结果
-        if t1 + t2 not in self._words :
-            return 0.0
-        # 获得数据
-        item = self._words[t1 + t2]
-        # 检查结果
-        if item1.count <= 0 \
-            or item2.count <= 0 or item.count <= 0 :
-            return 0.0
-        # 计算相关系数
-        return (0.5 * float(item.count) *
-                 (1.0 / float(item1.count) + 1.0 / float(item2.count)))
+        return last_delta
 
     # 完成一次全量计算
     def _solving(self) :
-        # 计数器
-        count = 0
         # 获得总数
-        total = len(self._vectors) * len(self._vectors)
-        # 打印数据总数
-        print("Word2Vector._solving : try to process %d relation(s) !" % total)
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
+        total = len(self) * len(self)
+        # 进度条
+        pb = ProgressBar(total)
+        # 打印信息
+        pb.begin()
+        #pb.begin(f"Word2Vector._solving : try to process {total} relation(s) !")
+
+        # 最大误差
+        max_delta = 0.0
         # 循环处理
-        for t1 in self._vectors.values() :
+        for t1 in self.values():
+            # 获得内容
+            c1 = t1.content
             # 循环处理
-            for t2 in self._vectors.values() :
+            for t2 in self.values() :
+                # 获得内容
+                c2 = t2.content
+
                 # 相关系数
                 gamma = 0.0
                 # 获得拼接内容
-                content = t1.content + t2.content
-                # 检查结果
-                if content in self._words :
-                    # 检查数据
-                    if self._words[content].gamma >= 0 :
-                        # 设置相关系数
-                        gamma = self._words[content].gamma
-                    else :
-                        # 获得词频
-                        frequency = self._words[content].count
-                        # 检查结果
-                        if t1.count > 0 and t2.count > 0 and frequency > 0 :
-                            # 计算相关系数
-                            gamma = (0.5 * float(frequency) *
-                                (1.0 / float(t1.count) + 1.0 / float(t2.count)))
-                        # 设置相关系数
-                        self._words[content].gamma = gamma
-                # 检查相关系数
-                assert gamma >= 0
+                c = c1 + c2
+                # 检查数据
+                if c in self._words :
+                    # 设置相关系数
+                    gamma = self._words[c].gamma
 
-                # 计算相关系数
-                result = VectorItem.dot(t1, t2)
-                # 获得误差
-                delta = gamma - result
-                # 检查误差
-                if math.fabs(delta) > 1.0e-5 :
-                    # 获得需要调整的误差分量
-                    dv1, dv2 = VectorItem.delta(t1, t2, delta)
-                    # 计算整体误差
-                    t1.delta = add(t1.delta, dv1); t2.delta = add(t2.delta, dv2)
-
-                # 计数器加1
-                count = count + 1
+                # 进度条
+                pb.increase()
+                # 计算数值
+                delta = \
+                    VectorItem.solving(t1, t2, gamma)
                 # 检查结果
-                if count >= (percent + 1) * one_percent :
-                    # 增加百分之一
-                    percent = percent + 1
-                    # 打印进度条
-                    print("\r", end = "")
-                    print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                    sys.stdout.flush()
+                if delta > max_delta : max_delta = delta
+
         # 打印数据总数
-        print("")
-        print("Word2Vector._solving : %d relation(s) processed !" % total)
-
-    # 完成一次全量计算
-    def solving(self, max_loop = 20) :
-        # 循环处理
-        loop_count = 0
-        # 循环处理
-        while True :
-            # 循环次数加一
-            loop_count += 1
-            # 检查结果
-            if loop_count > max_loop :
-                # 重置循环次数
-                loop_count = 0
-                # 重置所有的数据
-                self._vectors.random()
-
-            # 清理标志位
-            flag = 0x00
-            # 内层计数器
-            count = 0
-            # 内层循环
-            while count < max_loop :
-                # 增加计数
-                count += 1
-                # 清理所有误差分量
-                self._vectors.zero_delta()
-                # 进行一次全量计算
-                self._solving()
-                # 对误差求均值
-                self._vectors.average_delta()
-                # 获得最大误差数值
-                max_delta = self._vectors.get_max_delta()
-                # 打印信息
-                print("Word2Vector.solving : max Δg(%f) in %d count(s) !" % (max_delta, loop_count))
-                # 检查结果
-                if max_delta > 1.0e-5 :
-                    # 加和所有分量
-                    self._vectors.add_delta(); continue
-                # 设置标记位
-                flag |= 0x01
-                # 检查次数；设置标记位；中断循环
-                if loop_count == 1 : flag |= 0x10; count = max_loop
-
-            # 检查标志位
-            if (flag & 0x01) != 0x01 :
-                # 设置循环次数，要求重置数据
-                loop_count = max_loop
-            # 检查矢量的分量
-            elif self._vectors.reset_useless() :
-                # 打印信息
-                print("Word2Vector.solving : component is small !")
-            # 检查矢量间的距离是否在范围内
-            elif self._vectors.get_max_dist() > 1.0e2 :
-                # 打印信息
-                print("Word2Vector.solving : distance is too large !")
-            else:
-                # 打印信息
-                print("Word2Vector.solving : all vectors have been properly set !")
-                return True
+        pb.end()
+        #pb.end(f"Word2Vector._solving : {total} relations(s) processed !")
+        # 返回结果
+        return max_delta
 
 # 路径
 json_path = ".\\json\\"
 # 生成对象
-w2v = Word2Vector(8)
+vectors = VectorGroup(8)
 
 def init_vectors() :
     # 加载数文件
-    if not w2v.init(json_path) :
+    if not vectors.init(json_path) :
         # 打印信息
         print("Word2Vector.init_vectors : fail to load files !")
     else :
@@ -692,7 +475,7 @@ def init_vectors() :
 
 def load_vectors() :
     # 加载数文件
-    if not w2v.load(json_path) :
+    if not vectors.load(json_path + "vectors.json") :
         # 打印信息
         print("Word2Vector.load_vectors : fail to load file !")
     else :
@@ -701,7 +484,7 @@ def load_vectors() :
 
 def save_vectors() :
     # 加载数文件
-    w2v.save(json_path)
+    vectors.save(json_path + "vectors.json")
     # 打印信息
     print("Word2Vector.save_vectors : vectors.json has been saved !")
 
@@ -714,39 +497,76 @@ def verify_vectors() :
         user_input = input("Enter '0' to exit : ")
         # 检查长度
         if len(user_input) != 2 : continue
-        # 获得第一个字符
-        w1 = user_input[0]
-        w2 = user_input[-1]
-        # 获得相关系数
-        gamma = w2v.get_gamma(w1, w2)
-        # 检查结果
-        if gamma <= 0.0 :
+        # 检查数据
+        gamma = 0.0
+        # 获得词汇描述
+        word = vectors.get_word(user_input)
+        # 检查结构
+        if word is not None :
+            # 设置相关系数
+            gamma = word.gamma
+        else :
             # 打印信息
-            print("WordVector.verify_vectors : invalid input !")
+            print("Word2Vector.verify_vectors : invalid input !")
             continue
         # 打印信息
-        print("WordVector.verify_vectors : show results !")
+        print("Word2Vector.verify_vectors : show results !")
 
+        w1 = user_input[:1]
         print("\t", end = "")
         print("w1 = \"%s\"" % w1)
         print("\t", end = "")
-        print("f1 = %d" % w2v.get_count(w1))
+        if w1 not in vectors :
+            print("f1 = -1.0")
+        else :
+            print("f1 = %d" % vectors[w1].count)
 
+        w2 = user_input[:-1]
         print("\t", end = "")
         print("w2 = \"%s\"" % w2)
         print("\t", end = "")
-        print("f2 = %d" % w2v.get_count(w2))
+        if w2 not in vectors :
+            print("f2 = -1.0")
+        else :
+            print("f2 = %d" % vectors[w2].count)
 
         print("\t", end = "")
         print("word12 = \"%s\"" % user_input)
         print("\t", end = "")
         print("Gamma12 = %f" % gamma)
         print("\t", end = "")
-        print("gamma12 = %f" % w2v.dot_gamma(w1, w2))
-        print("\t", end = "")
-        print("distance12 = %f" % w2v.distance(w1, w2))
+        print("gamma12 = %f" % VectorItem.dot(vectors[w1], vectors[w2]))
+
+def calculation_example():
+    # 生成对象
+    vectors = VectorGroup(2)
+
+    # 生成对象
+    v1 = vectors.new_item("运")
+    v1.count = 937002
+    vectors.add_item(v1)
+
+    # 生成对象
+    v2 = vectors.new_item("动")
+    v2.count = 2363927
+    vectors.add_item(v2)
+
+    vectors.add_word("运运", 343)
+    vectors.add_word("动动", 1753)
+    vectors.add_word("运动", 175908)
+    vectors.add_word("动运", 1122)
+
+    # 求解
+    if vectors.solving() > 1.0e-5 :
+        print("Word2Vector.calculation_example : fail to solve !")
+    else :
+        print("Word2Vector.calculation_example : successfully done !")
+
 
 def main() :
+
+    # 计算加速器
+    accelerator = None
 
     # 选项
     options = \
@@ -755,8 +575,10 @@ def main() :
             "init vectors",
             "load vectors",
             "save vectors",
-            "solving all",
+            "solving vectors",
             "verify vectors",
+            "initialize gammas",
+            "calculation example",
         ]
 
     # 提示信息
@@ -779,7 +601,7 @@ def main() :
         # 开始执行
         if user_input == '0' :
             # 打印信息
-            print("WordVector.main : user exit !"); break
+            print("Word2Vector.main : user exit !"); break
         elif user_input == '1' :
             # 初始化
             init_vectors()
@@ -791,12 +613,18 @@ def main() :
             save_vectors()
         elif user_input == '4' :
             # 求解
-            w2v.solving()
+            vectors.solving(10)
         elif user_input == '5' :
-            # 手工检验
+            # 验证
             verify_vectors()
+        elif user_input == '6' :
+            # 求解
+            vectors.init_gammas()
+        elif user_input == '7' :
+            # 计算例子
+            calculation_example()
         else :
-            print("WordVector.main : unknown choice !")
+            print("Word2Vector.main : unknown choice !")
 
 if __name__ == '__main__':
     try:
@@ -804,5 +632,5 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         traceback.print_exc()
-        print("VectorGroup.main :__main__ : ", str(e))
-        print("VectorGroup.main :__main__ : unexpected exit !")
+        print("Word2Vector.main :__main__ : ", str(e))
+        print("Word2Vector.main :__main__ : unexpected exit !")

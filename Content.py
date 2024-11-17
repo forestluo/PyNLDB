@@ -5,6 +5,7 @@ import sys
 import json
 import traceback
 
+from CommonTool import *
 from ContentTool import *
 from SentenceTool import *
 
@@ -156,100 +157,72 @@ class ContentGroup :
     # 使用尽量少的内存予以处理
     # 在更新计数统计数据之后进行
     def clear_useless(self) :
-        # 计数器
-        count = 0
         # 获得总数
         total = len(self._contents)
+        # 进度条
+        pb = ProgressBar(total)
         # 打印数据总数
-        print("ContentGroup.clear_useless : try to process %d row(s) !" % total)
+        pb.begin(f"ContentGroup.clear_useless : try to process {total} row(s) !")
         # 结果数据
         contents = {}
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
         # 检查数据结果
         for (key, item) in self._contents.items() :
+            # 进度条
+            pb.increase()
             # 检查参数
             if not item.is_useless() : contents[key] = item
-            # 计数器加1
-            count = count + 1
-            # 检查结果
-            if count >= (percent + 1) * one_percent :
-                # 增加百分之一
-                percent = percent + 1
-                # 打印进度条
-                print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                sys.stdout.flush()
         # 设置结果
         self._contents.clear(); self._contents = contents
         # 打印数据总数
-        print("")
-        print("ContentGroup.clear_useless : %d row(s) processed !" % total)
+        pb.end(f"ContentGroup.clear_useless : {total} row(s) processed !")
 
     # 删除无效项目
     def clear_invalid(self, max_length = -1) :
-        # 计数器
-        count = 0
         # 获得总数
         total = len(self._contents)
+        # 进度条
+        pb = ProgressBar(total)
         # 打印数据总数
-        print("ContentGroup.clear_invalid : try to process %d row(s) !" % total)
+        pb.begin(f"ContentGroup.clear_invalid : try to process {total} row(s) !")
         # 结果数据
         contents = {}
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
         # 检查数据结果
         for (key, item) in self._contents.items() :
+            # 进度条
+            pb.increase()
             # 检查参数
             if item.is_valid(max_length) : contents[key] = item
-            # 计数器加1
-            count = count + 1
-            # 检查结果
-            if count >= (percent + 1) * one_percent :
-                # 增加百分之一
-                percent = percent + 1
-                # 打印进度条
-                print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                sys.stdout.flush()
         # 设置结果
         self._contents.clear(); self._contents = contents
         # 打印数据总数
-        print("")
-        print("ContentGroup.clear_invalid : %d row(s) processed !" % total)
+        pb.end(f"ContentGroup.clear_invalid : {total} row(s) processed !")
 
-    # 遍历处理
-    def traverse(self, function) :
-        # 计数器
-        count = 0
-        # 获得总数
-        total = len(self._contents)
-        # 打印数据总数
-        print("ContentGroup.traverse : try to process %d row(s) !" % total)
-
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
+    # 带参数，遍历处理
+    # 该函数不打印任何信息
+    def _traverse(self, function, parameter = None) :
         # 检查数据结果
         for item in self._contents.values() :
-            # 计数器加1
-            count = count + 1
-            # 检查结果
-            if count >= (percent + 1) * one_percent :
-                # 增加百分之一
-                percent = percent + 1
-                # 打印进度条
-                print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                sys.stdout.flush()
             # 检查函数
             # 调用函数处理数据
-            if function is not None : function(item)
+            if function is not None : function(item, parameter)
+
+    # 带参数，遍历处理
+    def traverse(self, function, parameter = None) :
+        # 获得总数
+        total = len(self._contents)
+        # 进度条
+        pb = ProgressBar(total)
         # 打印数据总数
-        print("")
-        print("ContentGroup.traverse : %d row(s) processed !" % total)
+        pb.begin(f"ContentGroup.traverse : try to process {total} row(s) !")
+        # 检查数据结果
+        for item in self._contents.values() :
+            # 进度条
+            pb.increase()
+            # 检查函数
+            # 调用函数处理数据
+            if function is not None : function(item, parameter)
+        # 打印信息
+        pb.end(f"ContentGroup.traverse : {total} row(s) processed !")
 
     def save(self, file_name):
         # 检查文件名
@@ -261,37 +234,24 @@ class ContentGroup :
         # 检查文件
         assert json_file is not None
 
-        # 计数器
-        count = 0
         # 获得总数
         total = len(self._contents)
+        # 进度条
+        pb = ProgressBar(total)
         # 打印数据总数
-        print("ContentGroup.save : try to save %d row(s) !" % total)
+        pb.begin(f"ContentGroup.save : try to save {total} row(s) !")
         # 将总数写入文件
         json_file.write(str(total))
         json_file.write("\n")
-
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
         # 检查数据结果
         for item in self._contents.values() :
-            # 计数器加1
-            count = count + 1
+            # 进度条
+            pb.increase()
             # 写入文件
             json_file.write(json.dumps(item.json, ensure_ascii = False))
             json_file.write("\n")
-            # 检查结果
-            if count >= (percent + 1) * one_percent:
-                # 增加百分之一
-                percent = percent + 1
-                # 打印进度条
-                print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                sys.stdout.flush()
-        # 打印数据总数
-        print("")
-        print("ContentGroup.save : %d row(s) saved !" % total)
+        # 打印信息
+        pb.end(f"ContentGroup.save : {total} row(s) saved !")
         # 关闭文件
         json_file.close()
         # 打印信息
@@ -313,13 +273,10 @@ class ContentGroup :
         # 检查文件
         assert json_file is not None
 
-        # 计数器
-        count = 0
-        # 获得总数
+        # 进度条
+        pb = None
+        # 总数
         total = 0
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
 
         try:
             # 按行读取
@@ -334,10 +291,8 @@ class ContentGroup :
                     line = json_file.readline()
                     continue
 
-                # 计数器加1
-                count = count + 1
                 # 检查计数器
-                if count == 1:
+                if pb is None :
                     # 获得数据总数
                     total = int(line)
                     # 检查结果
@@ -345,32 +300,27 @@ class ContentGroup :
                         # 打印信息
                         print("ContentGroup.load : invalid total(\"%s\") !" % line)
                         break
-                    # 设置百分之一
-                    one_percent = total / 100.0
+                    # 进度条
+                    pb = ProgressBar(total)
                     # 打印数据总数
-                    print("ContentGroup.load : try to load %d row(s) !" % total)
+                    pb.begin(f"ContentGroup.load : try to load {total} row(s) !")
                 else:
                     # 生成原始数据对象
                     new_item = self.new_item()
                     # 按照json格式解析
                     new_item.json = json.loads(line)
+                    # 计数器加1
+                    if pb is not None : pb.increase()
                     # 查询字典
                     if new_item.content not in self :
                         # 加入字典
                         self._contents[new_item.content] = new_item
-                    # 检查结果
-                    if (count - 1) >= (percent + 1) * one_percent:
-                        # 增加百分之一
-                        percent = percent + 1
-                        # 打印进度条
-                        print("\r", end = "")
-                        print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                        sys.stdout.flush()
                 # 读取下一行
                 line = json_file.readline()
             # 打印信息
+            if pb is not None : pb.end()
             print("")
-            print("ContentGroup.load : %d line(s) processed !" % count)
+            print("ContentGroup.load : %d line(s) processed !" % pb.count)
         except Exception as e:
             traceback.print_exc()
             print("ContentGroup.load : ", str(e))
@@ -438,7 +388,7 @@ class RawContent(ContentGroup) :
 
     # 增加项目
     # 用于traverse函数调用
-    def add_item(self, item):
+    def add_item(self, item, parameter = None):
         # 检查参数
         assert isinstance(item, ContentItem)
         # 获得内容
@@ -448,7 +398,9 @@ class RawContent(ContentGroup) :
             # 增加计数
             self[content].count += item.count; return
         # 增加项目
-        self[content] = RawItem(item.content, item.source); self[content].count = item.count
+        self[content] = self.new_item(item.content)
+        # 设置参数
+        self[content].source = item.source; self[content].count = item.count
 
 class TokenItem(ContentItem) :
     # 初始化对象
@@ -501,7 +453,7 @@ class TokenContent(ContentGroup) :
 
     # 增加项目
     # 用于traverse函数调用
-    def add_item(self, item) :
+    def add_item(self, item, parameter = None) :
         # 检查参数
         assert isinstance(item, ContentItem)
         # 扫描结果
@@ -511,25 +463,7 @@ class TokenContent(ContentGroup) :
                 # 增加计数器
                 self[token].count += item.count; continue
             # 增加字典内容
-            self[token] = TokenItem(token); self[token].count = item.count
-
-    # 计算Gamma值
-    def get_gamma(self, content, count = 1) :
-        # 检查参数
-        assert count >= 0
-        assert isinstance(content, str)
-        # Gamma数值
-        gamma = 0.0
-        # 循环处理
-        for token in content :
-            # 检查字典
-            if not token in self : return -1.0
-            # 检查结果
-            if self[token].count <= 0 : return -1.0
-            # 计算结果
-            gamma += 1.0 / float(self[token].count)
-        # 返回结果
-        return gamma * float(count) / float(len(content))
+            self[token] = self.new_item(token); self[token].count = item.count
 
 class DictionaryItem(ContentItem) :
     # 初始化对象
@@ -608,7 +542,7 @@ class DictionaryContent(ContentGroup) :
 
     # 增加项目
     # 用于traverse函数
-    def count_item(self, item):
+    def count_item(self, item, parameter = None) :
         # 检查参数
         assert isinstance(item, ContentItem)
         # 生成内容
@@ -651,13 +585,10 @@ class DictionaryContent(ContentGroup) :
         # 检查文件
         assert json_file is not None
 
-        # 计数器
-        count = 0
-        # 获得总数
+        # 进度条
+        pb = None
+        # 总数
         total = 0
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
         # 创建对象
         dictionary = DictionaryContent()
 
@@ -674,10 +605,8 @@ class DictionaryContent(ContentGroup) :
                     line = json_file.readline()
                     continue
 
-                # 计数器加1
-                count = count + 1
                 # 检查计数器
-                if count == 1:
+                if pb is None :
                     # 获得数据总数
                     total = int(line)
                     # 检查结果
@@ -685,13 +614,15 @@ class DictionaryContent(ContentGroup) :
                         # 打印信息
                         print("DictionaryContent.load_dict : invalid total(\"%s\") !" % line)
                         break
-                    # 设置百分之一
-                    one_percent = total / 100.0
+                    # 进度条
+                    pb = ProgressBar(total)
                     # 打印数据总数
-                    print("DictionaryContent.load_dict : try to load %d row(s) !" % total)
+                    pb.begi(f"DictionaryContent.load_dict : try to load {total} row(s) !")
                 else:
                     # 按照json格式解析
                     item = json.loads(line)
+                    # 进度条
+                    if pb is not None : pb.increase()
                     # 获得内容
                     content = item["content"]
                     # 检查数据
@@ -709,18 +640,10 @@ class DictionaryContent(ContentGroup) :
                         if isinstance(item["source"], str) :
                             # 增加来源
                             dictionary[content].add_source(item["source"], item["remark"])
-
-                    # 检查结果
-                    if (count - 1) >= (percent + 1) * one_percent:
-                        # 增加百分之一
-                        percent = percent + 1
-                        # 打印进度条
-                        print("\r", end = "")
-                        print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                        sys.stdout.flush()
                 # 读取下一行
                 line = json_file.readline()
             # 打印信息
+            if pb is not None : pb.end()
             print("")
             print("DictionaryContent.load_dict : %d line(s) processed !" % count)
         except Exception as e:
@@ -825,7 +748,9 @@ class SegmentContent(ContentGroup) :
 
             else :
                 # 增加项目
-                self[content] = SegmentItem(content, item.source); self[content].count = item.count
+                self[content] = self.new_item(content)
+                # 设置参数
+                self[content].source = item.source; self[content].count = item.count
 
 class WordItem(ContentItem) :
     # 初始化对象
@@ -866,7 +791,7 @@ class WordContent(ContentGroup) :
         # 增加项目
         self.add_item(WordItem(content))
 
-    def add_item(self, item) :
+    def add_item(self, item, parameter = None) :
         # 检查参数
         assert isinstance(item, ContentItem)
         # 生成内容
@@ -895,7 +820,7 @@ class WordContent(ContentGroup) :
                 # 如果是纯中文内容，则增加数据项
                 if ChineseTool.is_chinese(word) :
                     # 增加项目
-                    self[word] = WordItem(word); self[word].count = item.count
+                    self[word] = self.new_item(word); self[word].count = item.count
 
 class SentenceItem(ContentItem) :
     # 初始化对象
@@ -960,7 +885,7 @@ class SentenceContent(ContentGroup) :
 
     # 提取句子
     # 用于traverse函数
-    def extract_item(self, item) :
+    def extract_item(self, item, parameter = None) :
         # 检查参数
         assert isinstance(item, ContentItem)
         # 提取句子
@@ -972,7 +897,9 @@ class SentenceContent(ContentGroup) :
                 # 计数器增加
                 self[sentence].count += item.count; continue
             # 加入字典
-            self[sentence] = SentenceItem(sentence, item.source); self[sentence].count = item.count
+            self[sentence] = self.new_item(sentence)
+            # 设置参数
+            self[sentence].source = item.source; self[sentence].count = item.count
 
 class CoreItem(ContentItem) :
     # 初始化对象
@@ -1158,22 +1085,19 @@ class CoreContent(ContentGroup) :
         # 返回结果
         return gamma * float(self[content].count) / float(len(segments))
 
-    # 更新Gamma数值
+    # 更新相关系数
     def update_gammas(self) :
-        # 计数器
-        count = 0
         # 获得总数
         total = len(self)
+        # 进度条
+        pb = ProgressBar(total)
         # 打印数据总数
-        print("CoreContent.update_gammas : try to update %d row(s) !" % total)
+        pb.begin(f"CoreContent.update_gammas : try to update {total} row(s) !")
 
         # 指定长度
         length = 1
-        # 百分之一
-        percent = 0
-        one_percent = total / 100.0
         # 循环处理
-        while count < total :
+        while pb.count < total :
             # 打印信息
             print("CoreContent.update_gammas : try to process !")
             print("\t", end = ""); print("length = %d" % length)
@@ -1182,7 +1106,7 @@ class CoreContent(ContentGroup) :
                 # 检查长度
                 if item.length != length : continue
                 # 计数器加1
-                count = count + 1
+                pb.count += 1
                 # 复位数据
                 item.gamma = 0.0
                 item.pattern = None
@@ -1199,17 +1123,10 @@ class CoreContent(ContentGroup) :
                     item.update_gamma(self)
             # 长度加一
             length += 1
-            # 检查结果
-            if count >= (percent + 1) * one_percent:
-                # 增加百分之一
-                percent = percent + 1
-                # 打印进度条
-                print("\r", end = "")
-                print("Progress({}%) :".format(percent), "▓" * (percent * 3 // 5), end = "")
-                sys.stdout.flush()
+            # 进度条
+            pb.update()
             # 打印信息
             print("")
             print("CoreContent.update_gammas : length(%d) processed !" % length)
-        # 打印数据总数
-        print("")
-        print("CoreContent.update_gammas : %d row(s) updated !" % total)
+        # 打印信息
+        pb.end(f"CoreContent.update_gammas : {total} row(s) updated !")
