@@ -675,7 +675,7 @@ class VectorGroup(ContentGroup) :
             _dAis = numpy.dot(_L, bjs)
             _dBjs = numpy.dot(_L.T, ais)
             # 打印信息
-            print("VectorGroup.solving : ΔG[%d] = %f !" % (j, max_delta))
+            print("VectorGroup.fast_solving : ΔG[%d] = %f !" % (j, max_delta))
             # 检查结果
             if last_delta > max_delta :
                 # 呈下降趋势
