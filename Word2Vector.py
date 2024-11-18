@@ -614,7 +614,7 @@ class VectorGroup(ContentGroup) :
         return max_delta
 
     # 完成一次全量计算
-    def fast_solving(self, max_loop = 20, error = 1.0e-5):
+    def fast_solving(self, max_loop = 20, error = 1.0e-5, max_deltas = None):
         # 检查参数
         assert 0 < error < 1.0
         # 总数
@@ -658,8 +658,28 @@ class VectorGroup(ContentGroup) :
             # 用矩阵求解
             # 获得计算值
             delta = gammas - numpy.dot(ais, bjs.T)
+
             # 获得范数
-            max_delta = numpy.abs(delta).max()
+            abs_delta = numpy.abs(delta)
+            # 查找最大值的位置
+            pos = numpy.argmax(abs_delta)
+            # 获得索引
+            row = pos // n
+            col = pos - row * n
+            max_delta = abs_delta[row][col]
+            # 记录误差
+            if max_deltas is not None :
+                # 检查是否有记录
+                if pos not in max_deltas.keys() :
+                    max_deltas[pos] = 1
+                # 记录数加一
+                max_deltas[pos] += 1
+            # 打印信息
+            print(f"VectorGroup.fast_solving : ΔG[{i}, {j}] = {max_delta} !")
+            print("\tGamma = ", end = "")
+            print(gammas[row][col])
+            print(f"\t[row, col] = [{row}, {col}]")
+
             # 计算模长
             _Ais = numpy.sum(numpy.square(ais), axis = 1)
             _Ais = numpy.reshape(_Ais, (n, 1))
@@ -674,8 +694,6 @@ class VectorGroup(ContentGroup) :
             # 获得误差矩阵
             _dAis = numpy.dot(_L, bjs)
             _dBjs = numpy.dot(_L.T, ais)
-            # 打印信息
-            print("VectorGroup.fast_solving : ΔG[%d] = %f !" % (j, max_delta))
             # 检查结果
             if last_delta > max_delta :
                 # 呈下降趋势
@@ -683,14 +701,17 @@ class VectorGroup(ContentGroup) :
             # 检查结果
             if max_delta > error :
                 # 求平均值，并加和计算
-                ais += value * _dAis; bjs += value * _dBjs
+                ais += value * _dAis
+                bjs += value * _dBjs
             else :
                 # 最大行和范数
                 max_norm = numpy.maximum(
                     numpy.linalg.norm(_dAis, numpy.inf),
                     numpy.linalg.norm(_dBjs, numpy.inf))
                 # 打印结果
-                print("VectorGroup.solving : norm[%d] = %f !" % (j, max_norm)); break
+                print(f"VectorGroup.fast_solving : norm[{i}, {j}] = {max_norm} !"); break
+        # 设置数据矩阵
+        self.traverse(VectorItem.init_matrix, [ais, bjs])
         # 返回结果
         return last_delta
 
@@ -816,9 +837,12 @@ def fast_calculation_example():
     vectors.add_word("运动", 175908)
     vectors.add_word("动运", 1122)
 
+    # 最大误差记录
+    max_deltas = {}
     # 求解
-    if vectors.fast_solving() > 1.0e-5 :
+    if vectors.fast_solving(max_deltas = max_deltas) > 1.0e-5 :
         print("Word2Vector.fast_calculation_example : fail to solve !")
+        print(max_deltas)
     else :
         print("Word2Vector.fast_calculation_example : successfully done !")
 
@@ -878,8 +902,12 @@ def main() :
             # 初始化
             vectors.init_gammas()
         elif user_input == '5' :
+            # 误差记录
+            max_deltas = {}
             # 求解
-            vectors.fast_solving()
+            vectors.fast_solving(max_deltas = max_deltas)
+            # 打印
+            print(max_deltas)
         elif user_input == '6' :
             # 求解
             vectors.solving(20)
