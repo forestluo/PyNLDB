@@ -26,9 +26,9 @@ class ProgressBar :
         # 增加数值
         self.__count += value
 
-    def increase(self) :
+    def increase(self, count = 1) :
         # 计数器加1
-        self.__count += 1
+        self.__count += count
         self.update()
 
     def begin(self, line = None) :
@@ -50,8 +50,9 @@ class ProgressBar :
               .format(self.__percent, self.__total), end = "")
         sys.stdout.flush()
         """
+        print("")
         # 检查参数
-        if isinstance(line, str) : print(""); print(line)
+        if isinstance(line, str) : print(line)
 
     def update(self) :
         # 检查结果

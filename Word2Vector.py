@@ -2,7 +2,6 @@
 import math
 import numpy
 
-from numba import jit
 from Content import *
 
 class VectorItem(ContentItem) :
@@ -29,6 +28,16 @@ class VectorItem(ContentItem) :
         value = self.__matrix.max()
         # 检查结果
         return not (1.0e-5 < value < 10)
+
+    @property
+    def matrix(self) :
+        # 返回结果
+        return self.__matrix
+
+    @property
+    def delta(self) :
+        # 返回结果
+        return self.__delta
 
     @property
     def json(self) :
@@ -63,20 +72,6 @@ class VectorItem(ContentItem) :
         print(self.__matrix)
 
     # 遍历函数
-    # 初始化索引
-    @staticmethod
-    def set_index(t, value) :
-        # 设置初始值
-        t.index = value
-
-    # 遍历函数
-    # 加和误差
-    @staticmethod
-    def add_delta(t, p = None) :
-        # 矩阵加和
-        t.__matrix += t.__delta
-
-    # 遍历函数
     # 缩放误差
     @staticmethod
     def mul_delta(t, value) :
@@ -88,12 +83,18 @@ class VectorItem(ContentItem) :
     # 初始化误差矩阵
     # 将误差值设置为零
     @staticmethod
+    def init_delta(t, delta = None) :
+        # 检查参数
+        if delta is not None :
+            # 设置矩阵
+            t.__matrix[0] = delta[0][t.index] # dAi
+            t.__matrix[1] = delta[1][t.index] # dBi
+        else :
+            # 设置初始值
+            t.__delta = numpy.zeros(t.__delta.shape)
 
-    def init_delta(t, p = None) :
-        # 设置初始值
-        t.__delta = \
-            numpy.zeros(t.__delta.shape)
-
+    # 遍历函数
+    # 寻找行和范数
     @staticmethod
     def norm_delta(t, p) :
         # 返回结果
@@ -105,13 +106,26 @@ class VectorItem(ContentItem) :
         if value > p[0] : p[0] = value
 
     # 遍历函数
+    # 加和误差
+    @staticmethod
+    def mov_matrix(t, p = None) :
+        # 矩阵加和
+        t.__matrix += t.__delta
+
+    # 遍历函数
     # 初始化矢量矩阵
     # 给矩阵赋予随机数值
     @staticmethod
-    def init_matrix(t, p = None) :
-        # 设置矩阵
-        t.__matrix = \
-            numpy.random.random(t.__matrix.shape)
+    def init_matrix(t, matrix = None) :
+        # 检查参数
+        if matrix is not None :
+            # 设置矩阵
+            t.__matrix[0] = matrix[0][t.index] # Ai
+            t.__matrix[1] = matrix[1][t.index] # Bi
+        else :
+            # 设置矩阵
+            t.__matrix = \
+                numpy.random.random(t.__matrix.shape)
 
     # 遍历函数
     # 重新计算无效的数据
@@ -276,26 +290,38 @@ class VectorGroup(ContentGroup) :
 
     # 初始化相关系数
     def init_gammas(self) :
-        # 清理索引
-        self._traverse(VectorItem.set_index, 0)
-        # 打印信息
-        print("VectorGroup.init : index of all words initialized !")
+        # 索引清零
+        # 临时做为标记位使用
+        for t in self.values() : t.index = 0
         # 初始化相关系数
+        # 需要使用索引作为临时标记位
         self._init_gammas()
         # 打印信息
-        print("VectorGroup.init : gammas of all words initialized !")
+        print("VectorGroup.init : gammas initialized !")
         # 交叉检查，清理无用的矢量
         self._contents = \
             {key : item for (key, item)
              in self._contents.items() if item.index > 0}
         # 打印信息
         print("VectorGroup.init : %d row(s) left !" % len(self))
-        print("VectorGroup.init : useless vectors have been removed !")
+        print("VectorGroup.init : useless vectors removed !")
+        # 初始化索引值
+        for index, t in enumerate(self.values()) : t.index = index
+        # 返回结果
+        return len(self)
 
     # 初始化相关系数
     def _init_gammas(self) :
+        # 总数
+        n = len(self._words)
+        # 进度条
+        pb = ProgressBar(n)
+        # 开始
+        pb.begin(f"VectorGroup._init_gammas : init gammas[{n}] !")
         # 初始化相关系数
         for item in self._words.values() :
+            # 进度条
+            pb.increase()
             # 获得内容
             f = item.count
             c = item.content
@@ -336,9 +362,11 @@ class VectorGroup(ContentGroup) :
             # 计算相关系数
             item.gamma = 0.5 * float(f) \
                 * (1.0 / float(f1) + 1.0 / float(f2))
+        # 结束
+        pb.end()
 
     # 完成一次全量计算
-    def solving(self, max_loop = 20, error = 1.0e-5) :
+    def solving(self, max_loop = 20, error = 1.0e-5, use_matrix = False) :
         # 检查参数
         assert 0 < error < 1.0
         # 总数
@@ -352,8 +380,10 @@ class VectorGroup(ContentGroup) :
 
         # 初始化相关系数
         self.init_gammas()
+        # 相关系数矩阵
+        gammas = self._get_gammas()
         # 初始化矩阵
-        self._traverse(VectorItem.init_matrix)
+        self.traverse(VectorItem.init_matrix)
 
         # 循环计数
         i = 0; j = 0
@@ -366,9 +396,16 @@ class VectorGroup(ContentGroup) :
             # 设置初始误差矩阵
             self._traverse(VectorItem.init_delta)
             # 进行一次全量计算，累积误差数值
-            delta = self._solving()
+            delta = 0.0
+            # 检查标记位
+            if not use_matrix :
+                # 求解方程
+                delta = self._normal_solving(gammas)
+                print("")
+            else :
+                # 用矩阵求解方程
+                delta = self._matrix_solving(gammas)
             # 打印信息
-            print("")
             print("VectorGroup.solving : ΔG[%d] = %f !" % (j, delta))
             # 检查结果
             if last_delta > delta :
@@ -379,7 +416,7 @@ class VectorGroup(ContentGroup) :
                 # 求平均值
                 self._traverse(VectorItem.mul_delta, value)
                 # 进行加和计算
-                self._traverse(VectorItem.add_delta)
+                self._traverse(VectorItem.mov_matrix)
                 # 重置无效的数据
                 self._traverse(VectorItem.reset_useless)
             else :
@@ -392,8 +429,51 @@ class VectorGroup(ContentGroup) :
         # 返回结果
         return last_delta
 
+    # 获得标准数据
+    def _get_gammas(self) :
+        # 获得维度
+        n = len(self._words)
+        # 进度条
+        pb = ProgressBar(n)
+        # 开始
+        pb.begin(f"VectorGroup._get_gammas : get gammas[{n}] !")
+        # 生成数据
+        gammas = numpy.zeros((len(self), len(self)))
+        # 初始化相关系数
+        for item in self._words.values() :
+            # 获得内容
+            f = item.count
+            c = item.content
+            # 检查数据
+            assert len(c) == 2
+            # 检查数值
+            if f <= 0 : continue
+
+            # 获得单词
+            c1 = c[:1]
+            # 检查数据
+            if c1 not in self : continue
+            # 获得索引值
+            i = self[c1].index
+
+            # 获得单词
+            c2 = c[-1]
+            # 检查数据
+            if c2 not in self : continue
+            # 获得索引值
+            j = self[c2].index
+
+            # 进度条
+            pb.increase()
+            # 设置数值
+            gammas[i][j] = item.gamma
+        # 结束
+        pb.end()
+        # 返回结果
+        return gammas
+
     # 完成一次全量计算
-    def _solving(self) :
+    def _normal_solving(self, gammas) :
         # 获得总数
         total = len(self) * len(self)
         # 进度条
@@ -405,21 +485,11 @@ class VectorGroup(ContentGroup) :
         # 最大误差
         max_delta = 0.0
         # 循环处理
-        for t1 in self.values():
-            # 获得内容
-            c1 = t1.content
+        for t1 in self.values() :
             # 循环处理
             for t2 in self.values() :
-                # 获得内容
-                c2 = t2.content
                 # 相关系数
-                gamma = 0.0
-                # 获得拼接内容
-                c = c1 + c2
-                # 检查数据
-                if c in self._words :
-                    # 设置相关系数
-                    gamma = self._words[c].gamma
+                gamma = gammas[t1.index][t2.index]
                 # 增加计数
                 pb.increase()
                 # 增加处理过程
@@ -433,51 +503,196 @@ class VectorGroup(ContentGroup) :
         # 返回结果
         return max_delta
 
-    """
-    # 完成一次全量计算
-    def _solving(self) :
-        # 获得总数
-        total = len(self) * len(self)
+    # 利用矩阵运算求解
+    def _matrix_solving(self, gammas) :
+        # gammas = [[0.00036606 0.1310742], [0.00083604 0.00074156]]
+        # 获得维度
+        n = len(self)
+
         # 进度条
-        pb = ProgressBar(total)
+        pb = ProgressBar(n)
         # 打印信息
-        pb.begin()
-        #pb.begin(f"Word2Vector._solving : try to process {total} relation(s) !")
-
-        # 最大误差
-        max_delta = 0.0
+        pb.begin(f"VectorGroup._matrix_solving : get Ai[{n}] !")
+        # 生成数据
+        # ais = [[1. 1.], [2. 2.]]
+        ais = numpy.zeros((n, self._dimension))
         # 循环处理
-        for t1 in self.values():
-            # 获得内容
-            c1 = t1.content
+        for t in self.values() :
+            # 进度条
+            pb.increase()
+            # 设置矩阵值
+            ais[t.index] = t.matrix[0]
+        # 结束
+        pb.end()
+
+        # 进度条
+        pb = ProgressBar(n)
+        # 打印信息
+        pb.begin(f"VectorGroup._matrix_solving : get Bj[{n}] !")
+        # 生成数据
+        # bjs = [[1. 1.], [2. 2.]]
+        bjs = numpy.zeros((n, self._dimension))
+        # 循环处理
+        for t in self.values() :
+            # 进度条
+            pb.increase()
+            # 设置矩阵值
+            bjs[t.index] = t.matrix[1]
+        # 结束
+        pb.end()
+
+        # 进度条
+        pb = ProgressBar(9 * n + 3 * n * n)
+        # 打印信息
+        pb.begin("VectorGroup._matrix_solving : get matrix !")
+        # 获得计算值
+        # delta = [[-1.99963394 -3.8689258 ], [-3.99916396 -7.99925844]]
+        delta = gammas - numpy.dot(ais, bjs.T)
+        # 进度条
+        pb.increase(2 * n)
+        # 获得范数
+        # max_delta = 7.999258437337532
+        max_delta = numpy.abs(delta).max()
+        # 进度条
+        pb.increase(n + n * n)
+        # 计算模长
+        # _Ais = [2. 8.]
+        _Ais = numpy.sum(numpy.square(ais), axis = 1)
+        _Ais = numpy.reshape(_Ais, (n, 1))
+        # 进度条
+        pb.increase(2 * n)
+        # _Bjs = [2. 8.]
+        _Bjs = numpy.sum(numpy.square(bjs), axis = 1)
+        _Bjs = numpy.reshape(_Bjs, (1, n))
+        # 进度条
+        pb.increase(2 * n)
+        # 组成新矩阵
+        _Ais = numpy.tile(_Ais,(1, n))
+        _Bjs = numpy.tile(_Bjs,(n, 1))
+        # 进度条
+        pb.increase(2 * n)
+        # _L = [[-0.49990848 -0.38689258], [-0.3999164  -0.49995365]]
+        _L = delta * numpy.reciprocal(_Bjs + _Ais)
+        # 进度条
+        pb.increase(2 * n * n)
+        # 结束
+        pb.end()
+
+        # 进度条
+        pb = ProgressBar(n)
+        # 打印信息
+        pb.begin(f"VectorGroup._matrix_solving : get items[{n}] !")
+        # 设置误差分量
+        items = [None] * n
+        # 建立索引
+        for t in self.values() :
+            # 进度条
+            pb.increase()
+            # 设置元素
+            items[t.index] = t
+        # 结束
+        pb.end()
+
+        # 进度条
+        pb = ProgressBar(n * n)
+        # 打印信息
+        pb.begin(f"VectorGroup._matrix_solving : set deltas[{n * n}] !")
+        # 循环处理
+        for i in range(n) :
             # 循环处理
-            for t2 in self.values() :
-                # 获得内容
-                c2 = t2.content
-
-                # 相关系数
-                gamma = 0.0
-                # 获得拼接内容
-                c = c1 + c2
-                # 检查数据
-                if c in self._words :
-                    # 设置相关系数
-                    gamma = self._words[c].gamma
-
+            for j in range(n) :
                 # 进度条
                 pb.increase()
-                # 计算数值
-                delta = \
-                    VectorItem.solving(t1, t2, gamma)
-                # 检查结果
-                if delta > max_delta : max_delta = delta
-
-        # 打印数据总数
+                # 获得数值
+                value = _L[i][j]
+                # 设置误差分量
+                items[i].delta[0] += value * bjs[j]
+                items[j].delta[1] += value * ais[i]
+        # 结束
         pb.end()
-        #pb.end(f"Word2Vector._solving : {total} relations(s) processed !")
         # 返回结果
         return max_delta
-    """
+
+    # 完成一次全量计算
+    def fast_solving(self, max_loop = 20, error = 1.0e-5):
+        # 检查参数
+        assert 0 < error < 1.0
+        # 总数
+        # 也是维度之一
+        n = len(self)
+        # 检查内容
+        if n < 2:
+            print("VectorGroup.fast_solving : insufficient vectors !")
+            return
+
+        # 初始化相关系数
+        # 有删除无效数据的行为
+        n = self.init_gammas()
+        # 相关系数矩阵
+        gammas = self._get_gammas()
+
+        # 生成Ais
+        ais = numpy.random.random((n, self._dimension))
+        # 生成Bjs
+        bjs = numpy.random.random((n, self._dimension))
+        # 初始化矩阵
+        self.traverse(VectorItem.init_matrix, [ais, bjs])
+
+        # 循环计数
+        i = 0; j = 0
+        # 最大行和范数
+        last_delta = 1.0e5
+        # 求倒数
+        value = 1.0 / float(n)
+        # 循环直至误差符合要求，或者收敛至最小误差
+        while i < max_loop :
+            # 计数器加一
+            i += 1; j += 1
+            # 生成dAis
+            _dAis = numpy.zeros((n, self._dimension))
+            # 生成dBjs
+            _dBjs = numpy.zeros((n, self._dimension))
+            # 初始化矩阵
+            self._traverse(VectorItem.init_delta, [_dAis, _dBjs])
+            # 进行一次全量计算，累积误差数值
+            # 用矩阵求解
+            # 获得计算值
+            delta = gammas - numpy.dot(ais, bjs.T)
+            # 获得范数
+            max_delta = numpy.abs(delta).max()
+            # 计算模长
+            _Ais = numpy.sum(numpy.square(ais), axis = 1)
+            _Ais = numpy.reshape(_Ais, (n, 1))
+            # 计算模长
+            _Bjs = numpy.sum(numpy.square(bjs), axis = 1)
+            _Bjs = numpy.reshape(_Bjs, (1, n))
+            # 组成新矩阵
+            _Ais = numpy.tile(_Ais, (1, n))
+            _Bjs = numpy.tile(_Bjs, (n, 1))
+            # 计算系数矩阵
+            _L = delta * numpy.reciprocal(_Bjs + _Ais)
+            # 获得误差矩阵
+            _dAis = numpy.dot(_L, bjs)
+            _dBjs = numpy.dot(_L.T, ais)
+            # 打印信息
+            print("VectorGroup.solving : ΔG[%d] = %f !" % (j, max_delta))
+            # 检查结果
+            if last_delta > max_delta :
+                # 呈下降趋势
+                i = 0; last_delta = max_delta
+            # 检查结果
+            if max_delta > error :
+                # 求平均值，并加和计算
+                ais += value * _dAis; bjs += value * _dBjs
+            else :
+                # 最大行和范数
+                max_norm = numpy.maximum(
+                    numpy.linalg.norm(_dAis, numpy.inf),
+                    numpy.linalg.norm(_dBjs, numpy.inf))
+                # 打印结果
+                print("VectorGroup.solving : norm[%d] = %f !" % (j, max_norm)); break
+        # 返回结果
+        return last_delta
 
 # 路径
 json_path = ".\\json\\"
@@ -557,7 +772,7 @@ def verify_vectors() :
         print("\t", end = "")
         print("gamma12 = %f" % VectorItem.dot(vectors[w1], vectors[w2]))
 
-def calculation_example():
+def calculation_example(use_matrix = False):
     # 生成对象
     vectors = VectorGroup(2)
 
@@ -577,11 +792,35 @@ def calculation_example():
     vectors.add_word("动运", 1122)
 
     # 求解
-    if vectors.solving() > 1.0e-5 :
+    if vectors.solving(use_matrix = use_matrix) > 1.0e-5 :
         print("Word2Vector.calculation_example : fail to solve !")
     else :
         print("Word2Vector.calculation_example : successfully done !")
 
+def fast_calculation_example():
+    # 生成对象
+    vectors = VectorGroup(2)
+
+    # 生成对象
+    v1 = vectors.new_item("运")
+    v1.count = 937002
+    vectors.add_item(v1)
+
+    # 生成对象
+    v2 = vectors.new_item("动")
+    v2.count = 2363927
+    vectors.add_item(v2)
+
+    vectors.add_word("运运", 343)
+    vectors.add_word("动动", 1753)
+    vectors.add_word("运动", 175908)
+    vectors.add_word("动运", 1122)
+
+    # 求解
+    if vectors.fast_solving() > 1.0e-5 :
+        print("Word2Vector.fast_calculation_example : fail to solve !")
+    else :
+        print("Word2Vector.fast_calculation_example : successfully done !")
 
 def main() :
 
@@ -595,10 +834,14 @@ def main() :
             "init vectors",
             "load vectors",
             "save vectors",
-            "solving vectors",
-            "verify vectors",
             "initialize gammas",
-            "calculation example",
+            "fast solving vectors",
+            "normal solving vectors",
+            "matrix solving vectors",
+            "verify vectors",
+            "fast calculation example",
+            "normal calculation example",
+            "matrix calculation example",
         ]
 
     # 提示信息
@@ -632,17 +875,32 @@ def main() :
             # 保存
             save_vectors()
         elif user_input == '4' :
-            # 求解
-            vectors.solving(10)
+            # 初始化
+            vectors.init_gammas()
         elif user_input == '5' :
-            # 验证
-            verify_vectors()
+            # 求解
+            vectors.fast_solving()
         elif user_input == '6' :
             # 求解
-            vectors.init_gammas()
+            vectors.solving(20)
         elif user_input == '7' :
+            # 求解
+            vectors.solving(20, use_matrix = True)
+        elif user_input == '8' :
+            # 验证
+            verify_vectors()
+        elif user_input == '9' :
+            # 计算例子
+            fast_calculation_example()
+        elif user_input == '10' :
             # 计算例子
             calculation_example()
+            #标定结果
+            #VectorGroup.solving: ΔG[34] = 0.005881 !
+            #Word2Vector.calculation_example: fail to solve !
+        elif user_input == '11':
+            # 计算例子
+            calculation_example(True)
         else :
             print("Word2Vector.main : unknown choice !")
 

@@ -318,8 +318,7 @@ class ContentGroup :
                 # 读取下一行
                 line = json_file.readline()
             # 打印信息
-            if pb is not None : pb.end()
-            print("")
+            pb.end()
             print("ContentGroup.load : %d line(s) processed !" % pb.count)
         except Exception as e:
             traceback.print_exc()
@@ -643,8 +642,7 @@ class DictionaryContent(ContentGroup) :
                 # 读取下一行
                 line = json_file.readline()
             # 打印信息
-            if pb is not None : pb.end()
-            print("")
+            pb.end()
             print("DictionaryContent.load_dict : %d line(s) processed !" % count)
         except Exception as e:
             traceback.print_exc()
