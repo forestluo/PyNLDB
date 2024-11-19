@@ -2,9 +2,6 @@
 import math
 import numpy
 
-from numba import jit
-from numba import cuda
-
 from Content import *
 
 class VectorItem(ContentItem) :
@@ -68,9 +65,10 @@ class VectorItem(ContentItem) :
     def dump(self, dump_matrix = True, dump_delta = True):
         # 打印信息
         print("VectorItem.dump : show properties !")
-        print("\t", end = ""); print("length = %d" % self.length)
-        print("\t", end = ""); print("count = %d" % self.count)
-        print("\t", end = ""); print("content = \"%s\"" % self.content)
+        print(f"\tindex = {self.index}")
+        print(f"\tcount = {self.count}")
+        print(f"\tlength = {self.length}")
+        print(f"\tcontent = \"{self.content}\"")
         if dump_matrix : print("matrix : "); print(self.__matrix)
         if dump_delta :   print("delta : ");  print(self.__delta)
 
@@ -143,32 +141,39 @@ class VectorItem(ContentItem) :
         t.__matrix = \
             numpy.random.random(t.__matrix.shape)
 
-"""
-# 计划使用CUDA加速
-# 但是目前Numba0.60版本不支持numpy.tile函数
-# 而Numba0.61dev版本需要llvmlite 0.44dev
-# llvmlite 0.44dev在Windows下无法编译和安装
-@jit
-def cuda_solving(n, ais, bjs, gammas) :
-    # 获得计算值
-    delta = gammas - numpy.dot(ais, bjs.T)
-    # 通过误差计算步长，并移至下一个步骤
-    # 计算模长
-    _Ais = numpy.sum(numpy.square(ais), axis = 1)
-    _Ais = numpy.reshape(_Ais, (n, 1))
-    _Ais = numpy.tile(_Ais, (1, n))
-    # 计算模长
-    _Bjs = numpy.sum(numpy.square(bjs), axis = 1)
-    _Bjs = numpy.reshape(_Bjs, (1, n))
-    _Bjs = numpy.tile(_Bjs, (n, 1))
-    # 计算系数矩阵（含均值处理）
-    _L = delta * numpy.reciprocal(_Bjs + _Ais) / n
-    # 求平均值，并加和计算
-    ais += numpy.dot(_L, bjs)
-    bjs += numpy.dot(_L.T, ais)
-    # 返回结果
-    return delta
-"""
+    # 求相关系数
+    # 按照公式正常处置
+    @staticmethod
+    def get_gamma(t1, t2) :
+        # Ti = (Ai, Bi)'
+        # Tj = (Aj, Bj)'
+        # G = [1, 0].(Ti.Tj').[0, 1]'
+        # 获得矩阵（2x2）
+        # Ti * Tj = Ti.Tj' = (Ai, Bi)'.(Aj, Bj)
+        # | Ai.Aj Ai.Bj |
+        # | Bi.Aj Bi.Bj |
+        result = numpy.matmul(t1.__matrix, t2.__matrix.T)
+        # 正常处置
+        result = numpy.matmul(numpy.array([[1, 0]]), result)
+        result = numpy.matmul(result, numpy.array([[0, 1]]).T)
+        # 返回结果
+        return result[0][0]
+
+    # 按照公式正常处置
+    @staticmethod
+    def get_delta(t1, t2, delta) :
+        # Ti = (Ai, Bi)'
+        # Tj = (Aj, Bj)'
+        # 计算模长
+        _Bj = numpy.dot(t2.__matrix[1], t2.__matrix[1]) # |Bj| * |Bj|
+        _Ai = numpy.dot(t1.__matrix[0], t1.__matrix[0]) # |Ai| * |Ai|
+        # 计算数据
+        value = delta / (_Bj + _Ai)
+        # 计算delta
+        # | 0, value | | Aj |   | 0    , 0 | | Ai |
+        # | 0    , 0 |.| Bj | , | value, 0 |.| Bi |
+        return numpy.matmul(numpy.array([[value, 0],[0, 0]]), t2.__matrix), \
+                    numpy.matmul(numpy.array([[0, 0],[0, value]]), t1.__matrix)
 
 class VectorGroup(ContentGroup) :
     # 初始化
@@ -304,14 +309,14 @@ class VectorGroup(ContentGroup) :
         # 计数器加一
         else : self._max_deltas[key] += 1
 
-    def __clear_vectors(self) :
+    def clear_vectors(self, words = None) :
         # 检查长度
-        if len(self._max_deltas) < 0 : return
+        if len(self._max_deltas) <= 0 : return
         # 获得最大值
         index = max(self._max_deltas,
             key = lambda k : self._max_deltas[k])
         # 检查数值
-        if self._max_deltas[index] < self._max_loop : return
+        #if self._max_deltas[index] < self._max_loop : return
         # 维度
         n = len(self)
         # 获得索引
@@ -325,40 +330,70 @@ class VectorGroup(ContentGroup) :
             items[item.index] = item
         # 词汇
         t1 = items[row]; t2 = items[col]
+        # 释放
+        items.clear()
         # 显示数据
-        t1.dump(False, False)
-        t2.dump(False, False)
+        t1.dump(); t2.dump()
+
         # 检查结果
         if t1 is None :
             if t2 is None : return
-            else : del t1
+            else :
+                if words is not None :
+                    words.add_item(t2)
+                self.remove(t2.content)
         else :
-            if t2 is None : del t1
-            elif t1.count < t2.count : del t1
-            elif t1.count > t2.count : del t2
-            else : del t1; del t2
+            if t2 is None :
+                if words is not None :
+                    words.add_item(t1)
+                self.remove(t1.content)
+            elif t1.count < t2.count :
+                if words is not None :
+                    words.add_item(t1)
+                self.remove(t1.content)
+            elif t1.count > t2.count :
+                if words is not None :
+                    words.add_item(t2)
+                self.remove(t2.content)
+            else :
+                if words is not None :
+                    words.add_item(t1)
+                    words.add_item(t2)
+                self.remove(t1.content)
+                self.remove(t2.content)
+        # 删除该项目
+        key = t1.content + t2.content
+        # 检查参数
+        if words is not None :
+            words.add_content(key)
+        if key in self._words :
+            self._words[key].dump()
+            self._words.remove(key)
 
     # 获得标准数据
-    def __get_gammas(self) :
+    def get_gammas(self) :
         # 获得总数
         total = len(self._words)
         # 进度条
         pb = ProgressBar(total)
         # 开始
-        pb.begin(f"VectorGroup.__get_gammas : get gammas[{total}] !")
+        pb.begin(f"VectorGroup.get_gammas : get gammas[{total}] !")
         # 获得维度
         n = len(self)
         # 生成数据
         gammas = numpy.zeros((n, n))
         # 初始化相关系数
         for item in self._words.values() :
+            # 进度条
+            pb.increase()
+
             # 获得内容
             f = item.count
             c = item.content
             # 检查数据
             assert len(c) == 2
             # 检查数值
-            if f <= 0 : continue
+            if f <= 1 : continue
 
             # 获得单词
             c1 = c[:1]
@@ -374,8 +409,6 @@ class VectorGroup(ContentGroup) :
             # 获得索引值
             j = self[c2].index
 
-            # 进度条
-            pb.increase()
             # 设置数值
             gammas[i][j] = item.gamma
         # 结束
@@ -454,7 +487,7 @@ class VectorGroup(ContentGroup) :
         # 初始化相关系数
         self.init_gammas()
         # 相关系数矩阵
-        gammas = self.__get_gammas()
+        gammas = self.get_gammas()
         # 检查标记位
         if self.init_matrix :
             # 清除标记位
@@ -512,7 +545,7 @@ class VectorGroup(ContentGroup) :
         pb = ProgressBar(total)
         # 打印信息
         pb.begin()
-        #pb.begin(f"Word2Vector.__normal_solving : try to process {total} relation(s) !")
+        #pb.begin(f"Word2Vector.__solving : try to process {total} relation(s) !")
 
         # 最大误差
         max_delta = 0.0
@@ -554,7 +587,7 @@ class VectorGroup(ContentGroup) :
 
         # 打印信息
         pb.end()
-        #pb.end(f"Word2Vector.__normal_solving : {total} relations(s) processed !")
+        #pb.end(f"Word2Vector.__solving : {total} relations(s) processed !")
         # 返回结果
         return max_delta
 
@@ -574,7 +607,7 @@ class VectorGroup(ContentGroup) :
         # 有删除无效数据的行为
         n = self.init_gammas()
         # 相关系数矩阵
-        gammas = self.__get_gammas()
+        gammas = self.get_gammas()
 
         # 生成Ais
         ais = numpy.random.random((n, self._dimension))
@@ -611,7 +644,7 @@ class VectorGroup(ContentGroup) :
         # 循环计数
         i = 0; j = 0
         # 最大行和范数
-        last_delta = 1.0e5
+        last_delta = numpy.inf
         # 清理误差记录
         self._max_deltas.clear()
         # 循环直至误差符合要求，或者收敛至最小误差
@@ -638,7 +671,7 @@ class VectorGroup(ContentGroup) :
 
             # 计划使用CUDA加速
             # 但是目前Numba0.60版本不支持numpy.tile函数
-            # 而Numba0.61dev版本需要llvmlite 0.44dev
+            # Numba0.61dev版本需要llvmlite 0.44dev
             # llvmlite 0.44dev在Windows下无法编译和安装
             #delta = cuda_solving(n, ais, bjs, gammas)
 
@@ -656,10 +689,10 @@ class VectorGroup(ContentGroup) :
             self.__count_max_delta(row, col)
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
-            print(f"\tGamma = {gammas[row][col]}")
-            print(f"\t[row, col] = [{row}, {col}]")
-            print(f"\tΔGamma[{i}, {j}] = {max_delta}")
-            print(f"\tΔDelta[{i}, {j}] = {last_delta - max_delta}")
+            #print(f"\t[row, col] = [{row}, {col}]")
+            print(f"\tGamma[{row}, {col}] = {gammas[row][col]}")
+            print(f"\t∇Gamma[{i}, {j}] = {max_delta}")
+            if j > 1 : print(f"\t∇²Gamma[{i}, {j}] = {last_delta - max_delta}")
             # 检查数据
             if max_delta < self._error :
                 # 中断循环
@@ -668,29 +701,24 @@ class VectorGroup(ContentGroup) :
             # 检查结果
             if last_delta > max_delta :
                 # 检查下降趋势
-                if last_delta - max_delta <= self._error :
+                if j > 1 and \
+                    last_delta - max_delta <= self._error :
                     # 下降趋势太弱
-                    print(f"VectorGroup.fast_solving : too slow !")
+                    print(f"VectorGroup.fast_solving : small convergence !")
                     break
                 # 呈下降趋势
                 i = 0; last_delta = max_delta
             """
             # 对误差较大的项目增加适当扰动
             for k in range(self._dimension):
-                # 扰动的大小随机决定
-                ais[row][k] *= numpy.random.random()
-                bjs[col][k] *= numpy.random.random()
+                # 扰动的大小和方向随机决定
+                ais[row][k] += (0.5 - numpy.random.random()) * self._error
+                bjs[col][k] += (0.5 - numpy.random.random()) * self._error
             """
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
         # 打印信息
         print(f"VectorGroup.fast_solving : final matrix[{n}] copied !")
-        # 去除不合适的数据
-        self.__clear_vectors()
-        # 清理误差记录
-        self._max_deltas.clear()
-        # 打印信息
-        print(f"VectorGroup.fast_solving : improper vectors removed !")
         # 返回结果
         return last_delta
 
@@ -724,6 +752,8 @@ def save_vectors() :
     print("Word2Vector.save_vectors : vectors.json has been saved !")
 
 def verify_vectors() :
+    # 获得矩阵
+    gammas = vectors.get_gammas()
     # 清理输入项目
     user_input = ""
     # 循环处理
@@ -740,39 +770,40 @@ def verify_vectors() :
         if word is not None :
             # 设置相关系数
             gamma = word.gamma
+
+        w1 = user_input[0]
+        # 检查结果
+        if w1 in vectors :
+            vectors[w1].dump()
+        else :
+            print(f"\tw1 = \"{w1}\"")
+            print(f"\tf1 = ...invalid word...")
+
+        w2 = user_input[-1]
+        # 检查结果
+        if w2 in vectors :
+            vectors[w2].dump()
+        else :
+            print(f"\tw2 = \"{w2}\"")
+            print(f"\tf2 = ...invalid word...")
+
+        # 检查结果
+        if word is not None :
+            # 打印数据
+            word.dump()
         else :
             # 打印信息
             print("Word2Vector.verify_vectors : invalid input !")
-            continue
+
         # 打印信息
         print("Word2Vector.verify_vectors : show results !")
-
-        w1 = user_input[:1]
-        print("\t", end = "")
-        print("w1 = \"%s\"" % w1)
-        print("\t", end = "")
-        if w1 not in vectors :
-            print("f1 = -1.0")
-        else :
-            print("f1 = %d" % vectors[w1].count)
-
-        w2 = user_input[:-1]
-        print("\t", end = "")
-        print("w2 = \"%s\"" % w2)
-        print("\t", end = "")
-        if w2 not in vectors :
-            print("f2 = -1.0")
-        else :
-            print("f2 = %d" % vectors[w2].count)
-
-        print("\t", end = "")
-        print("word12 = \"%s\"" % user_input)
-        print("\t", end = "")
-        print("Gamma12 = %f" % gamma)
-        print("\t", end = "")
-        print("gamma12 = %f" % VectorItem.dot(vectors[w1], vectors[w2]))
+        print(f"\tGamma12 (from words) = {gamma}")
+        print(f"\tGamma12 (from gamma matrix) = {gammas[vectors[w1].index][vectors[w2].index]}")
+        print(f"\tGamma12 (from vector calculation) = {VectorItem.get_gamma(vectors[w1], vectors[w2])}")
 
 def fast_solving() :
+    # 记录
+    words = WordContent()
     # 计数器
     i = 0
     while True :
@@ -780,13 +811,18 @@ def fast_solving() :
         i += 1
         # 求解
         max_delta = vectors.fast_solving()
-        # 保存文件
-        vectors.save(json_path + f"vectors{i}.json")
         # 检查结果
         if max_delta > 1.0e-5 :
+            # 清理不合适的数据
+            vectors.clear_vectors(words)
+            # 保存文件
+            words.save(json_path + "removed.json")
+            # 打印信息
             print("Word2Vector.fast_solving : fail to solve !")
         else :
             print("Word2Vector.fast_solving : successfully done !"); break
+    # 保存文件
+    vectors.save(json_path + "vectors.json")
 
 def fast_calculation_example():
     # 生成对象

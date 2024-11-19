@@ -126,6 +126,11 @@ class ContentGroup :
         # 清理所有数据
         self._contents.clear()
 
+    # 删除元素
+    def remove(self, key) :
+        # 删除元素
+        self._contents.pop(key)
+
     # 生成新的对象
     def new_item(self, content = None) :
         # 返回结果
