@@ -358,7 +358,7 @@ class VectorGroup(ContentGroup) :
             # 检查数据
             assert len(c) == 2
             # 检查数值
-            if f <= 0 : continue
+            if f <= 1 : continue
 
             # 获得单词
             c1 = c[:1]
@@ -773,6 +773,11 @@ def verify_vectors() :
         print("gamma12 = %f" % VectorItem.dot(vectors[w1], vectors[w2]))
 
 def fast_solving() :
+    # 检查数据
+    if len(vectors) < 2 :
+        print("Word2Vector.fast_solving : insufficient vectors !")
+        return
+
     # 计数器
     i = 0
     while True :
