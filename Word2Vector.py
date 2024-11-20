@@ -299,8 +299,10 @@ class VectorGroup(ContentGroup) :
 
     # 增加一个误差记录
     def __count_max_delta(self, row, col) :
+        # 获得维度
+        n = len(self)
         # 展平索引值
-        key = row * self._dimension + col
+        key = row * n + col
         # 检查记录
         if key not in \
             self._max_deltas.keys() :
