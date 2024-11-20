@@ -810,11 +810,11 @@ class WordItem(ContentItem) :
     def dump(self) :
         # 打印信息
         print("WordItem.dump : show properties !")
-        print("\t", end = ""); print("length = %d" % self.length)
-        print("\t", end = ""); print("count = %d" % self.count)
-        print("\t", end = ""); print("gamma = %f" % self.gamma)
-        print("\t", end = ""); print("content = \"%s\"" % self.content)
-        print("\t", end = ""); print("sha256 = 0x%s" % self.sha256.hexdigest())
+        print(f"\tlength = {self.length}")
+        print(f"\tcount = {self.count}")
+        print(f"\tgamma = {self.gamma}")
+        print(f"\tcontent = \"{self.content}\"")
+        #print(f"\tsha256 = 0x{self.sha256.hexdigest()}")
 
 class WordContent(ContentGroup) :
     # 初始化

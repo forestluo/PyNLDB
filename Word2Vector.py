@@ -194,6 +194,8 @@ class VectorGroup(ContentGroup) :
         self._max_deltas = {}
         # 设置词汇组
         self._words = WordContent()
+        # 被删除的内容
+        self._removed = WordContent()
 
     # 维度
     @property
@@ -275,6 +277,30 @@ class VectorGroup(ContentGroup) :
             return False
         # 打印信息
         print("VectorGroup.init : all vectors initialized !")
+        # 检查文件是否存在
+        if os.path.isfile(path + "removed.json"):
+            # 清理
+            self._removed.clear()
+            # 加载数据
+            if self._removed.load(path + "removed.json") > 0 :
+                # 进度条
+                pb = ProgressBar(len(self._removed))
+                # 开始
+                pb.begin("VectorGroup.init : remove vectors and words !")
+                # 循环处理
+                for item in self._removed.values() :
+                    # 进度条
+                    pb.increase()
+                    # 删除已被判定需要被移除的数据
+                    if item.length == 1 \
+                        and item.content in self :
+                        # 删除项目
+                        self.remove(item.content)
+                    elif item.content in self._words :
+                        # 删除项目
+                        self._words.remove(item.content)
+                # 结束
+                pb.end()
         # 设置标志位
         self.init_matrix = True
         # 返回结果
@@ -302,6 +328,17 @@ class VectorGroup(ContentGroup) :
         # 返回结果
         return len(self)
 
+    # 获得最大数量之
+    def __get_max_delta_count(self) :
+        # 检查长度
+        if len(self._max_deltas) <= 0 :
+            return 0
+        # 获得最大值
+        index = max(self._max_deltas,
+                    key=lambda k: self._max_deltas[k])
+        # 检查数值
+        return self._max_deltas[index]
+
     # 增加一个误差记录
     def __count_max_delta(self, row, col) :
         # 获得维度
@@ -316,18 +353,7 @@ class VectorGroup(ContentGroup) :
         # 计数器加一
         else : self._max_deltas[key] += 1
 
-    # 获得最大数量之
-    def __get_max_delta_count(self) :
-        # 检查长度
-        if len(self._max_deltas) <= 0 :
-            return 0
-        # 获得最大值
-        index = max(self._max_deltas,
-                    key=lambda k: self._max_deltas[k])
-        # 检查数值
-        return self._max_deltas[index]
-
-    def clear_vectors(self, removed = None) :
+    def clear_vectors(self) :
         # 检查长度
         if len(self._max_deltas) <= 0 : return
         # 获得最大值
@@ -364,18 +390,16 @@ class VectorGroup(ContentGroup) :
             # 获得单词
             word = self._words[key]
 
-        # 检查参数
-        if removed is not None:
-            # 增加项目
-            if t1 not in removed :
-                removed.add_item(t1)
-            # 增加项目
-            if t2 not in removed :
-                removed.add_item(t2)
-            # 增加项目
-            if key not in removed :
-                if word is not None :
-                    removed.add_item(word)
+        # 增加项目
+        if t1 not in self._removed :
+            self._removed.add_item(t1)
+        # 增加项目
+        if t2 not in self._removed :
+            self._removed.add_item(t2)
+        # 增加项目
+        if key not in self._removed :
+            if word is not None :
+                self._removed.add_item(word)
 
         # 打印计算值
         if t1 is not None and t2 is not None:
@@ -386,11 +410,10 @@ class VectorGroup(ContentGroup) :
         if word is not None :
             # 删除关键字
             self._words.remove(key)
-            # 检查相关系数
-            if numpy.abs(1.0 - word.gamma) < 0.25 :
-                # 删除项目
-                self.remove(t1.content); self.remove(t2.content); return
+        # 同时删除项目
+        self.remove(t1.content); self.remove(t2.content)
 
+        """
         # 检查结果
         if t1 is None :
             if t2 is None : return
@@ -401,6 +424,7 @@ class VectorGroup(ContentGroup) :
             elif t1.count > t2.count : self.remove(t2.content)
             else :
                 self.remove(t1.content); self.remove(t2.content)
+        """
 
     # 获得标准数据
     def get_gammas(self) :
@@ -858,7 +882,7 @@ def fast_solving() :
         # 检查结果
         if max_delta > 1.0e-5 :
             # 清理不合适的数据
-            vectors.clear_vectors(words)
+            vectors.clear_vectors()
             # 保存文件
             words.save(json_path + "removed.json")
             # 打印信息
