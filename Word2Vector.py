@@ -6,9 +6,9 @@ from Content import *
 
 class VectorItem(ContentItem) :
     # 初始化对象
-    def __init__(self, dimension, content = None) :
+    def __init__(self, dimension, content = None, count = 1) :
         # 调用父类初始化函数
-        super().__init__(content)
+        super().__init__(content, count)
         # 检查参数
         assert dimension >= 2
         # 索引
@@ -47,20 +47,20 @@ class VectorItem(ContentItem) :
                 "count" : self.count,
                 "length" : self.length,
                 "content" : self.content,
+                "index" : self.index,
                 "matrix" : self.__matrix.tolist(),
             }
 
     @json.setter
     def json(self, value) :
         # 设置参数
+        self.index = value["index"]
         self.count = value["count"]
         self.content = value["content"]
         # 检查长度
         #assert self.length == value["length"]
         # 设置举着
         self.__matrix = numpy.array(value["matrix"])
-        # 设置误差
-        self.__delta = numpy.zeros(self.__matrix.shape)
 
     def dump(self, dump_matrix = True, dump_delta = True):
         # 打印信息
@@ -229,9 +229,9 @@ class VectorGroup(ContentGroup) :
         self._words[content].count = count
 
     # 生成新的对象
-    def new_item(self, content = None) :
+    def new_item(self, content = None, count = 1) :
         # 返回结果
-        return VectorItem(self._dimension, content)
+        return VectorItem(self._dimension, content, count)
 
     # 增加项目
     # 用于traverse函数调用
@@ -244,8 +244,13 @@ class VectorGroup(ContentGroup) :
         if content in self:
             # 增加计数
             self[content].count += item.count; return
-        # 增加项目
-        self[content] = self.new_item(item.content); self[content].count = item.count
+        # 检查类型
+        if isinstance(item, VectorItem) :
+            # 增加对象
+            self[content] = item
+        else :
+            # 增加项目
+            self[content] = self.new_item(item.content, item.count)
 
     # 加载数据
     def init(self, path) :
@@ -299,8 +304,10 @@ class VectorGroup(ContentGroup) :
 
     # 增加一个误差记录
     def __count_max_delta(self, row, col) :
+        # 获得维度
+        n = len(self)
         # 展平索引值
-        key = row * self._dimension + col
+        key = row * n + col
         # 检查记录
         if key not in \
             self._max_deltas.keys() :
@@ -309,7 +316,18 @@ class VectorGroup(ContentGroup) :
         # 计数器加一
         else : self._max_deltas[key] += 1
 
-    def clear_vectors(self, words = None) :
+    # 获得最大数量之
+    def __get_max_delta_count(self) :
+        # 检查长度
+        if len(self._max_deltas) <= 0 :
+            return 0
+        # 获得最大值
+        index = max(self._max_deltas,
+                    key=lambda k: self._max_deltas[k])
+        # 检查数值
+        return self._max_deltas[index]
+
+    def clear_vectors(self, removed = None) :
         # 检查长度
         if len(self._max_deltas) <= 0 : return
         # 获得最大值
@@ -333,42 +351,56 @@ class VectorGroup(ContentGroup) :
         # 释放
         items.clear()
         # 显示数据
-        t1.dump(); t2.dump()
+        t1.dump(dump_delta = False); t2.dump(dump_delta = False)
+
+        # 项目
+        word = None
+        # 删除该项目
+        key = t1.content + t2.content
+        # 检查参数
+        if key in self._words :
+            # 打印数据
+            self._words[key].dump()
+            # 获得单词
+            word = self._words[key]
+
+        # 检查参数
+        if removed is not None:
+            # 增加项目
+            if t1 not in removed :
+                removed.add_item(t1)
+            # 增加项目
+            if t2 not in removed :
+                removed.add_item(t2)
+            # 增加项目
+            if key not in removed :
+                if word is not None :
+                    removed.add_item(word)
+
+        # 打印计算值
+        if t1 is not None and t2 is not None:
+            print("VectorGroup.clear_vectors : calculate gamma !")
+            print(f"\tgamma = {VectorItem.get_gamma(t1, t2)}")
+
+        # 检查关键字
+        if word is not None :
+            # 删除关键字
+            self._words.remove(key)
+            # 检查相关系数
+            if numpy.abs(1.0 - word.gamma) < 0.25 :
+                # 删除项目
+                self.remove(t1.content); self.remove(t2.content); return
 
         # 检查结果
         if t1 is None :
             if t2 is None : return
-            else :
-                if words is not None :
-                    words.add_item(t2)
-                self.remove(t2.content)
+            else : self.remove(t2.content)
         else :
-            if t2 is None :
-                if words is not None :
-                    words.add_item(t1)
-                self.remove(t1.content)
-            elif t1.count < t2.count :
-                if words is not None :
-                    words.add_item(t1)
-                self.remove(t1.content)
-            elif t1.count > t2.count :
-                if words is not None :
-                    words.add_item(t2)
-                self.remove(t2.content)
+            if t2 is None : self.remove(t1.content)
+            elif t1.count < t2.count : self.remove(t1.content)
+            elif t1.count > t2.count : self.remove(t2.content)
             else :
-                if words is not None :
-                    words.add_item(t1)
-                    words.add_item(t2)
-                self.remove(t1.content)
-                self.remove(t2.content)
-        # 删除该项目
-        key = t1.content + t2.content
-        # 检查参数
-        if words is not None :
-            words.add_content(key)
-        if key in self._words :
-            self._words[key].dump()
-            self._words.remove(key)
+                self.remove(t1.content); self.remove(t2.content)
 
     # 获得标准数据
     def get_gammas(self) :
@@ -393,7 +425,7 @@ class VectorGroup(ContentGroup) :
             # 检查数据
             assert len(c) == 2
             # 检查数值
-            if f <= 1 : continue
+            if f <= 0 : continue
 
             # 获得单词
             c1 = c[:1]
@@ -432,7 +464,7 @@ class VectorGroup(ContentGroup) :
             f = item.count
             c = item.content
             # 检查数值
-            if f <= 1 :
+            if f <= 0 :
                 item.gamma = 0.0; continue
 
             # 检查数据
@@ -685,24 +717,36 @@ class VectorGroup(ContentGroup) :
             col = pos - row * n
             # 设置最大误差值
             max_delta = abs_delta[row][col]
+            # 占比
+            percent = numpy.inf
+            # 占比
+            if gammas[row][col] > 0.0 :
+                # 计算动态占比
+                percent = max_delta / gammas[row][col]
             # 增加误差记录
             self.__count_max_delta(row, col)
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
             #print(f"\t[row, col] = [{row}, {col}]")
             print(f"\tGamma[{row}, {col}] = {gammas[row][col]}")
-            print(f"\t∇Gamma[{i}, {j}] = {max_delta}")
+            print(f"\t∇Gamma[{i}, {j}] = {max_delta} ({"{:.2f}".format(percent * 100.0)}%)")
             if j > 1 : print(f"\t∇²Gamma[{i}, {j}] = {last_delta - max_delta}")
             # 检查数据
-            if max_delta < self._error :
+            if max_delta < self._error or percent < self._error :
                 # 中断循环
                 last_delta = max_delta
                 break
+            """
+            # 检查结果
+            if self.__get_max_delta_count() > self._max_loop :
+                # 下降趋势太弱
+                print(f"VectorGroup.fast_solving : loop blocked !")
+                break
+            """
             # 检查结果
             if last_delta > max_delta :
                 # 检查下降趋势
-                if j > 1 and \
-                    last_delta - max_delta <= self._error :
+                if j > 1 and last_delta - max_delta <= self._error :
                     # 下降趋势太弱
                     print(f"VectorGroup.fast_solving : small convergence !")
                     break

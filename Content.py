@@ -129,12 +129,12 @@ class ContentGroup :
     # 删除元素
     def remove(self, key) :
         # 删除元素
-        self._contents.pop(key)
+        return self._contents.pop(key)
 
     # 生成新的对象
-    def new_item(self, content = None) :
+    def new_item(self, content = None,count = 1) :
         # 返回结果
-        return ContentItem(content)
+        return ContentItem(content, count)
 
     # 最大长度
     @property
@@ -342,11 +342,11 @@ class ContentGroup :
 
 class RawItem(ContentItem) :
     # 初始化对象
-    def __init__(self, content = None, source = None):
+    def __init__(self, content = None, count = 1, source = None) :
         # 设置来源
         self.source = source
         # 调用父类初始化
-        super().__init__(content)
+        super().__init__(content, count)
 
     @property
     def json(self) :
@@ -378,12 +378,11 @@ class RawItem(ContentItem) :
 
 class RawContent(ContentGroup) :
     # 生成新的对象
-    def new_item(self, content = None) :
+    def new_item(self, content = None, count = 1, source = None) :
         # 返回结果
-        return RawItem(content)
+        return RawItem(content, count, source)
 
     # 增加项目
-    # 用于traverse函数调用
     def add_content(self, content):
         # 检查参数
         assert isinstance(content, str)
@@ -401,16 +400,19 @@ class RawContent(ContentGroup) :
         if content in self:
             # 增加计数
             self[content].count += item.count; return
-        # 增加项目
-        self[content] = self.new_item(item.content)
-        # 设置参数
-        self[content].source = item.source; self[content].count = item.count
+        # 检查类型
+        if isinstance(item, RawItem) :
+            # 增加对象
+            self[content] = item
+        else :
+            # 增加项目
+            self[content] = self.new_item(item.content, item.count)
 
 class TokenItem(ContentItem) :
     # 初始化对象
-    def __init__(self, content = None) :
+    def __init__(self, content = None, count = 1) :
         # 调用父类初始化
-        super().__init__(content)
+        super().__init__(content, count)
         # 检查参数
         if content is not None :
             assert len(content) == 1
@@ -443,9 +445,9 @@ class TokenItem(ContentItem) :
 
 class TokenContent(ContentGroup) :
     # 生成新的对象
-    def new_item(self, content = None) :
+    def new_item(self, content = None, count = 1) :
         # 返回结果
-        return TokenItem(content)
+        return TokenItem(content, count)
 
     # 增加项目
     # 用于traverse函数调用
@@ -455,9 +457,26 @@ class TokenContent(ContentGroup) :
         # 增加项目
         self.add_item(ContentItem(content))
 
+    def add_item(self, item) :
+        # 检查参数
+        assert isinstance(item, ContentItem)
+        # 获得内容
+        content = item.content
+        # 检查类型
+        if content in self :
+            # 增加计数器
+            self[token].count += item.count; return
+        # 检查类型
+        if isinstance(item, TokenItem) :
+            # 增加对象
+            self[content] = item
+        else :
+            # 增加项目
+            self[content] = self.new_item(item.content, item.count)
+
     # 增加项目
     # 用于traverse函数调用
-    def add_item(self, item, parameter = None) :
+    def add_splitted(self, item, parameter = None) :
         # 检查参数
         assert isinstance(item, ContentItem)
         # 扫描结果
@@ -465,18 +484,19 @@ class TokenContent(ContentGroup) :
             # 检查字典
             if token in self :
                 # 增加计数器
-                self[token].count += item.count; continue
-            # 增加字典内容
-            self[token] = self.new_item(token); self[token].count = item.count
+                self[token].count += item.count
+            else :
+                # 增加字典内容
+                self[token] = self.new_item(token, item.count)
 
 class DictionaryItem(ContentItem) :
     # 初始化对象
-    def __init__(self, content = None) :
+    def __init__(self, content = None, count = 1) :
         # 来源与注释
         # source : remark
         self.sources = {}
         # 调用父类初始化函数
-        super().__init__(content)
+        super().__init__(content, count)
 
     # 是否为其来源
     def has_source(self, source) :
@@ -524,35 +544,20 @@ class DictionaryItem(ContentItem) :
         print("\t", end = ""); print("sha256 = 0x%s" % self.sha256.hexdigest())
 
 class DictionaryContent(ContentGroup) :
-    # 初始化对象
-    def __init__(self) :
-        # 调用父类初始化函数
-        super().__init__()
-        # 是否需要切分
-        self.need_split = True
-
     # 新对象
-    def new_item(self, content = None) :
+    def new_item(self, content = None, count = 1) :
         # 返回结果
-        return DictionaryItem(content)
+        return DictionaryItem(content, count)
 
     # 增加项目
     # 用于traverse函数
-    def count_content(self, content) :
-        # 检查参数
-        assert isinstance(content, str)
-        # 增加项目
-        self.count_item(ContentItem(content))
-
-    # 增加项目
-    # 用于traverse函数
-    def count_item(self, item, parameter = None) :
+    def count_item(self, item, need_split = True) :
         # 检查参数
         assert isinstance(item, ContentItem)
         # 生成内容
         segments = ['$' + item.content]
         # 检查标志位
-        if self.need_split :
+        if need_split :
             # 拆分内容
             segments = SplitTool.split(item.content)
         # 循环处理
@@ -666,11 +671,11 @@ class DictionaryContent(ContentGroup) :
 
 class SegmentItem(ContentItem) :
     # 初始化对象
-    def __init__(self, content = None, source = None) :
+    def __init__(self, content = None, count = 1, source = None) :
         # 来源
         self.sources = []
         # 调用父类初始化函数
-        super().__init__(content)
+        super().__init__(content, count)
         # 检查参数
         if isinstance(source, str) : self.sources.append(source)
 
@@ -719,17 +724,38 @@ class SegmentItem(ContentItem) :
 
 class SegmentContent(ContentGroup) :
     # 新对象
-    def new_item(self, content = None) :
+    def new_item(self, content = None, count = 1, source = None) :
         # 返回结果
-        return SegmentItem(content)
+        return SegmentItem(content, count, source)
 
     def add_content(self, content) :
         # 检查参数
         assert isinstance(content, str)
         # 增加项目
-        self.add_content(ContentItem(content))
+        self.add_item(ContentItem(content))
 
     def add_item(self, item) :
+        # 检查参数
+        assert isinstance(item, ContentItem)
+        # 获得内容
+        content = item.content
+        # 检查结果
+        if content in self:
+            # 获得元素
+            element = self[content]
+            # 增加计数
+            element.count += item.count
+            # 检查来源
+            if isinstance(item.source, str) :
+                # 增加来源
+                element.add_source(item.source)
+        # 增加项目
+        elif isinstance(item, SegmentItem) : self[content] = item
+        else :
+            # 增加项目
+            self[content] = self.new_item(content, item.count, item.source)
+
+    def add_splitted(self, item, parameter = None) :
         # 检查参数
         assert isinstance(item, ContentItem)
         # 拆分内容
@@ -748,7 +774,6 @@ class SegmentContent(ContentGroup) :
                 element.count += item.count
                 # 检查来源
                 if isinstance(item.source, str) : element.add_source(item.source)
-
             else :
                 # 增加项目
                 self[content] = self.new_item(content)
@@ -757,12 +782,30 @@ class SegmentContent(ContentGroup) :
 
 class WordItem(ContentItem) :
     # 初始化对象
-    def __init__(self, content = None) :
-        # 调用父类初始化函数
-        super().__init__(content)
+    def __init__(self, content = None, count = 1) :
         # 设置相关系数
         # 主要用于临时计算
         self.gamma = -1.0
+        # 调用父类初始化函数
+        super().__init__(content, count)
+
+    @property
+    def json(self) :
+        # 返回结果
+        return \
+            {
+                "count" : self.count,
+                "length" : self.length,
+                "content" : self.content,
+                "gamma" : self.gamma,
+            }
+
+    @json.setter
+    def json(self, value) :
+        # 设置参数
+        self.count = value["count"]
+        self.content = value["content"]
+        #assert self.length == value["length"]
 
     def dump(self) :
         # 打印信息
@@ -780,13 +823,11 @@ class WordContent(ContentGroup) :
         super().__init__()
         # 当前长度
         self.limit_length = 1
-        # 输入内容时，是否需要分割
-        self.need_split = True
 
     # 新对象
-    def new_item(self, content = None) :
+    def new_item(self, content = None, count = 1) :
         # 返回结果
-        return WordItem(content)
+        return WordItem(content, count)
 
     def add_content(self, content) :
         # 检查参数
@@ -794,13 +835,32 @@ class WordContent(ContentGroup) :
         # 增加项目
         self.add_item(WordItem(content))
 
-    def add_item(self, item, parameter = None) :
+    def add_item(self, item) :
+        # 检查参数
+        assert isinstance(item, ContentItem)
+        # 检查单词
+        word = item.content
+        # 检查结果
+        if word in self:
+            # 增加计数器
+            self[word].count += item.count; return
+        # 检查类型
+        if isinstance(item, WordItem) :
+            # 增加对象
+            self[word] = item
+        # 检查是否为中文
+        # 如果是纯中文内容，则增加数据项
+        elif item.is_chinese() :
+            # 增加项目
+            self[word] = self.new_item(word, item.count)
+
+    def add_splitted(self, item, need_split = True) :
         # 检查参数
         assert isinstance(item, ContentItem)
         # 生成内容
         segments = ['$' + item.content]
         # 检查标志位
-        if self.need_split :
+        if need_split :
             # 拆分内容
             segments = SplitTool.split(item.content)
         # 循环处理
@@ -818,20 +878,20 @@ class WordContent(ContentGroup) :
                 # 检查结果
                 if word in self :
                     # 增加计数器
-                    self[word].count += item.count; continue
+                    self[word].count += item.count
                 # 检查是否为中文
                 # 如果是纯中文内容，则增加数据项
-                if ChineseTool.is_chinese(word) :
+                elif item.is_chinese() :
                     # 增加项目
-                    self[word] = self.new_item(word); self[word].count = item.count
+                    self[word] = self.new_item(word, item.count)
 
 class SentenceItem(ContentItem) :
     # 初始化对象
-    def __init__(self, content = None, source = None) :
+    def __init__(self, content = None, count = 1, source = None) :
         # 设置参数
         self.source = source
         # 调用父类初始化函数
-        super().__init__(content)
+        super().__init__(content, count)
 
     @property
     def json(self) :
@@ -866,54 +926,54 @@ class SentenceItem(ContentItem) :
 
 class SentenceContent(ContentGroup) :
     # 新对象
-    def new_item(self, content = None) :
+    def new_item(self, content = None, count = 1, source = None) :
         # 返回结果
-        return SentenceItem(content)
+        return SentenceItem(content, count, source)
 
-    # 提取句子
-    # 用于traverse函数
-    def extract_content(self, content) :
+    def add_item(self, item) :
         # 检查参数
-        assert isinstance(content, str)
-        # 提取句子
-        self.extract_item(SentenceItem(content))
+        assert isinstance(item, ContentItem)
+        # 检查单词
+        content = item.content
+        # 检查结果
+        if content in self:
+            # 增加计数器
+            self[content].count += item.count; return
+        # 检查类型
+        if isinstance(item, SentenceItem) :
+            # 增加对象
+            self[content] = item
+        else :
+            # 增加项目
+            self[content] = self.new_item(content, item.count)
 
     # 提取句子
     # 用于traverse函数
-    def extract_data(self, data) :
-        # 检查参数
-        assert isinstance(data, dict)
-        # 提取句子
-        self.extract_content(SentenceItem(data["content"]))
-
-    # 提取句子
-    # 用于traverse函数
-    def extract_item(self, item, parameter = None) :
+    def add_extracted(self, item, parameter = None) :
         # 检查参数
         assert isinstance(item, ContentItem)
         # 提取句子
         sentences = SentenceTemplate.extract(item.content)
         # 循环处理f
-        for sentence in sentences:
+        for sentence in sentences :
             # 检查数据是否存在
-            if sentence in self:
+            if sentence in self :
                 # 计数器增加
-                self[sentence].count += item.count; continue
-            # 加入字典
-            self[sentence] = self.new_item(sentence)
-            # 设置参数
-            self[sentence].source = item.source; self[sentence].count = item.count
+                self[sentence].count += item.count
+            else :
+                # 加入字典
+                self[sentence] = self.new_item(sentence, item.source, item.count)
 
 class CoreItem(ContentItem) :
     # 初始化对象
-    def __init__(self, content = None) :
-        # 调用父类初始化函数
-        super().__init__(content)
+    def __init__(self, content = None, count = 1) :
         # 只选取最大gamma值的分解模式
         # 设置最大值
         self.gamma = 0.0
         # 设置分解模式
         self.pattern = None
+        # 调用父类初始化函数
+        super().__init__(content, count)
 
     @property
     def json(self) :
@@ -1009,17 +1069,10 @@ class CoreItem(ContentItem) :
             if value > self.gamma : self.gamma = value; self.pattern = key
 
 class CoreContent(ContentGroup) :
-    # 初始化
-    def __init__(self) :
-        # 调用父类初始化函数
-        super().__init__()
-        # 输入内容时，是否需要分割
-        self.need_split = True
-
     # 新对象
-    def new_item(self, content = None) :
+    def new_item(self, content = None, count = 1) :
         # 返回结果
-        return CoreItem(content)
+        return CoreItem(content, count)
 
     def add_content(self, content) :
         # 检查参数
@@ -1030,21 +1083,31 @@ class CoreContent(ContentGroup) :
     def add_item(self, item) :
         # 检查参数
         assert isinstance(item, ContentItem)
+        # 获得内容
+        content = item.content
         # 检查结果
-        if item.content not in self :
-            # 检查是否为中文
-            # 如果是纯中文内容，则增加数据项
-            if item.is_chinese() : self[item.content] = item
+        if content in self :
+            # 增加计数
+            self[content].count += item.count; return
+        # 检查类型
+        if isinstance(item, CoreItem) :
+            # 增加对象
+            self[content] = item
+        # 检查是否为中文
+        # 如果是纯中文内容，则增加数据项
+        elif item.is_chinese() :
+            # 增加项目
+            self[content] = self.new_item(content, item.count)
 
     # 增加项目
     # 用于traverse函数
-    def count_item(self, item):
+    def count_item(self, item, need_split = True):
         # 检查参数
         assert isinstance(item, ContentItem)
         # 生成内容
         segments = ['$' + item.content]
         # 检查标志位
-        if self.need_split :
+        if need_split :
             # 拆分内容
             segments = SplitTool.split(item.content)
         # 循环处理

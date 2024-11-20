@@ -61,10 +61,8 @@ def generate_segments() :
         return
     # 建立分段表
     segments = SegmentContent()
-    # 需要对原内容进行分割处理
-    segments.need_split = True
     # 遍历数据，并进行分割处理
-    raw.traverse(segments.add_item)
+    raw.traverse(segments.add_splitted, True)
     # 打印信息
     print("GenerateData.generate_segments : total %d segment(s) !" % len(segments))
     # 保存项目
@@ -82,7 +80,7 @@ def generate_sentences() :
     # 生成对象
     sentences = SentenceContent()
     # 遍历数据，并提取句子
-    raw.traverse(sentences.extract_item)
+    raw.traverse(sentences.add_extracted)
     # 保存数据
     sentences.save(json_path + "sentences.json")
     # 打印信息
@@ -100,7 +98,7 @@ def generate_tokens() :
     # 建立字符表
     tokens = TokenContent()
     # 遍历数据，并提取符号
-    raw.traverse(tokens.add_item)
+    raw.traverse(tokens.add_splitted)
     # 保存文件
     tokens.save(json_path + "tokens.json")
     # 打印信息
@@ -118,12 +116,10 @@ def generate_words(length) :
     # 打印信息
     print("GenerateData.generate_words : length = %d !" % length)
     # 设置参数值
-    # 从segments加载，所以不需要切分
-    words.need_split = False
     # 设定数据处理的限定长度，仅加载指定长度的数据
     words.limit_length = length
     # 加载数据
-    segments.traverse(words.add_item)
+    segments.traverse(words.add_splitted, False)
     # 打印信息
     print("GenerateData.generate_words : total %d word(s) !" % len(words))
     print("GenerateData.generate_words : clear useless word(s)  !" )
@@ -153,10 +149,8 @@ def generate_dictionary() :
         return
     # 复位计数器
     dictionary.reset_count()
-    # 从Segments加载的数据无需分割
-    dictionary.need_split = False
     # 过滤
-    segments.traverse(dictionary.count_item)
+    segments.traverse(dictionary.count_item,False)
     # 再次保存数据
     dictionary.save(json_path + "dictionary.json")
     # 打印信息
@@ -214,11 +208,8 @@ def generate_core() :
     cores.reset_count()
     # 更新长度
     cores.update_max_length()
-    # 设置参数
-    # 加载segments数据，不需要再次切分
-    cores.need_split = False
     # 重新计数
-    segments.traverse(cores.count_item)
+    segments.traverse(cores.count_item, False)
     # 保存数据
     cores.save(json_path + "cores.json")
 
