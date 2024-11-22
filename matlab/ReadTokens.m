@@ -1,5 +1,5 @@
 % 读取tokens.json文件
-json_path = '.\json\';
+json_path = '..\json\';
 % 打开文件
 [file, message] = fopen(strcat(json_path, 'tokens.json'), 'r');
 % 检查结果

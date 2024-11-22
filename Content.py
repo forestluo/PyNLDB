@@ -129,7 +129,7 @@ class ContentGroup :
     # 删除元素
     def remove(self, key) :
         # 删除元素
-        return self._contents.pop(key)
+        return self._contents.pop(key, None)
 
     # 生成新的对象
     def new_item(self, content = None,count = 1) :
@@ -229,7 +229,7 @@ class ContentGroup :
         # 打印信息
         pb.end(f"ContentGroup.traverse : {total} row(s) processed !")
 
-    def save(self, file_name):
+    def save(self, file_name, sort = False) :
         # 检查文件名
         assert isinstance(file_name, str)
         # 打开文件
@@ -248,13 +248,26 @@ class ContentGroup :
         # 将总数写入文件
         json_file.write(str(total))
         json_file.write("\n")
-        # 检查数据结果
-        for item in self._contents.values() :
-            # 进度条
-            pb.increase()
-            # 写入文件
-            json_file.write(json.dumps(item.json, ensure_ascii = False))
-            json_file.write("\n")
+        # 检查标记位
+        if not sort :
+            # 检查数据结果
+            for item in self._contents.values() :
+                # 进度条
+                pb.increase()
+                # 写入文件
+                json_file.write(json.dumps(item.json, ensure_ascii = False))
+                json_file.write("\n")
+        else :
+            # 获得列表
+            values = sorted(self._contents.values(),
+                key = lambda i : i.count, reverse = True)
+            # 检查数据结果
+            for value in values:
+                # 进度条
+                pb.increase()
+                # 写入文件
+                json_file.write(json.dumps(value.json, ensure_ascii = False))
+                json_file.write("\n")
         # 打印信息
         pb.end(f"ContentGroup.save : {total} row(s) saved !")
         # 关闭文件
@@ -263,7 +276,7 @@ class ContentGroup :
         print("ContentGroup.save : file(\"%s\") closed !" % file_name)
 
     # 加载数据
-    def load(self, file_name):
+    def load(self, file_name) :
         # 检查文件名
         assert isinstance(file_name, str)
         # 检查文件是否存在

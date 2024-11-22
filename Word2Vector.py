@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 import math
 import numpy
 
 from Content import *
+from CommonTool import *
 
 class VectorItem(ContentItem) :
     # 初始化对象
@@ -109,9 +109,14 @@ class VectorItem(ContentItem) :
     # 遍历函数
     # 加和误差
     @staticmethod
-    def mov_matrix(t, p = None) :
-        # 矩阵加和
-        t.__matrix += t.__delta
+    def mov_matrix(t, delta = None) :
+        # 检查参数
+        if delta is not None :
+            # 矩阵加和
+            t.__matrix += delta
+        else :
+            # 矩阵加和
+            t.__matrix += t.__delta
 
     # 遍历函数
     # 初始化矢量矩阵
@@ -144,7 +149,7 @@ class VectorItem(ContentItem) :
     # 求相关系数
     # 按照公式正常处置
     @staticmethod
-    def get_gamma(t1, t2) :
+    def cal_gamma(t1, t2) :
         # Ti = (Ai, Bi)'
         # Tj = (Aj, Bj)'
         # G = [1, 0].(Ti.Tj').[0, 1]'
@@ -161,7 +166,7 @@ class VectorItem(ContentItem) :
 
     # 按照公式正常处置
     @staticmethod
-    def get_delta(t1, t2, delta) :
+    def cal_delta(t1, t2, delta) :
         # Ti = (Ai, Bi)'
         # Tj = (Aj, Bj)'
         # 计算模长
@@ -187,15 +192,15 @@ class VectorGroup(ContentGroup) :
         # 设置维度
         self._dimension = dimension
         # 循环次数
-        self._max_loop = 20
+        self._max_loop = 10
         # 误差
         self._error = 1.0e-5
-        # 误差记录位置
-        self._max_deltas = {}
         # 设置词汇组
         self._words = WordContent()
         # 被删除的内容
         self._removed = WordContent()
+        # 误差记录位置
+        self._counter = IndexCounter()
 
     # 维度
     @property
@@ -229,6 +234,8 @@ class VectorGroup(ContentGroup) :
         self._words[content] = item
         # 设置词频
         self._words[content].count = count
+        # 返回结果
+        return item
 
     # 生成新的对象
     def new_item(self, content = None, count = 1) :
@@ -254,60 +261,95 @@ class VectorGroup(ContentGroup) :
             # 增加项目
             self[content] = self.new_item(item.content, item.count)
 
-    # 加载数据
+    # 初始化
     def init(self, path) :
-        # 清理
-        self.clear()
-        # 加载数据
-        if self._words.load(path + "words1.json") <= 0 :
+        # 加载数文件
+        if not self._load_data(path):
             # 打印信息
-            print("VectorGroup.init : fail to load words1.json !")
+            print("VectorGroup.init : fail to load files !")
             return False
-        # 生成数据
-        # 自动设置元素的维度
-        self._words.traverse(self.add_item)
+        # 清理移除的数据
+        vectors.clear_removed(path)
         # 打印信息
-        print("VectorGroup.init : all vectors added !")
-        # 清理
-        self._words.clear()
-        # 加载数据
-        if self._words.load(path + "words2.json") <= 0 :
-            # 打印信息
-            print("VectorGroup.init : fail to load words2.json !")
-            return False
-        # 打印信息
-        print("VectorGroup.init : all vectors initialized !")
-        # 检查文件是否存在
-        if os.path.isfile(path + "removed.json"):
-            # 清理
-            self._removed.clear()
-            # 加载数据
-            if self._removed.load(path + "removed.json") > 0 :
-                # 进度条
-                pb = ProgressBar(len(self._removed))
-                # 开始
-                pb.begin("VectorGroup.init : remove vectors and words !")
-                # 循环处理
-                for item in self._removed.values() :
-                    # 进度条
-                    pb.increase()
-                    # 删除已被判定需要被移除的数据
-                    if item.length == 1 \
-                        and item.content in self :
-                        # 删除项目
-                        self.remove(item.content)
-                    elif item.content in self._words :
-                        # 删除项目
-                        self._words.remove(item.content)
-                # 结束
-                pb.end()
+        print("VectorGroup.init : all files have been loaded !")
+        # 第一次初始化相关系数
+        vectors._init_gammas()
+        # 清理无效数据
+        vectors.clear_invalid()
+        # 第二次初始化相关系数
+        vectors._init_gammas()
         # 设置标志位
         self.init_matrix = True
         # 返回结果
         return True
 
+    # 保存被移除的数据
+    def save_removed(self, path) :
+        # 保存文件
+        self._removed.save(path + "removed.json")
+
+    # 清理被移除的数据
+    def clear_removed(self, path) :
+        # 检查文件是否存在
+        if not os.path.isfile(path + "removed.json") :
+            return False
+        # 清理
+        self._removed.clear()
+        # 加载数据
+        if self._removed.load(path + "removed.json") <= 0 :
+            return False
+        # 进度条
+        pb = ProgressBar(len(self._removed))
+        # 开始
+        pb.begin("VectorGroup.clear_removed : remove vectors and words !")
+        # 循环处理
+        for item in self._removed.values() :
+            # 进度条
+            pb.increase()
+            # 删除已被判定需要被移除的数据
+            if item.length == 1 \
+                and item.content in self :
+                # 删除项目
+                self.remove(item.content)
+            elif item.content in self._words :
+                # 删除项目
+                self._words.remove(item.content)
+        # 结束
+        pb.end()
+        # 打印信息
+        print(f"VectorGroup.clear_removed : {len(self)} vector(s) left !")
+        print(f"VectorGroup.clear_removed : {len(self._words)} word(s) left !")
+        print(f"VectorGroup.clear_removed : total {len(self._removed)} removed !")
+        return True
+
+    # 加载数据
+    def _load_data(self, path) :
+        # 清理
+        self.clear()
+        # 加载数据
+        if self._words.load(path + "words1.json") <= 0 :
+            # 打印信息
+            print("VectorGroup._load_data : fail to load words1.json !")
+            return False
+        # 生成数据
+        # 自动设置元素的维度
+        self._words.traverse(self.add_item)
+        # 打印信息
+        print("VectorGroup._load_data : all vectors added !")
+        # 清理
+        self._words.clear()
+        # 加载数据
+        if self._words.load(path + "words2.json") <= 0 :
+            # 打印信息
+            print("VectorGroup._load_data : fail to load words2.json !")
+            return False
+        # 打印信息
+        print("VectorGroup._load_data : all vectors initialized !")
+        # 返回结果
+        return True
+
     # 初始化相关系数
-    def init_gammas(self) :
+    def _init_gammas(self) :
         # 索引清零
         # 临时做为标记位使用
         for t in self.values() : t.index = 0
@@ -315,162 +357,18 @@ class VectorGroup(ContentGroup) :
         # 需要使用索引作为临时标记位
         self.__init_gammas()
         # 打印信息
-        print("VectorGroup.init : gammas initialized !")
+        print("VectorGroup._init_gammas : gammas initialized !")
         # 交叉检查，清理无用的矢量
         self._contents = \
             {key : item for (key, item)
              in self._contents.items() if item.index > 0}
         # 打印信息
-        print("VectorGroup.init : %d row(s) left !" % len(self))
-        print("VectorGroup.init : useless vectors removed !")
+        print("VectorGroup._init_gammas : %d row(s) left !" % len(self))
+        print("VectorGroup._init_gammas : useless vectors removed !")
         # 初始化索引值
         for index, t in enumerate(self.values()) : t.index = index
         # 返回结果
         return len(self)
-
-    # 获得最大数量之
-    def __get_max_delta_count(self) :
-        # 检查长度
-        if len(self._max_deltas) <= 0 :
-            return 0
-        # 获得最大值
-        index = max(self._max_deltas,
-                    key=lambda k: self._max_deltas[k])
-        # 检查数值
-        return self._max_deltas[index]
-
-    # 增加一个误差记录
-    def __count_max_delta(self, row, col) :
-        # 获得维度
-        n = len(self)
-        # 展平索引值
-        key = row * n + col
-        # 检查记录
-        if key not in \
-            self._max_deltas.keys() :
-            # 设置初始值
-            self._max_deltas[key] = 1
-        # 计数器加一
-        else : self._max_deltas[key] += 1
-
-    def clear_vectors(self) :
-        # 检查长度
-        if len(self._max_deltas) <= 0 : return
-        # 获得最大值
-        index = max(self._max_deltas,
-            key = lambda k : self._max_deltas[k])
-        # 检查数值
-        #if self._max_deltas[index] < self._max_loop : return
-        # 维度
-        n = len(self)
-        # 获得索引
-        row = index // n
-        col = index - row * n
-        # 创建数组
-        items = [None] * n
-        # 循环处理
-        for item in self.values() :
-            # 设置参数
-            items[item.index] = item
-        # 词汇
-        t1 = items[row]; t2 = items[col]
-        # 释放
-        items.clear()
-        # 显示数据
-        t1.dump(dump_delta = False); t2.dump(dump_delta = False)
-
-        # 项目
-        word = None
-        # 删除该项目
-        key = t1.content + t2.content
-        # 检查参数
-        if key in self._words :
-            # 打印数据
-            self._words[key].dump()
-            # 获得单词
-            word = self._words[key]
-
-        # 增加项目
-        if t1 not in self._removed :
-            self._removed.add_item(t1)
-        # 增加项目
-        if t2 not in self._removed :
-            self._removed.add_item(t2)
-        # 增加项目
-        if key not in self._removed :
-            if word is not None :
-                self._removed.add_item(word)
-
-        # 打印计算值
-        if t1 is not None and t2 is not None:
-            print("VectorGroup.clear_vectors : calculate gamma !")
-            print(f"\tgamma = {VectorItem.get_gamma(t1, t2)}")
-
-        # 检查关键字
-        if word is not None :
-            # 删除关键字
-            self._words.remove(key)
-        # 同时删除项目
-        self.remove(t1.content); self.remove(t2.content)
-
-        """
-        # 检查结果
-        if t1 is None :
-            if t2 is None : return
-            else : self.remove(t2.content)
-        else :
-            if t2 is None : self.remove(t1.content)
-            elif t1.count < t2.count : self.remove(t1.content)
-            elif t1.count > t2.count : self.remove(t2.content)
-            else :
-                self.remove(t1.content); self.remove(t2.content)
-        """
-
-    # 获得标准数据
-    def get_gammas(self) :
-        # 获得总数
-        total = len(self._words)
-        # 进度条
-        pb = ProgressBar(total)
-        # 开始
-        pb.begin(f"VectorGroup.get_gammas : get gammas[{total}] !")
-        # 获得维度
-        n = len(self)
-        # 生成数据
-        gammas = numpy.zeros((n, n))
-        # 初始化相关系数
-        for item in self._words.values() :
-            # 进度条
-            pb.increase()
-
-            # 获得内容
-            f = item.count
-            c = item.content
-            # 检查数据
-            assert len(c) == 2
-            # 检查数值
-            if f <= 0 : continue
-
-            # 获得单词
-            c1 = c[:1]
-            # 检查数据
-            if c1 not in self : continue
-            # 获得索引值
-            i = self[c1].index
-
-            # 获得单词
-            c2 = c[-1]
-            # 检查数据
-            if c2 not in self : continue
-            # 获得索引值
-            j = self[c2].index
-
-            # 设置数值
-            gammas[i][j] = item.gamma
-        # 结束
-        pb.end()
-        # 返回结果
-        return gammas
 
     # 初始化相关系数
     def __init_gammas(self) :
@@ -524,8 +422,217 @@ class VectorGroup(ContentGroup) :
             # 计算相关系数
             item.gamma = 0.5 * float(f) \
                 * (1.0 / float(f1) + 1.0 / float(f2))
+            # 检查结果
+            if item.gamma > 1.0 : item.gamma = 0.0
         # 结束
         pb.end()
+
+    # 清理无效数据
+    def clear_invalid(self, max_length = -1) :
+        # 调用父类函数
+        super().clear_invalid(max_length)
+
+        # 清理无效数据
+        # 进度条
+        pb = ProgressBar(len(self))
+        # 开始
+        pb.begin(f"VectorGroup.clear_invalid : clear invalid vectors !")
+        # 循环处理
+        for item in self.values() :
+            # 进度条
+            pb.increase()
+            # 检查计数
+            if item.count >= 2 * self._dimension :
+                continue
+            # 将无效数据加入删除队列中
+            if item.content not in self._removed :
+                # 加入数据
+                self._removed.add_item(item)
+        # 统计次数不能低于维度
+        # 出现次数不足，则方程必定无解
+        self._contents = \
+            { key : item for (key, item)
+              in self._contents.items() if item.count >= 2 * self._dimension}
+        # 结束
+        pb.end()
+
+        # 进度条
+        pb = ProgressBar(len(self))
+        # 开始
+        pb.begin("VectorGroup.clear_invalid : clear invalid vectors !")
+        # 获得关系系数符号矩阵
+        signs = numpy.sum(numpy.abs(numpy.sign(self._get_gammas())), axis = 1)
+        # 循环检查
+        for item in self.values() :
+            # 进度条
+            pb.increase()
+            # 获得索引
+            index = item.index
+            # 检查结果
+            if signs[index] < 2 * self._dimension :
+                # 相关关系不能低于维度
+                # 关系方程不足，则方程必定无解
+                if item.content not in self._removed : self._removed.add_item(item)
+        # 结束
+        pb.end()
+        # 打印信息
+        print(f"VectorGroup.clear_invalid : average ({int(numpy.mean(signs))}) relation(s) !")
+
+        # 进度条
+        pb = ProgressBar(len(self._words))
+        # 开始
+        pb.begin("VectorGroup.clear_invalid : clear invalid words !")
+        # 清理词汇
+        for item in self._words.values() :
+            # 进度条
+            pb.increase()
+            # 获得词汇
+            content = item.content
+            # 逐个检查单词
+            for c in content :
+                # 检查状态
+                if c in self._removed :
+                    # 将无效数据加入删除队列中
+                    if item.content not in self._removed : self._removed.add_item(item)
+        # 结束
+        pb.end()
+
+        # 进度条
+        pb = ProgressBar(len(self._removed))
+        # 开始
+        pb.begin("VectorGroup.clear_invalid : remove all items !")
+        # 清理词汇
+        for item in self._removed.values() :
+            # 进度条
+            pb.increase()
+            # 删除
+            if item.content in self : self.remove(item.content)
+            if item.content in self._words : self._words.remove(item.content)
+        # 结束
+        pb.end()
+        # 打印信息
+        print(f"VectorGroup.clear_invalid : {len(self)} vector(s) left !")
+        print(f"VectorGroup.clear_invalid : {len(self._words)} word(s) left !")
+        print(f"VectorGroup.clear_invalid : total {len(self._removed)} item(s) removed !")
+
+    # 直接求解两个矢量值，使其符合相关系数要求
+    def modify2vectors(self) :
+        # 获得索引
+        index = self._counter.max_index()
+        # 检查长度
+        if index < 0 : return
+        # 维度
+        n = len(self)
+        # 获得索引
+        row = index // n
+        col = index - row * n
+        # 创建数组
+        items = [t for t in self.values()]
+        # 循环处理
+        for item in self.values() :
+            # 设置参数
+            items[item.index] = item
+        # 词汇
+        t1 = items[row]; t2 = items[col]
+        # 断言
+        assert t1 is not None and t2 is not None
+        # 释放
+        items.clear()
+        # 显示数据
+        t1.dump(False, False); t2.dump(False, False)
+
+        # 删除该项目
+        key = t1.content + t2.content
+        # 设置相关系数
+        word = WordItem(key, 0); word.gamma = 0
+        # 检查参数
+        if key in self._words : word = self._words[key]
+        # 打印数据
+        word.dump()
+
+        # 参数值
+        gamma = 0.0
+        delta = 0.0
+        # 循环计数
+        i = 0; j = 0
+        # 最大行和范数
+        last_delta = 1.0e5
+        # 打印计算值
+        print("VectorGroup.modify_vectors : modify vectors !")
+        # 循环直至误差符合要求，或者收敛至最小误差
+        while i < self._max_loop :
+            # 计数器加一
+            i += 1; j += 1
+            # 获得计算相关系数
+            gamma = VectorItem.cal_gamma(t1, t2)
+            # 计算两者的相关系数误差
+            delta = word.gamma - gamma
+            abs_delta = numpy.abs(delta)
+            # 检查结果
+            if abs_delta < self._error :
+                break
+            # 检查结果
+            if i == 0 :
+                last_delta = abs_delta
+            else :
+                if last_delta > abs_delta :
+                    # 误差呈下降趋势
+                    i = 0; last_delta = abs_delta
+            # 连续三次上升
+            if i >= 3 :
+                # 需要重新生成随机矢量
+                for k in range(self._dimension) :
+                    # 设置随机值
+                    t1.matrix[0][k] = 0.5 - numpy.random.random()
+                    t1.matrix[1][k] = 0.5 - numpy.random.random()
+                    t2.matrix[0][k] = 0.5 - numpy.random.random()
+                    t2.matrix[1][k] = 0.5 - numpy.random.random()
+                break
+            # 计算两者直接的误差分量
+            _dAi, _dBj = VectorItem.cal_delta(t1, t2, delta / 2)
+            # 直接纠正矢量
+            VectorItem.mov_matrix(t1, _dAi)
+            VectorItem.mov_matrix(t2, _dBj)
+        # 打印信息
+        print(f"\tgamma({i}, {j}) = {gamma} ({delta})")
+
+    # 获得标准数据
+    def _get_gammas(self) :
+        # 获得总数
+        total = len(self._words)
+        # 获得维度
+        n = len(self)
+        # 生成数据
+        gammas = numpy.zeros((n, n))
+        # 初始化相关系数
+        for item in self._words.values() :
+            # 获得内容
+            f = item.count
+            c = item.content
+            # 检查数据
+            assert len(c) == 2
+            # 检查数值
+            if f <= 0 : continue
+
+            # 获得单词
+            c1 = c[:1]
+            # 检查数据
+            if c1 not in self : continue
+            # 获得索引值
+            i = self[c1].index
+
+            # 获得单词
+            c2 = c[-1]
+            # 检查数据
+            if c2 not in self : continue
+            # 获得索引值
+            j = self[c2].index
+
+            # 设置数值
+            gammas[i][j] = item.gamma \
+                if 0 <= item.gamma <= 1.0 else 0.0
+        # 返回结果
+        return gammas
 
     # 完成一次全量计算
     def solving(self) :
@@ -541,9 +648,9 @@ class VectorGroup(ContentGroup) :
         value = 1.0 / float(count)
 
         # 初始化相关系数
-        self.init_gammas()
+        self._init_gammas()
         # 相关系数矩阵
-        gammas = self.get_gammas()
+        gammas = self._get_gammas()
         # 检查标记位
         if self.init_matrix :
             # 清除标记位
@@ -564,7 +671,7 @@ class VectorGroup(ContentGroup) :
             # 进行一次全量计算，累积误差数值
             delta = 0.0
             # 清理误差记录
-            self._max_deltas.clear()
+            self._counter.clear()
             # 求解方程
             delta = self.__solving(gammas)
             # 打印信息
@@ -583,7 +690,7 @@ class VectorGroup(ContentGroup) :
                 self._traverse(VectorItem.reset_useless)
             else :
                 # 清理记录
-                self._max_deltas.clear()
+                self._counter.clear()
                 # 最大行和范数
                 max_norm = [0]
                 # 获得误差矩阵的最大行和范数
@@ -601,7 +708,7 @@ class VectorGroup(ContentGroup) :
         pb = ProgressBar(total)
         # 打印信息
         pb.begin()
-        #pb.begin(f"Word2Vector.__solving : try to process {total} relation(s) !")
+        #pb.begin(f"VectorGroup.__solving : try to process {total} relation(s) !")
 
         # 最大误差
         max_delta = 0.0
@@ -629,7 +736,7 @@ class VectorGroup(ContentGroup) :
                     # 设置误差记录
                     max_delta = abs_delta
                     # 增加记录
-                    self.__count_max_delta(t1.index, t2.index)
+                    self._counter.count(t1.index * len(self) + t2.index)
 
                 # 计算模长
                 _Bj = numpy.dot(matrix2[1], matrix2[1])
@@ -643,7 +750,7 @@ class VectorGroup(ContentGroup) :
 
         # 打印信息
         pb.end()
-        #pb.end(f"Word2Vector.__solving : {total} relations(s) processed !")
+        #pb.end(f"VectorGroup.__solving : {total} relations(s) processed !")
         # 返回结果
         return max_delta
 
@@ -661,9 +768,9 @@ class VectorGroup(ContentGroup) :
 
         # 初始化相关系数
         # 有删除无效数据的行为
-        n = self.init_gammas()
+        n = self._init_gammas()
         # 相关系数矩阵
-        gammas = self.get_gammas()
+        gammas = self._get_gammas()
 
         # 生成Ais
         ais = numpy.random.random((n, self._dimension))
@@ -702,7 +809,7 @@ class VectorGroup(ContentGroup) :
         # 最大行和范数
         last_delta = numpy.inf
         # 清理误差记录
-        self._max_deltas.clear()
+        self._counter.clear()
         # 循环直至误差符合要求，或者收敛至最小误差
         while i < self._max_loop :
             # 计数器加一
@@ -736,53 +843,28 @@ class VectorGroup(ContentGroup) :
             abs_delta = numpy.abs(delta)
             # 查找最大值的位置
             pos = numpy.argmax(abs_delta)
+            # 增加误差记录
+            self._counter.count(pos)
             # 获得索引
             row = pos // n
             col = pos - row * n
             # 设置最大误差值
             max_delta = abs_delta[row][col]
-            # 占比
-            percent = numpy.inf
-            # 占比
-            if gammas[row][col] > 0.0 :
-                # 计算动态占比
-                percent = max_delta / gammas[row][col]
-            # 增加误差记录
-            self.__count_max_delta(row, col)
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
             #print(f"\t[row, col] = [{row}, {col}]")
             print(f"\tGamma[{row}, {col}] = {gammas[row][col]}")
-            print(f"\t∇Gamma[{i}, {j}] = {max_delta} ({"{:.2f}".format(percent * 100.0)}%)")
+            print(f"\t∇Gamma[{i}, {j}] = {max_delta}")
             if j > 1 : print(f"\t∇²Gamma[{i}, {j}] = {last_delta - max_delta}")
             # 检查数据
-            if max_delta < self._error or percent < self._error :
+            if max_delta < self._error :
                 # 中断循环
                 last_delta = max_delta
                 break
-            """
-            # 检查结果
-            if self.__get_max_delta_count() > self._max_loop :
-                # 下降趋势太弱
-                print(f"VectorGroup.fast_solving : loop blocked !")
-                break
-            """
             # 检查结果
             if last_delta > max_delta :
-                # 检查下降趋势
-                if j > 1 and last_delta - max_delta <= self._error :
-                    # 下降趋势太弱
-                    print(f"VectorGroup.fast_solving : small convergence !")
-                    break
                 # 呈下降趋势
                 i = 0; last_delta = max_delta
-            """
-            # 对误差较大的项目增加适当扰动
-            for k in range(self._dimension):
-                # 扰动的大小和方向随机决定
-                ais[row][k] += (0.5 - numpy.random.random()) * self._error
-                bjs[col][k] += (0.5 - numpy.random.random()) * self._error
-            """
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
         # 打印信息
@@ -793,7 +875,7 @@ class VectorGroup(ContentGroup) :
 # 路径
 json_path = ".\\json\\"
 # 生成对象
-vectors = VectorGroup(8)
+vectors = VectorGroup(64)
 
 def init_vectors() :
     # 加载数文件
@@ -820,8 +902,6 @@ def save_vectors() :
     print("Word2Vector.save_vectors : vectors.json has been saved !")
 
 def verify_vectors() :
-    # 获得矩阵
-    gammas = vectors.get_gammas()
     # 清理输入项目
     user_input = ""
     # 循环处理
@@ -866,12 +946,15 @@ def verify_vectors() :
         # 打印信息
         print("Word2Vector.verify_vectors : show results !")
         print(f"\tGamma12 (from words) = {gamma}")
-        print(f"\tGamma12 (from gamma matrix) = {gammas[vectors[w1].index][vectors[w2].index]}")
-        print(f"\tGamma12 (from vector calculation) = {VectorItem.get_gamma(vectors[w1], vectors[w2])}")
+        print(f"\tGamma12 (from vector calculation) = {VectorItem.cal_gamma(vectors[w1], vectors[w2])}")
 
 def fast_solving() :
-    # 记录
-    words = WordContent()
+    # 检查参数
+    if len(vectors) <= 0 :
+        # 打印信息
+        print("Word2Vector.fast_solving : insufficient vectors !")
+        return
+
     # 计数器
     i = 0
     while True :
@@ -881,16 +964,12 @@ def fast_solving() :
         max_delta = vectors.fast_solving()
         # 检查结果
         if max_delta > 1.0e-5 :
-            # 清理不合适的数据
-            vectors.clear_vectors()
-            # 保存文件
-            words.save(json_path + "removed.json")
+            # 调整不合适的数据
+            vectors.modify2vectors()
             # 打印信息
             print("Word2Vector.fast_solving : fail to solve !")
         else :
             print("Word2Vector.fast_solving : successfully done !"); break
-    # 保存文件
-    vectors.save(json_path + "vectors.json")
 
 def fast_calculation_example():
     # 生成对象
@@ -966,7 +1045,6 @@ def main() :
             "init vectors",
             "load vectors",
             "save vectors",
-            "initialize gammas",
             "fast solving vectors",
             "normal solving vectors",
             "verify vectors",
@@ -1005,21 +1083,18 @@ def main() :
             # 保存
             save_vectors()
         elif user_input == '4' :
-            # 初始化
-            vectors.init_gammas()
-        elif user_input == '5' :
             # 求解
             fast_solving()
-        elif user_input == '6' :
+        elif user_input == '5' :
             # 求解
             vectors.solving()
-        elif user_input == '7' :
+        elif user_input == '6' :
             # 验证
             verify_vectors()
-        elif user_input == '8' :
+        elif user_input == '7' :
             # 计算例子
             fast_calculation_example()
-        elif user_input == '9' :
+        elif user_input == '8' :
             # 计算例子
             normal_calculation_example()
         else :

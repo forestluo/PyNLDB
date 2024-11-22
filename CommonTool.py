@@ -64,3 +64,55 @@ class ProgressBar :
             print("Progress({}%) :" \
                 .format(self.__percent), "▓" * (self.__percent * 3 // 5), end = "")
             sys.stdout.flush()
+
+class IndexCounter :
+    # 初始化
+    def __init__(self) :
+        # 记录
+        self.__counter = {}
+
+    # 清理
+    def clear(self) :
+        # 清理数据
+        self.__counter.clear()
+
+    # 记录位置
+    def count(self, index) :
+        # 检查数据
+        if index in \
+            self.__counter.keys() :
+            # 增加计数
+            self.__counter[index] += 1
+        # 设置初始值
+        else : self.__counter[index] = 1
+
+    def max_index(self) :
+        # 检查长度
+        if len(self.__counter) <= 0:
+            return -1
+        # 获得最大值
+        return max(self.__counter,
+            key = lambda k : self.__counter[k])
+
+    def max_count(self) :
+        # 获得索引
+        index = self.max_index()
+        # 检查结果
+        if index < 0 : return -1
+        # 返回结果
+        return self.__counter[index]
+
+    def max_position(self, n) :
+        # 检查参数
+        assert n > 0
+        # 获得索引
+        index = self.max_index()
+        # 检查结果
+        if index < 0 : return -1, -1
+        # 获得行数
+        row = index // n
+        # 获得列数
+        col = index - row * n
+        # 返回结果
+        return row, col
+
