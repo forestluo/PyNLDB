@@ -100,7 +100,7 @@ def generate_tokens() :
     # 遍历数据，并提取符号
     raw.traverse(tokens.add_splitted)
     # 保存文件
-    tokens.save(json_path + "tokens.json")
+    tokens.save(json_path + "tokens.json", True)
     # 打印信息
     print("GenerateData.generate_tokens : tokens.json generated !")
 
@@ -128,7 +128,7 @@ def generate_words(length) :
     # 打印信息
     print("GenerateData.generate_words : %d word(s) left !" % len(words))
     # 保存项目
-    words.save(json_path + "words{}.json".format(length))
+    words.save(json_path + "words{}.json".format(length), length <= 1)
 
 def generate_dictionary() :
     # 打印信息
