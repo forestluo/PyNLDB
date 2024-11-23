@@ -233,6 +233,15 @@ class VectorGroup(ContentGroup) :
         # 设置初始化标志位
         self.init_matrix = False
 
+    # 通过索引获得词
+    def get_item(self, index) :
+        # 循环处理
+        for item in self.values() :
+            # 返回结果
+            if item.index == index : return item
+        # 返回结果
+        return None
+
     # 获得词汇描述
     def get_word(self, value) :
         # 检查数据
@@ -692,7 +701,8 @@ class VectorGroup(ContentGroup) :
         # 检查结果
         if row >= 0 and col >= 0 :
             # 记录数据
-            counter.count(row * len(self) + col, [1, row, col])
+            counter.count(row * len(self) + col,
+                [1, self.get_item(row), self.get_item(col)])
         # 打印信息
         pb.end()
         #pb.end(f"VectorGroup.__solving : {total} relations(s) processed !")
@@ -793,7 +803,8 @@ class VectorGroup(ContentGroup) :
             # 设置最大误差值
             max_delta = abs_delta[row][col]
             # 增加误差记录
-            counter.count(pos, [1, row, col])
+            counter.count(pos,
+                [1, self.get_item(row), self.get_item(col)])
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
             #print(f"\t[row, col] = [{row}, {col}]")
@@ -822,19 +833,9 @@ class VectorGroup(ContentGroup) :
         return last_delta
 
     # 踢出匹配项目
-    def kick_out(self, row, col) :
+    def kick_out(self, t1, t2) :
         # 维度
         n = len(self)
-        # 检查参数
-        assert 0 <= row <= n
-        assert 0 <= col <= n
-        # 词汇项目
-        t1 = None; t2 = None
-        # 循环处理
-        for item in self.values():
-            # 设置参数
-            if item.index == row : t1 = item
-            elif item.index == col : t2 = item
         # 断言
         assert t1 is not None and t2 is not None
         # 显示数据
@@ -1022,7 +1023,8 @@ def fast_solving() :
             # 检查结果
             if row >= 0 and col >= 0 :
                 # 踢出不合适的数据
-                vectors.kick_out(row,col)
+                vectors.kick_out(vectors.get_item(row),
+                                 vectors.get_item(col))
             # 清理数据
             counter.clear()
             # 打印信息
