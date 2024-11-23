@@ -835,10 +835,14 @@ class VectorGroup(ContentGroup) :
                 # 呈下降趋势
                 i = 0; last_delta = max_delta
             # 检查结果
-            if i >= 3 or \
+            if i >= 3 :
+                # 连续三次，误差呈上升趋势
+                print(f"VectorGroup.fast_solving : upgrade trend !")
+                break
+            if j > self._max_loop and \
                 numpy.abs(last_delta - max_delta) < self._error :
                 # 连续三次，误差呈上升趋势
-                print(f"VectorGroup.fast_solving : adjustment needed !")
+                print(f"VectorGroup.fast_solving : small convergence !")
                 break
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
