@@ -876,39 +876,6 @@ class VectorGroup(ContentGroup) :
         print(f"\tt2[{t2.index},\"{t2.content}\"].count = {t2.count}")
         print(f"\tword(\"{word.content}\").count = {word.count} ({word.gamma})")
 
-    # 洗牌
-    def shuffle(self, t1, t2) :
-        # 维度
-        n = len(self)
-        # 断言
-        assert t1 is not None and t2 is not None
-        # 删除该项目
-        content = t1.content + t2.content
-        # 设置相关系数
-        word = WordItem(content, 0); word.gamma = 0
-        # 检查参数
-        if content in self._words: word = self._words[content]
-
-        # 删除项目
-        if t1.content in self :
-            self.remove(t1.content)
-        if t2.content in self :
-            self.remove(t2.content)
-
-        # 把索引值大的项目往前挪动
-        #检查索引
-        if t1.index > t2.index :
-            # 加入项目
-            self.add_item(t1); self.add_item(t2)
-        # 加入项目
-        else : self.add_item(t2); self.add_item(t1)
-
-        # 打印计算值
-        print("VectorGroup.shuffle : shuffle vectors !")
-        print(f"\tt1[{t1.index},\"{t1.content}\"].count = {t1.count}")
-        print(f"\tt2[{t2.index},\"{t2.content}\"].count = {t2.count}")
-        print(f"\tword(\"{word.content}\").count = {word.count} ({word.gamma})")
-
     # 直接拟合两个词汇
     def disturb(self, t1, t2) :
         # 维度
@@ -922,16 +889,16 @@ class VectorGroup(ContentGroup) :
         # 检查参数
         if content in self._words: word = self._words[content]
 
-        # 需要重新生成随机矢量
-        for k in range(self._dimension):
-            # 设置随机值
-            t1.matrix[0][k] = 0.5 - numpy.random.random()
-            t1.matrix[1][k] = 0.5 - numpy.random.random()
-            t2.matrix[0][k] = 0.5 - numpy.random.random()
-            t2.matrix[1][k] = 0.5 - numpy.random.random()
-        # 归一化处理
-        VectorItem.normalize(t1)
-        VectorItem.normalize(t2)
+        # 获得计算相关系数
+        gamma = VectorItem.cal_gamma(t1, t2)
+        # 计算两者的相关系数误差
+        delta = word.gamma - gamma
+        # 计算两者直接的误差分量
+        _dAi, _dBj = VectorItem.cal_delta(t1, t2, delta / 2)
+        # 直接纠正矢量
+        VectorItem.add_delta(t1, _dAi)
+        VectorItem.add_delta(t2, _dBj)
+
         # 打印计算值
         print("VectorGroup.disturb : disturb vectors !")
         print(f"\tt1[{t1.index},\"{t1.content}\"].count = {t1.count}")
