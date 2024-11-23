@@ -823,7 +823,7 @@ class VectorGroup(ContentGroup) :
                 # 呈下降趋势
                 i = 0; last_delta = max_delta
             # 检查结果
-            if i >= 3 or counter.max_count() > self._max_loop :
+            if i >= 3 :
                 # 连续三次，误差呈上升趋势
                 print(f"VectorGroup.fast_solving : adjustment needed !")
                 break
