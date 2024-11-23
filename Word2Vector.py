@@ -810,9 +810,9 @@ class VectorGroup(ContentGroup) :
                 # 呈下降趋势
                 i = 0; last_delta = max_delta
             # 检查结果
-            if i >= 3 :
+            if i >= 3 or counter.max_count() > self._max_loop :
                 # 连续三次，误差呈上升趋势
-                print(f"VectorGroup.fast_solving : upward trend !")
+                print(f"VectorGroup.fast_solving : adjustment needed !")
                 break
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
