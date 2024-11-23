@@ -832,14 +832,11 @@ class VectorGroup(ContentGroup) :
         # 返回结果
         return last_delta
 
-    # 踢出匹配项目
-    def fit(self, t1, t2) :
+    def kick_out(self, t1, t2) :
         # 维度
         n = len(self)
         # 断言
         assert t1 is not None and t2 is not None
-        # 显示数据
-        #t1.dump(False, False); t2.dump(False, False)
         # 删除该项目
         content = t1.content + t2.content
         # 设置相关系数
@@ -848,6 +845,25 @@ class VectorGroup(ContentGroup) :
         if content in self._words: word = self._words[content]
         # 打印数据
         #word.dump()
+
+        # 打印计算值
+        print("VectorGroup.fit : fit vectors !")
+        print(f"\tt1[{t1.index},\"{t1.content}\"].count = {t1.count}")
+        print(f"\tt2[{t2.index},\"{t2.content}\"].count = {t2.count}")
+        print(f"\tword(\"{word.content}\").count = {word.count} ({word.gamma})")
+
+    # 踢出匹配项目
+    def fit(self, t1, t2) :
+        # 维度
+        n = len(self)
+        # 断言
+        assert t1 is not None and t2 is not None
+        # 删除该项目
+        content = t1.content + t2.content
+        # 设置相关系数
+        word = WordItem(content, 0); word.gamma = 0
+        # 检查参数
+        if content in self._words: word = self._words[content]
 
         # 参数值
         gamma = 0.0
@@ -1029,8 +1045,7 @@ def fast_solving() :
                 t1 = vectors.get_item(row)
                 t2 = vectors.get_item(col)
                 # 移除
-                vectors.remove(t1.content)
-                vectors.remove(t2.content)
+                vectors.kick_out(t1, t2)
             # 清理数据
             counter.clear()
             # 打印信息
