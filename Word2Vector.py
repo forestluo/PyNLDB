@@ -791,8 +791,10 @@ class VectorGroup(ContentGroup) :
             # 计算系数矩阵（含均值处理）
             _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais)) / n
             # 求平均值，并加和计算
-            ais += numpy.dot(_L, bjs)
-            bjs += numpy.dot(_L.T, ais)
+            _dAi = numpy.dot(_L, bjs)
+            _dBj = numpy.dot(_L.T, ais)
+            # 注意：分成两个步骤计算！！！
+            ais += _dAi; bjs += _dBj
 
             # 数据误差处理
             # 查找最大值的位置
