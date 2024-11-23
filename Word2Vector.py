@@ -818,7 +818,7 @@ class VectorGroup(ContentGroup) :
             t1 = self.get_item(row)
             t2 = self.get_item(col)
             # 增加误差记录
-            counter.count(pos, t1, t2)
+            counter.count(pos, [1, t1, t2])
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
             print(f"\tToken[{row},{col}] = [\"{t1.content}\",\"{t2.content}\"]")
