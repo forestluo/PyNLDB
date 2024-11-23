@@ -882,9 +882,9 @@ class VectorGroup(ContentGroup) :
         #检查索引
         if t1.index > t2.index :
             # 加入项目
-            self.add_item(t1)
+            self.add_item(t1); self.add_item(t2)
         # 加入项目
-        else : self.add_item(t2)
+        else : self.add_item(t2); self.add_item(t1)
 
         # 打印计算值
         print("VectorGroup.shuffle : shuffle vectors !")
