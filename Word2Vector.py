@@ -1025,9 +1025,12 @@ def fast_solving() :
             row, col = counter.max_position(len(vectors))
             # 检查结果
             if row >= 0 and col >= 0 :
-                # 直接匹配不合适的数据
-                vectors.fit(vectors.get_item(row),
-                            vectors.get_item(col))
+                # 获得词汇
+                t1 = vectors.get_item(row)
+                t2 = vectors.get_item(col)
+                # 移除
+                vectors.remove(t1.content)
+                vectors.remove(t2.content)
             # 清理数据
             counter.clear()
             # 打印信息
