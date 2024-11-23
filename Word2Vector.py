@@ -846,8 +846,15 @@ class VectorGroup(ContentGroup) :
         # 打印数据
         #word.dump()
 
+        # 删除项目
+        if t1.content in self :
+            self.remove(t1.content)
+        if t2.content in self :
+            self.remove(t2.content)
+        if word.content in self._words :
+            self._words.remove(content)
         # 打印计算值
-        print("VectorGroup.fit : fit vectors !")
+        print("VectorGroup.kick_out : kick_out vectors !")
         print(f"\tt1[{t1.index},\"{t1.content}\"].count = {t1.count}")
         print(f"\tt2[{t2.index},\"{t2.content}\"].count = {t2.count}")
         print(f"\tword(\"{word.content}\").count = {word.count} ({word.gamma})")
