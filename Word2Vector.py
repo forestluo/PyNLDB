@@ -839,7 +839,7 @@ class VectorGroup(ContentGroup) :
         # 断言
         assert t1 is not None and t2 is not None
         # 显示数据
-        t1.dump(False, False); t2.dump(False, False)
+        #t1.dump(False, False); t2.dump(False, False)
         # 删除该项目
         content = t1.content + t2.content
         # 设置相关系数
@@ -847,7 +847,7 @@ class VectorGroup(ContentGroup) :
         # 检查参数
         if content in self._words: word = self._words[content]
         # 打印数据
-        word.dump()
+        #word.dump()
 
         # 参数值
         gamma = 0.0
@@ -858,6 +858,9 @@ class VectorGroup(ContentGroup) :
         last_delta = numpy.inf
         # 打印计算值
         print("VectorGroup.fit : fit vectors !")
+        print(f"\tt1[{t1.index}, \"{t1.content}\"].count = {t1.count}")
+        print(f"\tt2[{t2.index}, \"{t2.content}\"].count = {t2.count}")
+        print(f"\tword(\"{word.content}\").count = {word.count} ({word.gamma})")
         # 循环直至误差符合要求，或者收敛至最小误差
         while i < self._max_loop:
             # 计数器加一
