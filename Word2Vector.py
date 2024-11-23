@@ -808,9 +808,9 @@ class VectorGroup(ContentGroup) :
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
             #print(f"\t[row, col] = [{row}, {col}]")
-            print(f"\tGamma[{row}, {col}] = {gammas[row][col]}")
-            print(f"\t∇Gamma[{i}, {j}] = {max_delta}")
-            if j > 1 : print(f"\t∇²Gamma[{i}, {j}] = {last_delta - max_delta}")
+            print(f"\tGamma[{row},{col}] = {gammas[row][col]}")
+            print(f"\t∇Gamma[{i},{j}] = {max_delta}")
+            if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {last_delta - max_delta}")
             # 检查数据
             if max_delta < self._error :
                 # 中断循环
@@ -858,8 +858,8 @@ class VectorGroup(ContentGroup) :
         last_delta = numpy.inf
         # 打印计算值
         print("VectorGroup.fit : fit vectors !")
-        print(f"\tt1[{t1.index}, \"{t1.content}\"].count = {t1.count}")
-        print(f"\tt2[{t2.index}, \"{t2.content}\"].count = {t2.count}")
+        print(f"\tt1[{t1.index},\"{t1.content}\"].count = {t1.count}")
+        print(f"\tt2[{t2.index},\"{t2.content}\"].count = {t2.count}")
         print(f"\tword(\"{word.content}\").count = {word.count} ({word.gamma})")
         # 循环直至误差符合要求，或者收敛至最小误差
         while i < self._max_loop:
@@ -897,7 +897,7 @@ class VectorGroup(ContentGroup) :
             VectorItem.add_delta(t1, _dAi)
             VectorItem.add_delta(t2, _dBj)
         # 打印信息
-        print(f"\tgamma({i}, {j}) = {gamma} ({delta})")
+        print(f"\tgamma({i},{j}) = {gamma} ({delta})")
 
 # 路径
 json_path = ".\\json\\"
