@@ -789,7 +789,7 @@ class VectorGroup(ContentGroup) :
             _Bjs = numpy.reshape(_Bjs, (1, n))
             _Bjs = numpy.tile(_Bjs, (n, 1))
             # 计算系数矩阵（含均值处理）
-            _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais) / n)
+            _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais)) / n
             # 求平均值，并加和计算
             ais += numpy.dot(_L, bjs)
             bjs += numpy.dot(_L.T, ais)
@@ -857,7 +857,7 @@ class VectorGroup(ContentGroup) :
         print(f"\tt2[{t2.index},\"{t2.content}\"].count = {t2.count}")
         print(f"\tword(\"{word.content}\").count = {word.count} ({word.gamma})")
 
-    # 踢出匹配项目
+    # 直接拟合两个词汇
     def fit(self, t1, t2) :
         # 维度
         n = len(self)
