@@ -777,8 +777,20 @@ class VectorGroup(ContentGroup) :
 
             # 获得计算值
             delta = gammas - numpy.dot(ais, bjs.T)
+
             # 获得误差绝对值
             abs_delta = numpy.abs(delta)
+            # 数据误差处理
+            # 查找最大值的位置
+            pos = numpy.argmax(abs_delta)
+            # 获得索引
+            row = pos // n
+            col = pos - row * n
+            # 设置最大误差值
+            max_delta = abs_delta[row][col]
+            # 设置误差
+            delta = numpy.multiply(delta[row][col], numpy.ones((n, n)))
+
             # 通过误差计算步长，并移至下一个步骤
             # 计算模长
             _Ais = numpy.sum(numpy.square(ais), axis = 1)
@@ -796,14 +808,6 @@ class VectorGroup(ContentGroup) :
             # 注意：分成两个步骤计算！！！
             ais += _dAi; bjs += _dBj
 
-            # 数据误差处理
-            # 查找最大值的位置
-            pos = numpy.argmax(abs_delta)
-            # 获得索引
-            row = pos // n
-            col = pos - row * n
-            # 设置最大误差值
-            max_delta = abs_delta[row][col]
             # 增加误差记录
             counter.count(pos,
                 [1, self.get_item(row), self.get_item(col)])
