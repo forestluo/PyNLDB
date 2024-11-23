@@ -830,6 +830,11 @@ class VectorGroup(ContentGroup) :
                 # 中断循环
                 last_delta = max_delta
                 break
+            if j > self._max_loop and \
+                numpy.abs(last_delta - max_delta) < self._error :
+                # 连续三次，误差呈上升趋势
+                print(f"VectorGroup.fast_solving : small ∇²Gamma !")
+                break
             # 检查结果
             if last_delta > max_delta :
                 # 呈下降趋势
@@ -837,12 +842,7 @@ class VectorGroup(ContentGroup) :
             # 检查结果
             if i >= 3 :
                 # 连续三次，误差呈上升趋势
-                print(f"VectorGroup.fast_solving : upgrade trend !")
-                break
-            if j > self._max_loop and \
-                numpy.abs(last_delta - max_delta) < self._error :
-                # 连续三次，误差呈上升趋势
-                print(f"VectorGroup.fast_solving : small convergence !")
+                print(f"VectorGroup.fast_solving : ∇Gamma increasing !")
                 break
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
