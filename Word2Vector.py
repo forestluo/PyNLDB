@@ -833,7 +833,7 @@ class VectorGroup(ContentGroup) :
         return last_delta
 
     # 踢出匹配项目
-    def kick_out(self, t1, t2) :
+    def fit(self, t1, t2) :
         # 维度
         n = len(self)
         # 断言
@@ -857,7 +857,7 @@ class VectorGroup(ContentGroup) :
         # 最大行和范数
         last_delta = numpy.inf
         # 打印计算值
-        print("VectorGroup.modify_vectors : modify vectors !")
+        print("VectorGroup.fit : fit vectors !")
         # 循环直至误差符合要求，或者收敛至最小误差
         while i < self._max_loop:
             # 计数器加一
@@ -1022,9 +1022,9 @@ def fast_solving() :
             row, col = counter.max_position(len(vectors))
             # 检查结果
             if row >= 0 and col >= 0 :
-                # 踢出不合适的数据
-                vectors.kick_out(vectors.get_item(row),
-                                 vectors.get_item(col))
+                # 直接匹配不合适的数据
+                vectors.fit(vectors.get_item(row),
+                            vectors.get_item(col))
             # 清理数据
             counter.clear()
             # 打印信息
