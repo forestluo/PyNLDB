@@ -859,6 +859,39 @@ class VectorGroup(ContentGroup) :
         print(f"\tt2[{t2.index},\"{t2.content}\"].count = {t2.count}")
         print(f"\tword(\"{word.content}\").count = {word.count} ({word.gamma})")
 
+    # 洗牌
+    def shuffle(self, t1, t2) :
+        # 维度
+        n = len(self)
+        # 断言
+        assert t1 is not None and t2 is not None
+        # 删除该项目
+        content = t1.content + t2.content
+        # 设置相关系数
+        word = WordItem(content, 0); word.gamma = 0
+        # 检查参数
+        if content in self._words: word = self._words[content]
+
+        # 删除项目
+        if t1.content in self:
+            self.remove(t1.content)
+        if t2.content in self:
+            self.remove(t2.content)
+
+        # 把索引值大的项目往前挪动
+        #检查索引
+        if t1.index > t2.index :
+            # 加入项目
+            self.add_item(t1)
+        # 加入项目
+        else : self.add_item(t2)
+
+        # 打印计算值
+        print("VectorGroup.kick_out : kick_out vectors !")
+        print(f"\tt1[{t1.index},\"{t1.content}\"].count = {t1.count}")
+        print(f"\tt2[{t2.index},\"{t2.content}\"].count = {t2.count}")
+        print(f"\tword(\"{word.content}\").count = {word.count} ({word.gamma})")
+
     # 直接拟合两个词汇
     def fit(self, t1, t2) :
         # 维度
@@ -1049,7 +1082,7 @@ def fast_solving() :
             # 检查结果
             if row >= 0 and col >= 0 :
                 # 移除
-                vectors.fit(vectors.get_item(row), vectors.get_item(col))
+                vectors.shuffle(vectors.get_item(row), vectors.get_item(col))
             # 清理数据
             counter.clear()
             # 打印信息
