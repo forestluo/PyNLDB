@@ -1044,17 +1044,12 @@ def fast_solving() :
         max_delta = vectors.fast_solving(counter)
         # 检查结果
         if max_delta > 1.0e-5 :
-            """
             # 获得最大误差位置
             row, col = counter.max_position(len(vectors))
             # 检查结果
             if row >= 0 and col >= 0 :
-                # 获得词汇
-                t1 = vectors.get_item(row)
-                t2 = vectors.get_item(col)
                 # 移除
-                vectors.kick_out(t1, t2)
-            """
+                vectors.fit(vectors.get_item(row), vectors.get_item(col))
             # 清理数据
             counter.clear()
             # 打印信息
