@@ -77,14 +77,17 @@ class IndexCounter :
         self.__counter.clear()
 
     # 记录位置
-    def count(self, index) :
+    def count(self, index, values) :
+        # 检查参数
+        assert isinstance(values, list)
+        assert len(values) == 3
         # 检查数据
         if index in \
             self.__counter.keys() :
             # 增加计数
-            self.__counter[index] += 1
+            self.__counter[index][0] += 1
         # 设置初始值
-        else : self.__counter[index] = 1
+        else : self.__counter[index] = values
 
     def max_index(self) :
         # 检查长度
@@ -92,15 +95,21 @@ class IndexCounter :
             return -1
         # 获得最大值
         return max(self.__counter,
-            key = lambda k : self.__counter[k])
+            key = lambda k : self.__counter[k][0])
+
+    def max_value(self) :
+        # 获得索引
+        index = self.max_index()
+        # 返回结果
+        return self.__counter[index] \
+            if index >= 0 else None
 
     def max_count(self) :
         # 获得索引
-        index = self.max_index()
-        # 检查结果
-        if index < 0 : return -1
+        value = self.max_value()
         # 返回结果
-        return self.__counter[index]
+        return value[0] \
+            if value is not None else -1
 
     def max_position(self, n) :
         # 检查参数
