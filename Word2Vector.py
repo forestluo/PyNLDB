@@ -844,7 +844,7 @@ class VectorGroup(ContentGroup) :
         # 设置相关系数
         word = WordItem(content, 0); word.gamma = 0
         # 检查参数
-        if content in self._words: word = self._words[key]
+        if content in self._words: word = self._words[content]
         # 打印数据
         word.dump()
 
