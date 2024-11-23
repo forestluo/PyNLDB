@@ -873,9 +873,9 @@ class VectorGroup(ContentGroup) :
         if content in self._words: word = self._words[content]
 
         # 删除项目
-        if t1.content in self:
+        if t1.content in self :
             self.remove(t1.content)
-        if t2.content in self:
+        if t2.content in self :
             self.remove(t2.content)
 
         # 把索引值大的项目往前挪动
