@@ -1044,6 +1044,7 @@ def fast_solving() :
         max_delta = vectors.fast_solving(counter)
         # 检查结果
         if max_delta > 1.0e-5 :
+            """
             # 获得最大误差位置
             row, col = counter.max_position(len(vectors))
             # 检查结果
@@ -1053,6 +1054,7 @@ def fast_solving() :
                 t2 = vectors.get_item(col)
                 # 移除
                 vectors.kick_out(t1, t2)
+            """
             # 清理数据
             counter.clear()
             # 打印信息
