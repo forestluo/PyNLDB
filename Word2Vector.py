@@ -788,8 +788,14 @@ class VectorGroup(ContentGroup) :
             col = pos - row * n
             # 设置最大误差值
             max_delta = abs_delta[row][col]
-            # 设置全局误差
-            delta = numpy.multiply(numpy.mean(delta), numpy.ones((n, n)))
+
+            # 保留某行
+            _mask = numpy.zeros((n, n))
+            # 设置某行，某列
+            _mask[row,:].fill(1.0)
+            _mask[:,col].fill(1.0)
+            # 乘上掩码
+            delta = numpy.multiply(_mask, delta)
 
             # 通过误差计算步长，并移至下一个步骤
             # 计算模长
