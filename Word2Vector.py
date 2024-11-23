@@ -887,7 +887,7 @@ class VectorGroup(ContentGroup) :
         else : self.add_item(t2)
 
         # 打印计算值
-        print("VectorGroup.kick_out : kick_out vectors !")
+        print("VectorGroup.shuffle : shuffle vectors !")
         print(f"\tt1[{t1.index},\"{t1.content}\"].count = {t1.count}")
         print(f"\tt2[{t2.index},\"{t2.content}\"].count = {t2.count}")
         print(f"\tword(\"{word.content}\").count = {word.count} ({word.gamma})")
