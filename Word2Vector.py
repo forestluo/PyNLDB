@@ -843,8 +843,6 @@ class VectorGroup(ContentGroup) :
         word = WordItem(content, 0); word.gamma = 0
         # 检查参数
         if content in self._words: word = self._words[content]
-        # 打印数据
-        #word.dump()
 
         # 删除项目
         if t1.content in self :
