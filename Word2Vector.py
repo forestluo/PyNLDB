@@ -421,9 +421,12 @@ class VectorGroup(ContentGroup) :
             # 获得索引值
             j = self[c2].index
 
+            """
             # 设置数值
             gammas[i][j] = item.gamma \
                 if 0 <= item.gamma <= 1.0 else 0.0
+            """
+            gammas[i][j] = item.gamma
         # 返回结果
         return gammas
 
@@ -483,8 +486,13 @@ class VectorGroup(ContentGroup) :
             # 计算相关系数
             item.gamma = 0.5 * float(f) \
                 * (1.0 / float(f1) + 1.0 / float(f2))
+            # 缩放数值范围
+            # [-1, +1]
+            item.gamma = 1.0 - 2.0 * item.gamma
+            """
             # 检查结果
             if item.gamma > 1.0 : item.gamma = 0.0
+            """
         # 结束
         pb.end()
 
