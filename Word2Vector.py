@@ -816,6 +816,80 @@ class VectorGroup(ContentGroup) :
         # 返回结果
         return last_delta
 
+    # 踢出匹配项目
+    def kick_out(self, row, col) :
+        # 维度
+        n = len(self)
+        # 检查参数
+        assert 0 <= row <= n
+        assert 0 <= col <= n
+        # 词汇项目
+        t1 = None; t2 = None
+        # 循环处理
+        for item in self.values():
+            # 设置参数
+            if item.index == row : t1 = item
+            elif item.index == col : t2 = item
+        # 断言
+        assert t1 is not None and t2 is not None
+        # 显示数据
+        t1.dump(False, False); t2.dump(False, False)
+        # 删除该项目
+        content = t1.content + t2.content
+        # 设置相关系数
+        word = WordItem(content, 0); word.gamma = 0
+        # 检查参数
+        if content in self._words: word = self._words[key]
+        # 打印数据
+        word.dump()
+
+        # 参数值
+        gamma = 0.0
+        delta = 0.0
+        # 循环计数
+        i = 0; j = 0
+        # 最大行和范数
+        last_delta = numpy.inf
+        # 打印计算值
+        print("VectorGroup.modify_vectors : modify vectors !")
+        # 循环直至误差符合要求，或者收敛至最小误差
+        while i < self._max_loop:
+            # 计数器加一
+            i += 1; j += 1
+            # 获得计算相关系数
+            gamma = VectorItem.cal_gamma(t1, t2)
+            # 计算两者的相关系数误差
+            delta = word.gamma - gamma
+            # 获得相关系数绝对值
+            abs_delta = numpy.abs(delta)
+            # 检查结果
+            if abs_delta < self._error:
+                break
+            # 检查结果
+            if i == 0:
+                last_delta = abs_delta
+            else:
+                if last_delta > abs_delta:
+                    # 误差呈下降趋势
+                    i = 0; last_delta = abs_delta
+            # 连续三次上升
+            if i >= 3:
+                # 需要重新生成随机矢量
+                for k in range(self._dimension):
+                    # 设置随机值
+                    t1.matrix[0][k] = 0.5 - numpy.random.random()
+                    t1.matrix[1][k] = 0.5 - numpy.random.random()
+                    t2.matrix[0][k] = 0.5 - numpy.random.random()
+                    t2.matrix[1][k] = 0.5 - numpy.random.random()
+                break
+            # 计算两者直接的误差分量
+            _dAi, _dBj = VectorItem.cal_delta(t1, t2, delta / 2)
+            # 直接纠正矢量
+            VectorItem.add_delta(t1, _dAi)
+            VectorItem.add_delta(t2, _dBj)
+        # 打印信息
+        print(f"\tgamma({i}, {j}) = {gamma} ({delta})")
+
 # 路径
 json_path = ".\\json\\"
 # 生成对象
@@ -930,6 +1004,7 @@ def fast_solving() :
 
     # 计数器
     i = 0
+    # 循环处理
     while True :
         # 计数器加一
         i += 1
@@ -937,6 +1012,12 @@ def fast_solving() :
         max_delta = vectors.fast_solving(counter)
         # 检查结果
         if max_delta > 1.0e-5 :
+            # 获得最大误差位置
+            row, col = counter.max_position(len(vectors))
+            # 检查结果
+            if row >= 0 and col >= 0 :
+                # 踢出不合适的数据
+                vectors.kick_out(row,col)
             # 清理数据
             counter.clear()
             # 打印信息
