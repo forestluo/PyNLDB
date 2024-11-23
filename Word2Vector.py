@@ -814,12 +814,14 @@ class VectorGroup(ContentGroup) :
             # 注意：分成两个步骤计算！！！
             ais += _dAi; bjs += _dBj
 
+            # 获得词汇
+            t1 = self.get_item(row)
+            t2 = self.get_item(col)
             # 增加误差记录
-            counter.count(pos,
-                [1, self.get_item(row), self.get_item(col)])
+            counter.count(pos, t1, t2)
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
-            #print(f"\t[row, col] = [{row}, {col}]")
+            print(f"\tToken[{row},{col}] = [\"{t1.content}\",\"{t2.content}\"]")
             print(f"\tGamma[{row},{col}] = {gammas[row][col]}")
             print(f"\t∇Gamma[{i},{j}] = {max_delta}")
             if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {last_delta - max_delta}")
