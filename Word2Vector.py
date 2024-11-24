@@ -794,7 +794,7 @@ class VectorGroup(ContentGroup) :
             t1 = self.get_item(row)
             t2 = self.get_item(col)
             # 增加误差记录
-            counter.count(pos, [1, t1, t2])
+            #counter.count(pos, [1, t1, t2])
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
             print(f"\tToken[{row},{col}] = [\"{t1.content}\",\"{t2.content}\"]")
@@ -811,17 +811,7 @@ class VectorGroup(ContentGroup) :
             if last_delta > max_delta :
                 # 呈下降趋势
                 i = 0; last_delta = max_delta
-            # 检查记录值
-            if counter.max_count() > self._max_loop :
-                # 获得位置
-                row, col = counter.max_position(n)
-                # 清理
-                counter.clear()
-                # 二阶误差值太小
-                print(f"VectorGroup.fast_solving : too much same errors !")
 
-            # 设置比例值
-            scale = 1.0
             # 仅保留最大误差处的数据
             _mask = numpy.zeros((n, n))
             # 设置掩码
@@ -838,8 +828,8 @@ class VectorGroup(ContentGroup) :
             _Bjs = numpy.sum(numpy.square(bjs), axis = 1)
             _Bjs = numpy.reshape(_Bjs, (1, n))
             _Bjs = numpy.tile(_Bjs, (n, 1))
-            # 计算系数矩阵（含均值处理）
-            _L = scale * numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais))
+            # 计算系数矩阵
+            _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais))
             # 求平均值，并加和计算
             _dAi = numpy.dot(_L, bjs)
             _dBj = numpy.dot(_L.T, ais)
