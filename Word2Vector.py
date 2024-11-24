@@ -814,7 +814,7 @@ class VectorGroup(ContentGroup) :
             # 间或进行
             # 局部计算
             if j > self._max_loop \
-                and numpy.abs(last_delta - max_delta) < self._error :
+                and numpy.abs(last_delta - max_delta) < 100 * self._error :
                 # 单独计算误差最大的单元
                 _mask = numpy.zeros((n, n))
                 # 设置掩码
