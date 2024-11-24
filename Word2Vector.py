@@ -816,6 +816,9 @@ class VectorGroup(ContentGroup) :
             _mask = numpy.zeros((n, n))
             # 设置掩码
             _mask[row][col] = 1.0
+            _mask[col][row] = 1.0
+            _mask[row][row] = 1.0
+            _mask[col][col] = 1.0
             # 乘上掩码
             delta = numpy.multiply(_mask, delta)
 
