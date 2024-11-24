@@ -811,11 +811,6 @@ class VectorGroup(ContentGroup) :
             if last_delta > max_delta :
                 # 呈下降趋势
                 i = 0; last_delta = max_delta
-            # 检查二阶误差
-            if j > self._max_loop and \
-                numpy.abs(last_delta - max_delta) < self._error :
-                # 二阶误差值太小
-                print(f"VectorGroup.fast_solving : small ∇²Gamma !")
             # 检查记录值
             if counter.max_count() > self._max_loop :
                 # 获得位置
