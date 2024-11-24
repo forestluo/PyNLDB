@@ -820,10 +820,10 @@ class VectorGroup(ContentGroup) :
                 break
 
             # 仅保留最大误差处的数据
-            _mask = numpy.ones((n, n))
+            _mask = numpy.zeros((n, n))
             # 设置某行，某列
-            _mask[row, :].fill(0.0)
-            _mask[:, col].fill(0.0)
+            _mask[row, :].fill(1.0)
+            _mask[:, col].fill(1.0)
             # 乘上掩码
             delta = numpy.multiply(_mask, delta)
 
