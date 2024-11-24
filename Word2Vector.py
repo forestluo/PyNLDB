@@ -789,31 +789,6 @@ class VectorGroup(ContentGroup) :
             # 设置最大误差值
             max_delta = abs_delta[row][col]
 
-            # 仅保留最大误差处的数据
-            _mask = numpy.zeros((n, n))
-            # 设置某行，某列
-            _mask[row,:].fill(1.0)
-            _mask[:,col].fill(1.0)
-            # 乘上掩码
-            delta = numpy.multiply(_mask, delta)
-
-            # 通过误差计算步长，并移至下一个步骤
-            # 计算模长
-            _Ais = numpy.sum(numpy.square(ais), axis = 1)
-            _Ais = numpy.reshape(_Ais, (n, 1))
-            _Ais = numpy.tile(_Ais, (1, n))
-            # 计算模长
-            _Bjs = numpy.sum(numpy.square(bjs), axis = 1)
-            _Bjs = numpy.reshape(_Bjs, (1, n))
-            _Bjs = numpy.tile(_Bjs, (n, 1))
-            # 计算系数矩阵（含均值处理）
-            _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais)) / n
-            # 求平均值，并加和计算
-            _dAi = numpy.dot(_L, bjs)
-            _dBj = numpy.dot(_L.T, ais)
-            # 注意：分成两个步骤计算！！！
-            ais += _dAi; bjs += _dBj
-
             # 获得词汇
             t1 = self.get_item(row)
             t2 = self.get_item(col)
@@ -832,9 +807,15 @@ class VectorGroup(ContentGroup) :
                 break
             if j > self._max_loop and \
                 numpy.abs(last_delta - max_delta) < self._error :
+                # 仅保留最大误差处的数据
+                _mask = numpy.zeros((n, n))
+                # 设置某行，某列
+                _mask[row, :].fill(1.0)
+                _mask[:, col].fill(1.0)
+                # 乘上掩码
+                delta = numpy.multiply(_mask, delta)
                 # 连续三次，误差呈上升趋势
                 print(f"VectorGroup.fast_solving : small ∇²Gamma !")
-                break
             # 检查结果
             if last_delta > max_delta :
                 # 呈下降趋势
@@ -844,6 +825,24 @@ class VectorGroup(ContentGroup) :
                 # 连续三次，误差呈上升趋势
                 print(f"VectorGroup.fast_solving : ∇Gamma increasing !")
                 break
+
+            # 通过误差计算步长，并移至下一个步骤
+            # 计算模长
+            _Ais = numpy.sum(numpy.square(ais), axis=1)
+            _Ais = numpy.reshape(_Ais, (n, 1))
+            _Ais = numpy.tile(_Ais, (1, n))
+            # 计算模长
+            _Bjs = numpy.sum(numpy.square(bjs), axis=1)
+            _Bjs = numpy.reshape(_Bjs, (1, n))
+            _Bjs = numpy.tile(_Bjs, (n, 1))
+            # 计算系数矩阵（含均值处理）
+            _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais)) / n
+            # 求平均值，并加和计算
+            _dAi = numpy.dot(_L, bjs)
+            _dBj = numpy.dot(_L.T, ais)
+            # 注意：分成两个步骤计算！！！
+            ais += _dAi; bjs += _dBj
+
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
         # 打印信息
