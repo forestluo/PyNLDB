@@ -798,7 +798,7 @@ class VectorGroup(ContentGroup) :
             # 设置掩码
             _mask[row][col] = 1.0
             # 屏蔽其他数据
-            delta = numpy.dot(delta, _mask)
+            delta = numpy.multiply(delta, _mask)
 
             # 通过误差计算步长，并移至下一个步骤
             # 计算模长
