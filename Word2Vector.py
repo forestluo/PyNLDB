@@ -834,7 +834,7 @@ class VectorGroup(ContentGroup) :
                 # 乘上掩码
                 delta = numpy.multiply(_mask, delta)
             # 线模式
-            elif numpy.remainder(j, 3) == 2 :
+            elif numpy.remainder(j, 3) == 1 :
                 # 仅保留最大误差处的数据
                 _mask = numpy.zeros((n, n))
                 # 设置某行，某列
