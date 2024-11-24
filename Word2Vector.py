@@ -1,9 +1,6 @@
 import math
 import numpy
 
-from numba import jit
-from numba import cuda
-
 from Content import *
 from CommonTool import *
 
