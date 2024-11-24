@@ -817,6 +817,17 @@ class VectorGroup(ContentGroup) :
             # 注意：分成两个步骤计算！！！
             ais += _dAi; bjs += _dBj
 
+            # 临时记录
+            _last_delta = last_delta
+            # 检查数据
+            if max_delta < self._error:
+                # 中断循环
+                last_delta = max_delta; break
+            # 检查结果
+            if last_delta > max_delta:
+                # 呈下降趋势
+                i = 0; last_delta = max_delta
+
             # 打印误差
             # 获得词汇
             t1 = self.get_item(row)
@@ -828,18 +839,7 @@ class VectorGroup(ContentGroup) :
             print(f"\tToken[{row},{col}] = [\"{t1.content}\",\"{t2.content}\"]")
             print(f"\tGamma = {gammas[row][col]}")
             print(f"\t∇Gamma[{i},{j}] = {max_delta}")
-            if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {last_delta - max_delta}")
-
-            # 检查数据
-            if max_delta < self._error:
-                # 中断循环
-                last_delta = max_delta
-                break
-            # 检查结果
-            if last_delta > max_delta:
-                # 呈下降趋势
-                i = 0;
-                last_delta = max_delta
+            if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {_last_delta - max_delta}")
 
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
