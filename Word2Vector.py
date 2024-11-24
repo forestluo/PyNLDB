@@ -833,6 +833,9 @@ class VectorGroup(ContentGroup) :
             if counter.max_count() > self._max_loop :
                 # 获得位置
                 row, col = counter.max_position(n)
+                # 清理
+                counter.clear()
+
                 # 设置比例值
                 scale = 1.0
                 # 仅保留最大误差处的数据
