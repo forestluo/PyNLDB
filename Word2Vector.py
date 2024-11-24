@@ -838,7 +838,7 @@ class VectorGroup(ContentGroup) :
             _Bjs = numpy.reshape(_Bjs, (1, n))
             _Bjs = numpy.tile(_Bjs, (n, 1))
             # 计算系数矩阵（含均值处理）
-            _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais)) / n
+            _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais)) / 2
             # 求平均值，并加和计算
             _dAi = numpy.dot(_L, bjs)
             _dBj = numpy.dot(_L.T, ais)
