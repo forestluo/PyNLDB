@@ -830,18 +830,18 @@ class VectorGroup(ContentGroup) :
             _Bjs = numpy.tile(_Bjs, (n, 1))
             # 计算系数矩阵
             _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais))
-            # 计算权重
+            # 计算Ai的权重
             _wAi = numpy.reciprocal(numpy.sum(abs_delta, axis = 1))
             _wAi = numpy.reshape(_wAi, (n, 1))
             _wAi = numpy.tile(_wAi, (1, n))
             _wAi = numpy.multiply(abs_delta, _wAi)
-            # 计算权重
+            # 计算Bj的权重
             _wBj = numpy.reciprocal(numpy.sum(abs_delta.T, axis = 1))
             _wBj = numpy.reshape(_wBj, (1, n))
             _wBj = numpy.tile(_wBj, (n, 1))
             _wBj = numpy.multiply(abs_delta, _wBj)
             # 计算误差分量
-            # 先用权重归一化，再计算误差
+            # 按照权重进行归一化，再计算误差
             _dAi = numpy.dot(numpy.multiply(_L, _wBj) , bjs)
             _dBj = numpy.dot(numpy.multiply(_L, _wAi).T, ais)
             # 注意：分成两个步骤计算！！！
