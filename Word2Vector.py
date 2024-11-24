@@ -816,7 +816,7 @@ class VectorGroup(ContentGroup) :
                 # 呈下降趋势
                 i = 0; last_delta = max_delta
             # 检查计数器
-            if counter.max_count() > 3 :
+            if counter.max_count() > self._max_loop :
                 # 获得位置
                 row, col = counter.max_position(n)
                 # 删除最大项
