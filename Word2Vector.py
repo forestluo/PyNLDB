@@ -819,14 +819,29 @@ class VectorGroup(ContentGroup) :
                 print(f"VectorGroup.fast_solving : ∇Gamma increasing !")
                 break
 
-            # 仅保留最大误差处的数据
-            _mask = numpy.zeros((n, n))
-            # 设置某行，某列
-            #_mask[row, :].fill(1.0)
-            #_mask[:, col].fill(1.0)
-            _mask[row][col] = 1.0
-            # 乘上掩码
-            delta = numpy.multiply(_mask, delta)
+            # 比例值
+            value = n
+            # 点模式
+            if numpy.remainder(j, 3) == 2 :
+                # 设置比例值
+                value = 1.0
+                # 仅保留最大误差处的数据
+                _mask = numpy.zeros((n, n))
+                # 设置某行，某列
+                # _mask[row, :].fill(1.0)
+                # _mask[:, col].fill(1.0)
+                _mask[row][col] = 1.0
+                # 乘上掩码
+                delta = numpy.multiply(_mask, delta)
+            # 线模式
+            elif numpy.remainder(j, 3) == 2 :
+                # 仅保留最大误差处的数据
+                _mask = numpy.zeros((n, n))
+                # 设置某行，某列
+                _mask[row, :].fill(1.0)
+                _mask[:, col].fill(1.0)
+                # 乘上掩码
+                delta = numpy.multiply(_mask, delta)
 
             # 通过误差计算步长，并移至下一个步骤
             # 计算模长
@@ -838,7 +853,7 @@ class VectorGroup(ContentGroup) :
             _Bjs = numpy.reshape(_Bjs, (1, n))
             _Bjs = numpy.tile(_Bjs, (n, 1))
             # 计算系数矩阵（含均值处理）
-            _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais))
+            _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais)) / value
             # 求平均值，并加和计算
             _dAi = numpy.dot(_L, bjs)
             _dBj = numpy.dot(_L.T, ais)
