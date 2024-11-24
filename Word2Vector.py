@@ -824,10 +824,14 @@ class VectorGroup(ContentGroup) :
                 # 单独计算误差最大的单元
                 _mask = numpy.zeros((n, n))
                 # 设置掩码
-                _mask[row][col] = 1.0
+                _mask[:][col] = 1.0
+                _mask[row][:] = 1.0
                 # 屏蔽其他数据
                 delta = numpy.dot(delta, _mask)
                 abs_delta = numpy.dot(abs_delta, _mask)
+                # 打印信息
+                print(f"VectorGroup.fast_solving : index recorder removed !")
+
 
             # 通过误差计算步长，并移至下一个步骤
             # 计算模长
