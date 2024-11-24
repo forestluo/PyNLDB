@@ -793,6 +793,30 @@ class VectorGroup(ContentGroup) :
             # 设置最大误差值
             max_delta = abs_delta[row][col]
 
+            # 单独计算误差最大的单元
+            _mask = numpy.zeros((n, n))
+            # 设置掩码
+            _mask[row][col] = 1.0
+            # 屏蔽其他数据
+            delta = numpy.dot(delta, _mask)
+
+            # 通过误差计算步长，并移至下一个步骤
+            # 计算模长
+            _Ais = numpy.sum(numpy.square(ais), axis = 1)
+            _Ais = numpy.reshape(_Ais, (n, 1))
+            _Ais = numpy.tile(_Ais, (1, n))
+            # 计算模长
+            _Bjs = numpy.sum(numpy.square(bjs), axis = 1)
+            _Bjs = numpy.reshape(_Bjs, (1, n))
+            _Bjs = numpy.tile(_Bjs, (n, 1))
+            # 计算系数矩阵
+            _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais))
+            # 计算误差分量
+            _dAi = numpy.dot(_L, bjs)
+            _dBj = numpy.dot(_L.T, ais)
+            # 注意：分成两个步骤计算！！！
+            ais += _dAi; bjs += _dBj
+
             # 打印误差
             # 获得词汇
             t1 = self.get_item(row)
@@ -807,73 +831,16 @@ class VectorGroup(ContentGroup) :
             if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {last_delta - max_delta}")
 
             # 检查数据
-            if max_delta < self._error :
+            if max_delta < self._error:
                 # 中断循环
                 last_delta = max_delta
                 break
-            # 间或进行
-            # 局部计算
-            if j > self._max_loop \
-                and numpy.abs(last_delta - max_delta) < 100 * self._error :
-                # 单独计算误差最大的单元
-                _mask = numpy.zeros((n, n))
-                # 设置掩码
-                _mask[row][col] = 1.0
-                # 屏蔽其他数据
-                delta = numpy.dot(delta, _mask)
-                # 通过误差计算步长，并移至下一个步骤
-                # 计算模长
-                _Ais = numpy.sum(numpy.square(ais), axis = 1)
-                _Ais = numpy.reshape(_Ais, (n, 1))
-                _Ais = numpy.tile(_Ais, (1, n))
-                # 计算模长
-                _Bjs = numpy.sum(numpy.square(bjs), axis = 1)
-                _Bjs = numpy.reshape(_Bjs, (1, n))
-                _Bjs = numpy.tile(_Bjs, (n, 1))
-                # 计算系数矩阵
-                _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais))
-                # 计算误差分量
-                _dAi = numpy.dot(_L, bjs)
-                _dBj = numpy.dot(_L.T, ais)
-                # 注意：分成两个步骤计算！！！
-                ais += _dAi; bjs += _dBj
-            # 全局计算
-            else :
-                # 通过误差计算步长，并移至下一个步骤
-                # 计算模长
-                _Ais = numpy.sum(numpy.square(ais), axis=1)
-                _Ais = numpy.reshape(_Ais, (n, 1))
-                _Ais = numpy.tile(_Ais, (1, n))
-                # 计算模长
-                _Bjs = numpy.sum(numpy.square(bjs), axis=1)
-                _Bjs = numpy.reshape(_Bjs, (1, n))
-                _Bjs = numpy.tile(_Bjs, (n, 1))
-                # 计算系数矩阵
-                _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais))
-                # 计算Ai的权重
-                _wAi = numpy.sum(abs_delta, axis = 1)
-                # 分母不为零，可以求倒数
-                _wAi = numpy.reciprocal(_wAi)
-                _wAi = numpy.reshape(_wAi, (n, 1))
-                _wAi = numpy.tile(_wAi, (1, n))
-                _wAi = numpy.multiply(abs_delta, _wAi)
-                # 计算Bj的权重
-                _wBj = numpy.sum(abs_delta.T, axis = 1)
-                # 分母不为零，可以求倒数
-                _wBj = numpy.reciprocal(_wBj)
-                _wBj = numpy.reshape(_wBj, (1, n))
-                _wBj = numpy.tile(_wBj, (n, 1))
-                _wBj = numpy.multiply(abs_delta, _wBj)
-                # 计算误差分量
-                # 按照权重进行归一化，再计算误差
-                _dAi = numpy.dot(numpy.multiply(_L, _wBj), bjs)
-                _dBj = numpy.dot(numpy.multiply(_L, _wAi).T, ais)
-                # 注意：分成两个步骤计算！！！
-                ais += _dAi; bjs += _dBj
             # 检查结果
             if last_delta > max_delta:
                 # 呈下降趋势
-                i = 0; last_delta = max_delta
+                i = 0;
+                last_delta = max_delta
+
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
         # 打印信息
