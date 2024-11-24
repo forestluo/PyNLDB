@@ -802,8 +802,6 @@ class VectorGroup(ContentGroup) :
             print(f"\t∇Gamma[{i},{j}] = {max_delta}")
             if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {last_delta - max_delta}")
 
-            # 检测误差
-            scale = 1.0 / n
             # 检查数据
             if max_delta < self._error :
                 # 中断循环
@@ -816,39 +814,25 @@ class VectorGroup(ContentGroup) :
             # 检查二阶误差
             if j > self._max_loop and \
                 numpy.abs(last_delta - max_delta) < self._error :
-                """
-                # 仅保留最大误差处的数据
-                _mask = numpy.zeros((n, n))
-                # 设置某行，某列
-                _mask[row, :].fill(1.0)
-                _mask[:, col].fill(1.0)
-                # 乘上掩码
-                delta = numpy.multiply(_mask, delta)
-                """
                 # 二阶误差值太小
                 print(f"VectorGroup.fast_solving : small ∇²Gamma !")
-            # 检查结果
-            if i > self._max_loop :
-                # 误差呈上升趋势
-                print(f"VectorGroup.fast_solving : ∇Gamma increasing !")
-                break
             # 检查记录值
             if counter.max_count() > self._max_loop :
                 # 获得位置
                 row, col = counter.max_position(n)
                 # 清理
                 counter.clear()
-
-                # 设置比例值
-                scale = 1.0
-                # 仅保留最大误差处的数据
-                _mask = numpy.zeros((n, n))
-                # 设置掩码
-                _mask[row][col] = 1.0
-                # 乘上掩码
-                delta = numpy.multiply(_mask, delta)
                 # 二阶误差值太小
                 print(f"VectorGroup.fast_solving : too much same errors !")
+
+            # 设置比例值
+            scale = 1.0
+            # 仅保留最大误差处的数据
+            _mask = numpy.zeros((n, n))
+            # 设置掩码
+            _mask[row][col] = 1.0
+            # 乘上掩码
+            delta = numpy.multiply(_mask, delta)
 
             # 通过误差计算步长，并移至下一个步骤
             # 计算模长
