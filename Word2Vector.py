@@ -858,8 +858,10 @@ class VectorGroup(ContentGroup) :
             _wBj = numpy.sum(abs_delta.T, axis = 1)
             # 检查结果
             if _wBj.min() > self._error :
+                # 分母不为零，可以求倒数
                 _wBj = numpy.reciprocal(_wBj)
             else :
+                # 直接设置数值
                 _wBj = numpy.where(_wBj > self._error, 1.0, 0.0)
             _wBj = numpy.reshape(_wBj, (1, n))
             _wBj = numpy.tile(_wBj, (n, 1))
