@@ -789,6 +789,7 @@ class VectorGroup(ContentGroup) :
             # 设置最大误差值
             max_delta = abs_delta[row][col]
 
+            # 打印误差
             # 获得词汇
             t1 = self.get_item(row)
             t2 = self.get_item(col)
@@ -800,6 +801,9 @@ class VectorGroup(ContentGroup) :
             print(f"\tGamma = {gammas[row][col]}")
             print(f"\t∇Gamma[{i},{j}] = {max_delta}")
             if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {last_delta - max_delta}")
+
+            # 检测误差
+            scale = 1.0 / n
             # 检查数据
             if max_delta < self._error :
                 # 中断循环
@@ -807,6 +811,16 @@ class VectorGroup(ContentGroup) :
                 break
             if j > self._max_loop and \
                 numpy.abs(last_delta - max_delta) < self._error :
+                # 设置比例值
+                scale = 1.0
+                # 仅保留最大误差处的数据
+                _mask = numpy.zeros((n, n))
+                # 设置某行，某列
+                # _mask[row, :].fill(1.0)
+                # _mask[:, col].fill(1.0)
+                _mask[row][col] = 1.0
+                # 乘上掩码
+                delta = numpy.multiply(_mask, delta)
                 # 二阶误差值太小
                 print(f"VectorGroup.fast_solving : small ∇²Gamma !")
             # 检查结果
@@ -819,29 +833,15 @@ class VectorGroup(ContentGroup) :
                 print(f"VectorGroup.fast_solving : ∇Gamma increasing !")
                 break
 
-            # 比例值
-            value = n
-            # 点模式
-            if numpy.remainder(j, 3) == 2 :
-                # 设置比例值
-                value = 1.0
-                # 仅保留最大误差处的数据
-                _mask = numpy.zeros((n, n))
-                # 设置某行，某列
-                # _mask[row, :].fill(1.0)
-                # _mask[:, col].fill(1.0)
-                _mask[row][col] = 1.0
-                # 乘上掩码
-                delta = numpy.multiply(_mask, delta)
-            # 线模式
-            elif numpy.remainder(j, 3) == 1 :
-                # 仅保留最大误差处的数据
-                _mask = numpy.zeros((n, n))
-                # 设置某行，某列
-                _mask[row, :].fill(1.0)
-                _mask[:, col].fill(1.0)
-                # 乘上掩码
-                delta = numpy.multiply(_mask, delta)
+            """
+            # 仅保留最大误差处的数据
+            _mask = numpy.zeros((n, n))
+            # 设置某行，某列
+            _mask[row, :].fill(1.0)
+            _mask[:, col].fill(1.0)
+            # 乘上掩码
+            delta = numpy.multiply(_mask, delta)
+            """
 
             # 通过误差计算步长，并移至下一个步骤
             # 计算模长
@@ -853,7 +853,7 @@ class VectorGroup(ContentGroup) :
             _Bjs = numpy.reshape(_Bjs, (1, n))
             _Bjs = numpy.tile(_Bjs, (n, 1))
             # 计算系数矩阵（含均值处理）
-            _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais)) / value
+            _L = scale * numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais))
             # 求平均值，并加和计算
             _dAi = numpy.dot(_L, bjs)
             _dBj = numpy.dot(_L.T, ais)
