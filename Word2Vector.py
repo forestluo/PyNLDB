@@ -809,8 +809,14 @@ class VectorGroup(ContentGroup) :
                 # 中断循环
                 last_delta = max_delta
                 break
+            # 检查结果
+            if last_delta > max_delta :
+                # 呈下降趋势
+                i = 0; last_delta = max_delta
+            # 检查二阶误差
             if j > self._max_loop and \
                 numpy.abs(last_delta - max_delta) < self._error :
+                """
                 # 仅保留最大误差处的数据
                 _mask = numpy.zeros((n, n))
                 # 设置某行，某列
@@ -818,12 +824,9 @@ class VectorGroup(ContentGroup) :
                 _mask[:, col].fill(1.0)
                 # 乘上掩码
                 delta = numpy.multiply(_mask, delta)
+                """
                 # 二阶误差值太小
                 print(f"VectorGroup.fast_solving : small ∇²Gamma !")
-            # 检查结果
-            if last_delta > max_delta :
-                # 呈下降趋势
-                i = 0; last_delta = max_delta
             # 检查结果
             if i > self._max_loop :
                 # 误差呈上升趋势
