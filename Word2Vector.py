@@ -808,10 +808,10 @@ class VectorGroup(ContentGroup) :
             if j > self._max_loop and \
                 numpy.abs(last_delta - max_delta) < self._error :
                 # 仅保留最大误差处的数据
-                _mask = numpy.zeros((n, n))
+                _mask = numpy.ones((n, n))
                 # 设置某行，某列
-                _mask[row, :].fill(1.0)
-                _mask[:, col].fill(1.0)
+                _mask[row, :].fill(0.0)
+                _mask[:, col].fill(0.0)
                 # 乘上掩码
                 delta = numpy.multiply(_mask, delta)
                 # 二阶误差值太小
@@ -821,7 +821,7 @@ class VectorGroup(ContentGroup) :
                 # 呈下降趋势
                 i = 0; last_delta = max_delta
             # 检查结果
-            if i >= self._max_loop :
+            if i > self._max_loop :
                 # 误差呈上升趋势
                 print(f"VectorGroup.fast_solving : ∇Gamma increasing !")
                 break
