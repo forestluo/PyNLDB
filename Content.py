@@ -112,11 +112,6 @@ class ContentGroup :
         # 设置数值
         self._contents[key] = item
 
-    # 返回所有键值
-    def keys(self) :
-        # 返回结果
-        return self._contents.keys()
-
     def values(self) :
         # 返回结果
         return self._contents.values()

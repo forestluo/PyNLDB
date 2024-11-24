@@ -224,6 +224,13 @@ class VectorGroup(ContentGroup) :
         # 返回结果
         return self._dimension
 
+    # 清理
+    def clear(self) :
+        # 调用父类函数
+        super().clear()
+        # 清理词汇内容
+        self._words.clear()
+
     # 加载数据
     def load(self, file_name):
         # 清理矢量
@@ -812,16 +819,6 @@ class VectorGroup(ContentGroup) :
                 # 呈下降趋势
                 i = 0; last_delta = max_delta
 
-            # 仅保留最大误差处的数据
-            _mask = numpy.zeros((n, n))
-            # 设置掩码
-            _mask[row][col] = 1.0
-            _mask[col][row] = 1.0
-            _mask[row][row] = 1.0
-            _mask[col][col] = 1.0
-            # 乘上掩码
-            delta = numpy.multiply(_mask, delta)
-
             # 通过误差计算步长，并移至下一个步骤
             # 计算模长
             _Ais = numpy.sum(numpy.square(ais), axis = 1)
@@ -833,9 +830,20 @@ class VectorGroup(ContentGroup) :
             _Bjs = numpy.tile(_Bjs, (n, 1))
             # 计算系数矩阵
             _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais))
-            # 求平均值，并加和计算
-            _dAi = numpy.dot(_L, bjs)
-            _dBj = numpy.dot(_L.T, ais)
+            # 计算权重
+            _wAi = numpy.reciprocal(numpy.sum(abs_delta, axis = 1))
+            _wAi = numpy.reshape(_wAi, (n, 1))
+            _wAi = numpy.tile(_wAi, (1, n))
+            _wAi = numpy.multiply(abs_delta, _wAi)
+            # 计算权重
+            _wBj = numpy.reciprocal(numpy.sum(abs_delta.T, axis = 1))
+            _wBj = numpy.reshape(_wBj, (1, n))
+            _wBj = numpy.tile(_wBj, (n, 1))
+            _wBj = numpy.multiply(abs_delta, _wBj)
+            # 计算误差分量
+            # 先用权重归一化，再计算误差
+            _dAi = numpy.dot(numpy.multiply(_L, _wBj) , bjs)
+            _dBj = numpy.dot(numpy.multiply(_L, _wAi).T, ais)
             # 注意：分成两个步骤计算！！！
             ais += _dAi; bjs += _dBj
 
@@ -974,7 +982,8 @@ def verify_vectors() :
         # 打印信息
         print("Word2Vector.verify_vectors : show results !")
         print(f"\tGamma12 (from words) = {gamma}")
-        print(f"\tGamma12 (from vector calculation) = {VectorItem.cal_gamma(vectors[w1], vectors[w2])}")
+        if w1 in vectors and w2 in vectors :
+            print(f"\tGamma12 (from vector calculation) = {VectorItem.cal_gamma(vectors[w1], vectors[w2])}")
 
 def solving() :
     # 检查参数
@@ -1037,16 +1046,14 @@ def fast_solving() :
 
 def fast_calculation_example():
     # 生成对象
-    vectors = VectorGroup(2)
+    vectors.clear()
 
     # 生成对象
-    v1 = vectors.new_item("运")
-    v1.count = 937002
+    v1 = vectors.new_item("运", 937002)
     vectors.add_item(v1)
 
     # 生成对象
-    v2 = vectors.new_item("动")
-    v2.count = 2363927
+    v2 = vectors.new_item("动", 2363927)
     vectors.add_item(v2)
 
     vectors.add_word("运运", 343)
@@ -1070,7 +1077,7 @@ def fast_calculation_example():
 
 def normal_calculation_example():
     # 生成对象
-    vectors = VectorGroup(2)
+    vectors.clear()
 
     # 生成对象
     v1 = vectors.new_item("运")
