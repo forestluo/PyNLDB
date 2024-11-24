@@ -798,7 +798,7 @@ class VectorGroup(ContentGroup) :
             t1 = self.get_item(row)
             t2 = self.get_item(col)
             # 增加误差记录
-            counter.count(pos, [1, t1, t2])
+            #counter.count(pos, [1, t1, t2])
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
             print(f"\tToken[{row},{col}] = [\"{t1.content}\",\"{t2.content}\"]")
@@ -811,21 +811,16 @@ class VectorGroup(ContentGroup) :
                 # 中断循环
                 last_delta = max_delta
                 break
-            # 检查结果
-            if last_delta > max_delta :
-                # 呈下降趋势
-                i = 0; last_delta = max_delta
-
             # 间或进行
             # 局部计算
-            if numpy.remainder(j, 2) == 1 :
+            if j > self._max_loop \
+                and numpy.abs(last_delta - max_delta) < self._error :
                 # 单独计算误差最大的单元
                 _mask = numpy.zeros((n, n))
                 # 设置掩码
                 _mask[row][col] = 1.0
                 # 屏蔽其他数据
                 delta = numpy.dot(delta, _mask)
-
                 # 通过误差计算步长，并移至下一个步骤
                 # 计算模长
                 _Ais = numpy.sum(numpy.square(ais), axis = 1)
@@ -856,14 +851,14 @@ class VectorGroup(ContentGroup) :
                 # 计算系数矩阵
                 _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais))
                 # 计算Ai的权重
-                _wAi = numpy.sum(abs_delta, axis=1)
+                _wAi = numpy.sum(abs_delta, axis = 1)
                 # 分母不为零，可以求倒数
                 _wAi = numpy.reciprocal(_wAi)
                 _wAi = numpy.reshape(_wAi, (n, 1))
                 _wAi = numpy.tile(_wAi, (1, n))
                 _wAi = numpy.multiply(abs_delta, _wAi)
                 # 计算Bj的权重
-                _wBj = numpy.sum(abs_delta.T, axis=1)
+                _wBj = numpy.sum(abs_delta.T, axis = 1)
                 # 分母不为零，可以求倒数
                 _wBj = numpy.reciprocal(_wBj)
                 _wBj = numpy.reshape(_wBj, (1, n))
@@ -875,6 +870,10 @@ class VectorGroup(ContentGroup) :
                 _dBj = numpy.dot(numpy.multiply(_L, _wAi).T, ais)
                 # 注意：分成两个步骤计算！！！
                 ais += _dAi; bjs += _dBj
+            # 检查结果
+            if last_delta > max_delta:
+                # 呈下降趋势
+                i = 0; last_delta = max_delta
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
         # 打印信息
