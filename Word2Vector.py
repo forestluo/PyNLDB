@@ -798,7 +798,7 @@ class VectorGroup(ContentGroup) :
             t1 = self.get_item(row)
             t2 = self.get_item(col)
             # 增加误差记录
-            #counter.count(pos, [1, t1, t2])
+            counter.count(pos, [1, t1, t2])
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
             print(f"\tToken[{row},{col}] = [\"{t1.content}\",\"{t2.content}\"]")
@@ -815,6 +815,19 @@ class VectorGroup(ContentGroup) :
             if last_delta > max_delta :
                 # 呈下降趋势
                 i = 0; last_delta = max_delta
+            # 检查计数器
+            if counter.max_count() > 3 :
+                # 获得位置
+                row, col = counter.max_position(n)
+                # 删除最大项
+                counter.remove_max()
+                # 单独计算误差最大的单元
+                _mask = numpy.zeros((n, n))
+                # 设置掩码
+                _mask[row][col] = 1.0
+                # 屏蔽其他数据
+                delta = numpy.dot(delta, _mask)
+                abs_delta = numpy.dot(abs_delta, _mask)
 
             # 通过误差计算步长，并移至下一个步骤
             # 计算模长

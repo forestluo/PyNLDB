@@ -89,6 +89,12 @@ class IndexCounter :
         # 设置初始值
         else : self.__counter[index] = values
 
+    def remove_max(self) :
+        # 获得索引
+        index = self.max_index()
+        # 移除相关项目
+        self.__counter.pop(index, None)
+
     def max_index(self) :
         # 检查长度
         if len(self.__counter) <= 0:
