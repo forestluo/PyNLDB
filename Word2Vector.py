@@ -816,20 +816,20 @@ class VectorGroup(ContentGroup) :
                 # 呈下降趋势
                 i = 0; last_delta = max_delta
             # 检查计数器
-            if counter.max_count() > self._max_loop :
+            if counter.max_count() > 3 :
                 # 获得位置
                 row, col = counter.max_position(n)
                 # 删除最大项
                 counter.remove_max()
-                # 单独计算误差最大的单元
-                _mask = numpy.zeros((n, n))
-                # 设置掩码
-                _mask[row][col] = 1.0
-                # 屏蔽其他数据
-                delta = numpy.dot(delta, _mask)
-                abs_delta = numpy.dot(abs_delta, _mask)
                 # 打印信息
                 print(f"VectorGroup.fast_solving : index recorder removed !")
+
+            # 单独计算误差最大的单元
+            _mask = numpy.zeros((n, n))
+            # 设置掩码
+            _mask[row][col] = 1.0
+            # 屏蔽其他数据
+            delta = numpy.dot(delta, _mask)
 
             # 通过误差计算步长，并移至下一个步骤
             # 计算模长
@@ -842,34 +842,9 @@ class VectorGroup(ContentGroup) :
             _Bjs = numpy.tile(_Bjs, (n, 1))
             # 计算系数矩阵
             _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais))
-            # 计算Ai的权重
-            _wAi = numpy.sum(abs_delta, axis = 1)
-            # 检查结果
-            if _wAi.min() > self._error :
-                # 分母不为零，可以求倒数
-                _wAi = numpy.reciprocal(_wAi)
-            else :
-                # 直接设置数值
-                _wAi = numpy.where(_wAi > self._error, 1.0, 0.0)
-            _wAi = numpy.reshape(_wAi, (n, 1))
-            _wAi = numpy.tile(_wAi, (1, n))
-            _wAi = numpy.multiply(abs_delta, _wAi)
-            # 计算Bj的权重
-            _wBj = numpy.sum(abs_delta.T, axis = 1)
-            # 检查结果
-            if _wBj.min() > self._error :
-                # 分母不为零，可以求倒数
-                _wBj = numpy.reciprocal(_wBj)
-            else :
-                # 直接设置数值
-                _wBj = numpy.where(_wBj > self._error, 1.0, 0.0)
-            _wBj = numpy.reshape(_wBj, (1, n))
-            _wBj = numpy.tile(_wBj, (n, 1))
-            _wBj = numpy.multiply(abs_delta, _wBj)
             # 计算误差分量
-            # 按照权重进行归一化，再计算误差
-            _dAi = numpy.dot(numpy.multiply(_L, _wBj) , bjs)
-            _dBj = numpy.dot(numpy.multiply(_L, _wAi).T, ais)
+            _dAi = numpy.dot(_L, bjs)
+            _dBj = numpy.dot(_L.T, ais)
             # 注意：分成两个步骤计算！！！
             ais += _dAi; bjs += _dBj
 
