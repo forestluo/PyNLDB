@@ -814,25 +814,25 @@ class VectorGroup(ContentGroup) :
                 _mask[:, col].fill(1.0)
                 # 乘上掩码
                 delta = numpy.multiply(_mask, delta)
-                # 连续三次，误差呈上升趋势
+                # 二阶误差值太小
                 print(f"VectorGroup.fast_solving : small ∇²Gamma !")
             # 检查结果
             if last_delta > max_delta :
                 # 呈下降趋势
                 i = 0; last_delta = max_delta
             # 检查结果
-            if i >= 3 :
-                # 连续三次，误差呈上升趋势
+            if i >= self._max_loop :
+                # 误差呈上升趋势
                 print(f"VectorGroup.fast_solving : ∇Gamma increasing !")
                 break
 
             # 通过误差计算步长，并移至下一个步骤
             # 计算模长
-            _Ais = numpy.sum(numpy.square(ais), axis=1)
+            _Ais = numpy.sum(numpy.square(ais), axis = 1)
             _Ais = numpy.reshape(_Ais, (n, 1))
             _Ais = numpy.tile(_Ais, (1, n))
             # 计算模长
-            _Bjs = numpy.sum(numpy.square(bjs), axis=1)
+            _Bjs = numpy.sum(numpy.square(bjs), axis = 1)
             _Bjs = numpy.reshape(_Bjs, (1, n))
             _Bjs = numpy.tile(_Bjs, (n, 1))
             # 计算系数矩阵（含均值处理）
