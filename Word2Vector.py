@@ -807,13 +807,6 @@ class VectorGroup(ContentGroup) :
                 break
             if j > self._max_loop and \
                 numpy.abs(last_delta - max_delta) < self._error :
-                # 仅保留最大误差处的数据
-                _mask = numpy.ones((n, n))
-                # 设置某行，某列
-                _mask[row, :].fill(0.0)
-                _mask[:, col].fill(0.0)
-                # 乘上掩码
-                delta = numpy.multiply(_mask, delta)
                 # 二阶误差值太小
                 print(f"VectorGroup.fast_solving : small ∇²Gamma !")
             # 检查结果
@@ -825,6 +818,14 @@ class VectorGroup(ContentGroup) :
                 # 误差呈上升趋势
                 print(f"VectorGroup.fast_solving : ∇Gamma increasing !")
                 break
+
+            # 仅保留最大误差处的数据
+            _mask = numpy.ones((n, n))
+            # 设置某行，某列
+            _mask[row, :].fill(0.0)
+            _mask[:, col].fill(0.0)
+            # 乘上掩码
+            delta = numpy.multiply(_mask, delta)
 
             # 通过误差计算步长，并移至下一个步骤
             # 计算模长
