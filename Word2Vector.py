@@ -210,10 +210,10 @@ class VectorGroup(ContentGroup) :
         self._dimension = dimension
         # 循环次数
         self._max_loop = 10
-        # 最小记录次数
-        self._min_count = 256
         # 误差
         self._error = 1.0e-5
+        # 最小记录次数
+        self._min_count = 1024
         # 设置词汇组
         self._words = WordContent()
 
