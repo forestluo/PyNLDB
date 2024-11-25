@@ -890,6 +890,14 @@ class VectorGroup(ContentGroup) :
         return last_delta
 
     def drop(self) :
+        # 总数
+        # 也是维度之一
+        n = len(self)
+        # 检查内容
+        if n < 2:
+            print("VectorGroup.drop : insufficient vectors !")
+            return False
+
         # 获得两个字符单元
         t1 = self["运"]; self.remove("运")
         t2 = self["动"]; self.remove("动")
