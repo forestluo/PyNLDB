@@ -210,6 +210,8 @@ class VectorGroup(ContentGroup) :
         self._dimension = dimension
         # 循环次数
         self._max_loop = 10
+        # 最小记录次数
+        self._min_count = 128
         # 误差
         self._error = 1.0e-5
         # 设置词汇组
@@ -514,7 +516,7 @@ class VectorGroup(ContentGroup) :
             pb.increase()
             # 检查计数
             # 至少需要的记录次数
-            if item.count >= 128 :
+            if item.count >= self._min_count :
                 continue
             # 将无效数据加入删除队列中
             if item.content not in removed :
@@ -523,7 +525,7 @@ class VectorGroup(ContentGroup) :
         # 仅保留有效项目
         self._contents = \
             { key : item for (key, item)
-              in self._contents.items() if item.count >= 2 * self._dimension}
+              in self._contents.items() if item.count >= self._min_count}
         # 结束
         pb.end()
 
