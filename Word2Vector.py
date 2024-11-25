@@ -947,16 +947,16 @@ class VectorGroup(ContentGroup) :
                 # 先解方程
                 max_delta = vectors.fast_solving()
                 # 检查结果
-                if max_delta > 1.0e-5 :
+                if max_delta < 1.0e-5 :
+                    # 打印数据
+                    print(f"VectorGroup.drop({count}) : successfully done !")
+                else :
                     # 删除数据
                     self.remove(value.content)
                     # 打印信息
                     print(f"VectorGroup.drop({count}) : fail to solve !")
                     # 打印信息
                     print(f"VectorGroup.drop({count}) : remove(\"{value.content}\") !")
-                else :
-                    # 打印数据
-                    print(f"VectorGroup.drop({count}) : successfully done !")
         # 打印信息
         print(f"VectorGroup.drop : all done !")
         print(f"VectorGroup.drop : {len(self)} item(s) left !")
