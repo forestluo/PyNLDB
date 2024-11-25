@@ -1,6 +1,6 @@
 import math
+import cupy
 import numpy
-
 import numba
 from numba import jit
 from numba import cuda
