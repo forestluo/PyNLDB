@@ -877,7 +877,6 @@ class VectorGroup(ContentGroup) :
             # 注意：分成两个步骤计算！！！
             ais += _dAi; bjs += _dBj
 
-            # 打印误差
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
             print(f"\tGamma<{length}> = {gammas[row][col]}")
