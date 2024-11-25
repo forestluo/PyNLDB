@@ -554,7 +554,7 @@ class VectorGroup(ContentGroup) :
         # 打印信息
         print(f"VectorGroup.clear_invalid : average ({int(numpy.mean(signs))}) relation(s) !")
         """
-        """"""
+
         # 进度条
         pb = ProgressBar(len(self._words))
         # 开始
