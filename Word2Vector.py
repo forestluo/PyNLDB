@@ -351,11 +351,13 @@ class VectorGroup(ContentGroup) :
     def _load_data(self, path) :
         # 清理
         self.clear()
-        # 加载数据
-        if self._words.load(path + "words1.json") <= 0 :
-            # 打印信息
-            print("VectorGroup._load_data : fail to load words1.json !")
-            return False
+        # 检查文件是否存在
+        if os.path.isfile(path + "words1.json") :
+            # 加载数据
+            if self._words.load(path + "words1.json") <= 0 :
+                # 打印信息
+                print("VectorGroup._load_data : fail to load words1.json !")
+                return False
         # 生成数据
         # 自动设置元素的维度
         self._words.traverse(self.add_item)
@@ -363,11 +365,13 @@ class VectorGroup(ContentGroup) :
         print("VectorGroup._load_data : all vectors added !")
         # 清理
         self._words.clear()
-        # 加载数据
-        if self._words.load(path + "words2.json") <= 0 :
-            # 打印信息
-            print("VectorGroup._load_data : fail to load words2.json !")
-            return False
+        # 检查文件是否存在
+        if os.path.isfile(path + "words2.json") :
+            # 加载数据
+            if self._words.load(path + "words2.json") <= 0 :
+                # 打印信息
+                print("VectorGroup._load_data : fail to load words2.json !")
+                return False
         # 打印信息
         print("VectorGroup._load_data : all vectors initialized !")
         # 返回结果
@@ -875,7 +879,7 @@ class VectorGroup(ContentGroup) :
             if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {_last_delta - max_delta}")
             # 保存文件
             with open("solving.csv", "a+") as file:
-                file.writelines(f"{i},{j},{length},{gammas[row][col]},{max_delta},{_last_delta - max_delta}\n")
+                file.writelines(f"{i},{length},{gammas[row][col]},{max_delta},{_last_delta - max_delta}\n")
                 file.close()
 
         # 设置数据矩阵
