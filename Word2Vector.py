@@ -876,7 +876,7 @@ class VectorGroup(ContentGroup) :
             print(f"\t∇Gamma[{i},{j}] = {max_delta}")
             if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {_last_delta - max_delta}")
             # 保存文件
-            with open("solving.cvs", "a+") as file:
+            with open("solving.csv", "a+") as file:
                 file.writelines(f"{i},{j},{length},{gammas[row][col]},{max_delta},{_last_delta - max_delta}\n")
                 file.close()
 
