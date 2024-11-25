@@ -941,6 +941,8 @@ class VectorGroup(ContentGroup) :
                 count += 1
                 # 加入数据
                 vectors.add_item(value)
+                # 打印信息
+                print(f"VectorGroup.drop({count}) : add(\"{value.content}\") !")
 
                 # 先解方程
                 max_delta = vectors.fast_solving()
@@ -950,6 +952,8 @@ class VectorGroup(ContentGroup) :
                     self.remove(value.content)
                     # 打印信息
                     print(f"VectorGroup.drop({count}) : fail to solve !")
+                    # 打印信息
+                    print(f"VectorGroup.drop({count}) : remove(\"{value.content}\") !")
                 else :
                     # 打印数据
                     print(f"VectorGroup.drop({count}) : successfully done !")
