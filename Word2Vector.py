@@ -946,7 +946,7 @@ class VectorGroup(ContentGroup) :
 # 路径
 json_path = ".\\json\\"
 # 生成对象
-vectors = VectorGroup(256)
+vectors = VectorGroup(1024)
 
 def init_vectors() :
     # 加载数文件
