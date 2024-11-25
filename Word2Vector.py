@@ -714,9 +714,12 @@ class VectorGroup(ContentGroup) :
         return max_delta
 
     # 获得掩码矩阵
-    def __get_max_positions(self, n, delta) :
+    def __get_max_positions(self, n, delta, length) :
+        # 检查参数
+        if length < 0 : length = 0
+        elif length >= n : length = n - 1
         # 进度条
-        pb = ProgressBar(n)
+        pb = ProgressBar(length)
         # 开始
         pb.begin("VectorGroup.__get_max_positions : search max positions !")
         # 位置记录
@@ -738,10 +741,8 @@ class VectorGroup(ContentGroup) :
         # 检查结果
         if max_delta <= self._error : return
 
-        # 临时参数
-        value = 1.0e5
         # 循环处理
-        while value > 0.5 * max_delta :
+        for i in range(length) :
             # 进度条
             pb.increase()
             # 查找最大值的位置
@@ -816,6 +817,8 @@ class VectorGroup(ContentGroup) :
             # 打印信息
             print(f"VectorGroup.fast_solving : matrix[{n}] initialized !")
 
+        # 搜索长度
+        length = 0
         # 循环计数
         i = 0; j = 0
         # 最大行和范数
@@ -829,7 +832,7 @@ class VectorGroup(ContentGroup) :
             delta = gammas - numpy.dot(ais, bjs.T)
 
             # 获得一系列误差最大值位置记录
-            positions = self.__get_max_positions(n, delta)
+            positions = self.__get_max_positions(n, delta, length)
             # 检查参数
             assert len(positions) >= 1
             # 获得最大误差值
@@ -843,9 +846,18 @@ class VectorGroup(ContentGroup) :
             # 临时记录
             _last_delta = last_delta
             # 检查结果
-            if last_delta > max_delta :
+            if last_delta < max_delta :
+                # 呈上升趋势
+                length -= 1
+                # 检查结果
+                if length < 0 : length = 0
+            else :
                 # 呈下降趋势
-                i = 0; last_delta = max_delta
+                i = 0; length += 1
+                # 保存上次误差
+                last_delta = max_delta
+                # 检查结果
+                if length > n // 2 : length = n // 2
 
             # 生成掩码矩阵
             _mask = numpy.zeros((n, n))
