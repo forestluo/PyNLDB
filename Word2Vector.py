@@ -889,6 +889,67 @@ class VectorGroup(ContentGroup) :
         # 返回结果
         return last_delta
 
+    def drop(self) :
+        # 获得两个字符单元
+        t1 = self["运"]; self.remove("运")
+        t2 = self["动"]; self.remove("动")
+        # 排序（按照计数降序排列）
+        values = sorted(self.values(), key = lambda v : v.count, reverse = True)
+        # 清空原有数据
+        super().clear()
+        # 加入起始数据
+        self.add_item(t1); self.add_item(t2)
+        # 标志位
+        flag = False
+        # 循环解决
+        for i in range(5) :
+            # 先解方程
+            max_delta = vectors.fast_solving()
+            # 检查结果
+            if max_delta > 1.0e-5:
+                # 重新初始化
+                vectors.init_matrix = True
+                # 打印信息
+                print(f"VectorGroup.drop({i}) : fail to solve !")
+            else:
+                # 设置标志位
+                flag = True
+                # 打印信息
+                print(f"VectorGroup.drop({i}) : successfully done !")
+                break
+        # 检查标志位
+        if not flag :
+            # 打印信息
+            print(f"VectorGroup.drop : fail to initialize !")
+            return False
+
+        # 逐步加入数据
+        for value in values :
+            # 计数器
+            count = 0
+            # 循环处理
+            while True :
+                # 计数器加一
+                count += 1
+                # 加入数据
+                vectors.add_item(value)
+
+                # 先解方程
+                max_delta = vectors.fast_solving()
+                # 检查结果
+                if max_delta > 1.0e-5 :
+                    # 删除数据
+                    self.remove(value.content)
+                    # 打印信息
+                    print(f"VectorGroup.drop({count}) : fail to solve !")
+                else :
+                    # 打印数据
+                    print(f"VectorGroup.drop({count}) : successfully done !")
+        # 打印信息
+        print(f"VectorGroup.drop : all done !")
+        print(f"VectorGroup.drop : {len(self)} item(s) left !")
+        return True
+
     def kick_out(self, t1, t2) :
         # 维度
         n = len(self)
@@ -1133,6 +1194,7 @@ def main() :
             "save vectors",
             "fast solving vectors",
             "normal solving vectors",
+            "drop vectors",
             "verify vectors",
             "fast calculation example",
             "normal calculation example",
@@ -1175,12 +1237,15 @@ def main() :
             # 求解
             solving()
         elif user_input == '6' :
+            # 加入
+            vectors.drop()
+        elif user_input == '7' :
             # 验证
             verify_vectors()
-        elif user_input == '7' :
+        elif user_input == '8' :
             # 计算例子
             fast_calculation_example()
-        elif user_input == '8' :
+        elif user_input == '9' :
             # 计算例子
             normal_calculation_example()
         else :
