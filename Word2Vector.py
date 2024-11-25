@@ -718,17 +718,13 @@ class VectorGroup(ContentGroup) :
         # 检查参数
         if length < 0 : length = 0
         elif length >= n : length = n - 1
-        # 进度条
-        pb = ProgressBar(length + 1)
-        # 开始
-        pb.begin(f"VectorGroup.__get_max_positions : {length} required !")
+        # 打印信息
+        print(f"VectorGroup.__get_max_positions : {length + 1} required !")
         # 位置记录
         positions = []
         # 获得误差的绝对值
         abs_delta = numpy.abs(delta)
 
-        # 进度条
-        pb.increase()
         # 查找最大值的位置
         pos = numpy.argmax(abs_delta)
         # 获得索引
@@ -742,8 +738,6 @@ class VectorGroup(ContentGroup) :
         if max_delta > self._error :
             # 循环处理
             for i in range(length) :
-                # 进度条
-                pb.increase()
                 # 查找最大值的位置
                 pos = numpy.argmax(abs_delta)
                 # 获得索引
@@ -756,8 +750,6 @@ class VectorGroup(ContentGroup) :
                 positions.append([row, col, value])
                 # 划去该位置的行列数据
                 abs_delta[row][:] = 0.0; abs_delta[:][col] = 0.0
-        # 打印信息
-        pb.end(f"VectorGroup.__get_max_positions : {len(positions)} position(s) !")
         # 返回结果
         return positions
 
