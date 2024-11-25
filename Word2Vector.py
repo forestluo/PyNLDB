@@ -316,7 +316,7 @@ class VectorGroup(ContentGroup) :
     def _remove_data(self, path) :
         # 检查文件是否存在
         if not os.path.isfile(path + "removed.json") :
-            return False
+            return True
         # 清理
         removed = WordContent()
         # 加载数据
@@ -329,7 +329,7 @@ class VectorGroup(ContentGroup) :
         # 开始
         pb.begin("VectorGroup._remove_data : remove vectors and words !")
         # 循环处理
-        for item in self._removed.values() :
+        for item in removed.values() :
             # 进度条
             pb.increase()
             # 删除已被判定需要被移除的数据
