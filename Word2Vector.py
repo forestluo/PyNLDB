@@ -597,7 +597,7 @@ class VectorGroup(ContentGroup) :
         print(f"VectorGroup.clear_invalid : total {len(removed)} item(s) removed !")
 
     # 完成一次全量计算
-    def solving(self, counter):
+    def solving(self):
         # 检查参数
         assert 0 < self._error < 1.0
         # 检查内容
@@ -627,7 +627,7 @@ class VectorGroup(ContentGroup) :
             # 设置初始误差矩阵
             self._traverse(VectorItem.init_delta)
             # 求解方程
-            delta = self.__solving(gammas, counter)
+            delta = self.__solving(gammas)
             # 打印信息
             print(f"VectorGroup.solving : ΔGamma[{i}, {j}] = {delta} !")
             # 检查结果
@@ -654,7 +654,7 @@ class VectorGroup(ContentGroup) :
         return last_delta
 
     # 完成一次全量计算
-    def __solving(self, gammas, counter) :
+    def __solving(self, gammas) :
         # 获得总数
         total = len(self) * len(self)
         # 进度条
@@ -690,8 +690,6 @@ class VectorGroup(ContentGroup) :
                 if abs_delta > max_delta :
                     # 设置误差记录
                     max_delta = abs_delta
-                    # 记录最大误差位置
-                    row = t1.index; col = t2.index
 
                 # 计算模长
                 _Bj = numpy.dot(matrix2[1], matrix2[1])
@@ -702,11 +700,6 @@ class VectorGroup(ContentGroup) :
                 t1.delta[0] += numpy.dot(value, matrix2[1])
                 # 计算分量（快捷处置）加和误差分量
                 t2.delta[1] += numpy.dot(value, matrix1[0])
-        # 检查结果
-        if row >= 0 and col >= 0 :
-            # 记录数据
-            counter.count(row * len(self) + col,
-                [1, self.get_item(row), self.get_item(col)])
         # 打印信息
         pb.end()
         #pb.end(f"VectorGroup.__solving : {total} relations(s) processed !")
@@ -754,7 +747,7 @@ class VectorGroup(ContentGroup) :
         return positions
 
     # 完成一次全量计算
-    def fast_solving(self, counter) :
+    def fast_solving(self) :
         # 检查参数
         assert 0 < self._error < 1.0
         # 总数
@@ -1025,20 +1018,15 @@ def solving() :
         print("Word2Vector.solving : insufficient vectors !")
         return
 
-    # 生成误差记录
-    counter = IndexCounter()
-
     # 计数器
     i = 0
     while True :
         # 计数器加一
         i += 1
         # 求解
-        max_delta = vectors.solving(counter)
+        max_delta = vectors.solving()
         # 检查结果
         if max_delta > 1.0e-5 :
-            # 清理数据
-            counter.clear()
             # 打印信息
             print("Word2Vector.solving : fail to solve !")
         else :
@@ -1051,9 +1039,6 @@ def fast_solving() :
         print("Word2Vector.fast_solving : insufficient vectors !")
         return
 
-    # 生成误差记录
-    counter = IndexCounter()
-
     # 计数器
     i = 0
     # 循环处理
@@ -1061,17 +1046,9 @@ def fast_solving() :
         # 计数器加一
         i += 1
         # 求解
-        max_delta = vectors.fast_solving(counter)
+        max_delta = vectors.fast_solving()
         # 检查结果
         if max_delta > 1.0e-5 :
-            # 获得最大误差位置
-            row, col = counter.max_position(len(vectors))
-            # 检查结果
-            if row >= 0 and col >= 0 :
-                # 移除
-                vectors.disturb(vectors.get_item(row), vectors.get_item(col))
-            # 清理数据
-            counter.clear()
             # 打印信息
             print("Word2Vector.fast_solving : fail to solve !")
         else :
@@ -1096,12 +1073,10 @@ def fast_calculation_example():
 
     # 打印数据
     for item in vectors.values() : item.dump(dump_delta = False)
-    # 生成误差记录
-    counter = IndexCounter()
     # 设置标记位
     vectors.init_matrix = True
     # 求解
-    if vectors.fast_solving(counter) > 1.0e-5 :
+    if vectors.fast_solving() > 1.0e-5 :
         print("Word2Vector.fast_calculation_example : fail to solve !")
     else :
         print("Word2Vector.fast_calculation_example : successfully done !")
@@ -1129,12 +1104,10 @@ def normal_calculation_example():
 
     # 打印数据
     for item in vectors.values() : item.dump(dump_delta = False)
-    # 生成误差记录
-    counter = IndexCounter()
     # 设置标记位
     vectors.init_matrix = True
     # 求解
-    if vectors.solving(counter) > 1.0e-5 :
+    if vectors.solving() > 1.0e-5 :
         print("Word2Vector.normal_calculation_example : fail to solve !")
     else :
         print("Word2Vector.normal_calculation_example : successfully done !")
