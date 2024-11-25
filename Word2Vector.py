@@ -719,7 +719,7 @@ class VectorGroup(ContentGroup) :
         if length < 0 : length = 0
         elif length >= n : length = n - 1
         # 打印信息
-        print(f"VectorGroup.__get_max_positions : {length + 1} required !")
+        #print(f"VectorGroup.__get_max_positions : {length + 1} required !")
         # 位置记录
         positions = []
         # 获得误差的绝对值
@@ -880,6 +880,7 @@ class VectorGroup(ContentGroup) :
             # 打印误差
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
+            print(f"\tlength = {length}")
             print(f"\tGamma = {gammas[row][col]}")
             print(f"\t∇Gamma[{i},{j}] = {max_delta}")
             if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {_last_delta - max_delta}")
