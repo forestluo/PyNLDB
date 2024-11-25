@@ -723,23 +723,35 @@ class VectorGroup(ContentGroup) :
         positions = []
         # 获得误差的绝对值
         abs_delta = numpy.abs(delta)
+
+        # 进度条
+        pb.increase()
+        # 查找最大值的位置
+        pos = numpy.argmax(abs_delta)
+        # 获得索引
+        row = pos // n
+        col = pos - row * n
+        max_delta = abs_delta[row][col]
+        # 记录位置
+        positions.append([row, col, max_delta])
+
+        # 检查结果
+        if max_delta <= self._error : return
+
+        # 临时参数
+        value = 1.0e5
         # 循环处理
-        while True:
+        while value > 0.5 * max_delta :
             # 进度条
             pb.increase()
-            # 数据误差处理
             # 查找最大值的位置
             pos = numpy.argmax(abs_delta)
             # 获得索引
             row = pos // n
             col = pos - row * n
-            max_delta = abs_delta[row][col]
+            value = abs_delta[row][col]
             # 记录位置
-            positions. \
-                append([row, col, max_delta])
-            # 检查所处位置的数值
-            if max_delta <= 0.1 : break
-            if max_delta <= self._error : break
+            positions.append([row, col, value])
             # 划去该位置的行列数据
             abs_delta[row][:] = 0.0; abs_delta[:][col] = 0.0
         # 打印信息
