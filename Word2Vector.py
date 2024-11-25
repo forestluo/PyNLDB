@@ -933,35 +933,32 @@ class VectorGroup(ContentGroup) :
             print(f"VectorGroup.drop : fail to initialize !")
             return False
 
+        # 计数器
+        count = 0
         # 逐步加入数据
         for value in values :
-            # 计数器
-            count = 0
-            # 循环处理
-            while True :
-                # 计数器加一
-                count += 1
-                # 加入数据
-                vectors.add_item(value)
-                # 打印信息
-                print(f"VectorGroup.drop({count}) : add(\"{value.content}\") !")
+            # 计数器加一
+            count += 1
+            # 加入数据
+            vectors.add_item(value)
+            # 打印信息
+            print(f"VectorGroup.drop({count}) : add(\"{value.content}\") !")
 
-                # 初始化
-                vectors.init_matrix = True
-                # 先解方程
-                max_delta = vectors.fast_solving()
-                # 检查结果
-                if max_delta < 1.0e-5 :
-                    # 打印数据
-                    print(f"VectorGroup.drop({count}) : successfully done !")
-                    break
-                else :
-                    # 删除数据
-                    self.remove(value.content)
-                    # 打印信息
-                    print(f"VectorGroup.drop({count}) : fail to solve !")
-                    # 打印信息
-                    print(f"VectorGroup.drop({count}) : remove(\"{value.content}\") !")
+            # 初始化
+            vectors.init_matrix = True
+            # 先解方程
+            max_delta = vectors.fast_solving()
+            # 检查结果
+            if max_delta < 1.0e-5 :
+                # 打印数据
+                print(f"VectorGroup.drop({count}) : successfully done !")
+            else :
+                # 删除数据
+                self.remove(value.content)
+                # 打印信息
+                print(f"VectorGroup.drop({count}) : fail to solve !")
+                # 打印信息
+                print(f"VectorGroup.drop({count}) : remove(\"{value.content}\") !")
         # 打印信息
         print(f"VectorGroup.drop : all done !")
         print(f"VectorGroup.drop : {len(self)} item(s) left !")
