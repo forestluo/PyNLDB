@@ -211,7 +211,7 @@ class VectorGroup(ContentGroup) :
         # 循环次数
         self._max_loop = 10
         # 最小记录次数
-        self._min_count = 128
+        self._min_count = 256
         # 误差
         self._error = 1.0e-5
         # 设置词汇组
