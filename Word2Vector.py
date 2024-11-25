@@ -880,8 +880,7 @@ class VectorGroup(ContentGroup) :
             # 打印误差
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
-            print(f"\tlength = {length}")
-            print(f"\tGamma = {gammas[row][col]}")
+            print(f"\tGamma<{length}> = {gammas[row][col]}")
             print(f"\t∇Gamma[{i},{j}] = {max_delta}")
             if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {_last_delta - max_delta}")
 
