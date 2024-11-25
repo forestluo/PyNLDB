@@ -713,6 +713,33 @@ class VectorGroup(ContentGroup) :
         # 返回结果
         return max_delta
 
+    # 获得掩码矩阵
+    def __get_max_positions(self, n, delta):
+        # 位置记录
+        positions = []
+        # 获得误差的绝对值
+        abs_delta = numpy.abs(delta)
+        # 循环处理
+        while True:
+            # 数据误差处理
+            # 查找最大值的位置
+            pos = numpy.argmax(abs_delta)
+            # 获得索引
+            row = pos // n
+            col = pos - row * n
+            max_delta = abs_delta[row][col]
+            # 记录位置
+            positions. \
+                append([row, col, max_delta])
+            # 检查所处位置的数值
+            if max_delta <= self._error : break
+            # 划去该位置的行列数据
+            abs_delta[row][:] = 0.0; abs_delta[:][col] = 0.0
+        # 打印信息
+        print(f"VectorGroup.__get_max_positions : {len(positions)} position(s) !")
+        # 返回结果
+        return positions
+
     # 完成一次全量计算
     def fast_solving(self, counter) :
         # 检查参数
@@ -782,21 +809,30 @@ class VectorGroup(ContentGroup) :
             # 获得计算值
             delta = gammas - numpy.dot(ais, bjs.T)
 
-            # 获得误差绝对值
-            abs_delta = numpy.abs(delta)
-            # 数据误差处理
-            # 查找最大值的位置
-            pos = numpy.argmax(abs_delta)
-            # 获得索引
-            row = pos // n
-            col = pos - row * n
-            # 设置最大误差值
-            max_delta = abs_delta[row][col]
+            # 获得一系列误差最大值位置记录
+            positions = self.__get_max_positions(n, delta)
+            # 检查参数
+            assert len(positions) >= 1
+            # 获得最大误差值
+            row = positions[0][0]
+            col = positions[0][1]
+            max_delta = positions[0][2]
+            # 检查结果
+            if max_delta <= self._error :
+                # 设置数值，并中断循环
+                last_delta = max_delta; break
+            # 临时记录
+            _last_delta = last_delta
+            # 检查结果
+            if last_delta > max_delta :
+                # 呈下降趋势
+                i = 0; last_delta = max_delta
 
-            # 单独计算误差最大的单元
+            # 生成掩码矩阵
             _mask = numpy.zeros((n, n))
-            # 设置掩码
-            _mask[row][col] = 1.0
+            # 设置掩码矩阵
+            for pos in positions :
+                _mask[pos[0]][pos[1]] = 1.0
             # 屏蔽其他数据
             delta = numpy.multiply(delta, _mask)
 
@@ -817,17 +853,6 @@ class VectorGroup(ContentGroup) :
             # 注意：分成两个步骤计算！！！
             ais += _dAi; bjs += _dBj
 
-            # 临时记录
-            _last_delta = last_delta
-            # 检查数据
-            if max_delta < self._error:
-                # 中断循环
-                last_delta = max_delta; break
-            # 检查结果
-            if last_delta > max_delta:
-                # 呈下降趋势
-                i = 0; last_delta = max_delta
-
             # 打印误差
             # 获得词汇
             t1 = self.get_item(row)
@@ -836,10 +861,10 @@ class VectorGroup(ContentGroup) :
             #counter.count(pos, [1, t1, t2])
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
-            print(f"\tToken[{row},{col}] = [\"{t1.content}\",\"{t2.content}\"]")
-            print(f"\tGamma = {gammas[row][col]}")
-            print(f"\t∇Gamma[{i},{j}] = {max_delta}")
-            if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {_last_delta - max_delta}")
+            print(f"\ttoken[{row},{col}] = [\"{t1.content}\",\"{t2.content}\"]")
+            print(f"\tmax gamma = {gammas[row][col]}")
+            print(f"\tmax ∇gamma[{i},{j}] = {max_delta}")
+            if j > 1 : print(f"\tcurrent ∇²gamma[{i},{j}] = {_last_delta - max_delta}")
 
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
