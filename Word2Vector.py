@@ -793,6 +793,9 @@ class VectorGroup(ContentGroup) :
             # 结束
             pb.end()
         else :
+            # 归一化
+            ais = _normalize(ais)
+            bjs = _normalize(bjs)
             # 清理标志位
             self.init_matrix = False
             # 初始化矩阵
