@@ -911,6 +911,8 @@ class VectorGroup(ContentGroup) :
         flag = False
         # 循环解决
         for i in range(5) :
+            # 设置标记位
+            vectors.init_matrix = True
             # 先解方程
             max_delta = vectors.fast_solving()
             # 检查结果
@@ -944,12 +946,15 @@ class VectorGroup(ContentGroup) :
                 # 打印信息
                 print(f"VectorGroup.drop({count}) : add(\"{value.content}\") !")
 
+                # 初始化
+                vectors.init_matrix = True
                 # 先解方程
                 max_delta = vectors.fast_solving()
                 # 检查结果
                 if max_delta < 1.0e-5 :
                     # 打印数据
                     print(f"VectorGroup.drop({count}) : successfully done !")
+                    break
                 else :
                     # 删除数据
                     self.remove(value.content)
