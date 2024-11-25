@@ -719,7 +719,7 @@ class VectorGroup(ContentGroup) :
         if length < 0 : length = 0
         elif length >= n : length = n - 1
         # 进度条
-        pb = ProgressBar(length)
+        pb = ProgressBar(length + 1)
         # 开始
         pb.begin(f"VectorGroup.__get_max_positions : {length} required !")
         # 位置记录
