@@ -873,17 +873,11 @@ class VectorGroup(ContentGroup) :
             ais += _dAi; bjs += _dBj
 
             # 打印误差
-            # 获得词汇
-            t1 = self.get_item(row)
-            t2 = self.get_item(col)
-            # 增加误差记录
-            #counter.count(pos, [1, t1, t2])
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
-            print(f"\ttoken[{row},{col}] = [\"{t1.content}\",\"{t2.content}\"]")
-            print(f"\tmax gamma = {gammas[row][col]}")
-            print(f"\tmax ∇gamma[{i},{j}] = {max_delta}")
-            if j > 1 : print(f"\tcurrent ∇²gamma[{i},{j}] = {_last_delta - max_delta}")
+            print(f"\tGamma = {gammas[row][col]}")
+            print(f"\t∇Gamma[{i},{j}] = {max_delta}")
+            if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {_last_delta - max_delta}")
 
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
