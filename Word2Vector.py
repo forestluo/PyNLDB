@@ -738,6 +738,7 @@ class VectorGroup(ContentGroup) :
             positions. \
                 append([row, col, max_delta])
             # 检查所处位置的数值
+            if max_delta <= 0.1 : break
             if max_delta <= self._error : break
             # 划去该位置的行列数据
             abs_delta[row][:] = 0.0; abs_delta[:][col] = 0.0
