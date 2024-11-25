@@ -714,13 +714,19 @@ class VectorGroup(ContentGroup) :
         return max_delta
 
     # 获得掩码矩阵
-    def __get_max_positions(self, n, delta):
+    def __get_max_positions(self, n, delta) :
+        # 进度条
+        pb = ProgressBar(n)
+        # 开始
+        pb.begin("VectorGroup.__get_max_positions : search max positions !")
         # 位置记录
         positions = []
         # 获得误差的绝对值
         abs_delta = numpy.abs(delta)
         # 循环处理
         while True:
+            # 进度条
+            pb.increase()
             # 数据误差处理
             # 查找最大值的位置
             pos = numpy.argmax(abs_delta)
@@ -736,7 +742,7 @@ class VectorGroup(ContentGroup) :
             # 划去该位置的行列数据
             abs_delta[row][:] = 0.0; abs_delta[:][col] = 0.0
         # 打印信息
-        print(f"VectorGroup.__get_max_positions : {len(positions)} position(s) !")
+        pb.end(f"VectorGroup.__get_max_positions : {len(positions)} position(s) !")
         # 返回结果
         return positions
 
