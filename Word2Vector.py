@@ -1,6 +1,7 @@
 import math
 import numpy
 
+import numba
 from numba import jit
 from numba import cuda
 
@@ -8,7 +9,6 @@ from Content import *
 from CommonTool import *
 
 # 归一化处理
-# matrix[2][d]
 #@jit (axis 选项不支持)
 def _normalize(matrix) :
     # 计算模长
@@ -200,10 +200,95 @@ class VectorItem(ContentItem) :
         return numpy.matmul(numpy.array([[value, 0],[0, 0]]), t2.__matrix), \
                     numpy.matmul(numpy.array([[0, 0],[0, value]]), t1.__matrix)
 
-@jit
-def cal_delta(gammas, ais, bjs) :
+@jit(nopython = True)
+def get_delta_matrix(gammas, ais, bjs) :
     # 返回结果
     return gammas - numpy.dot(ais, bjs.T)
+
+@jit(nopython = True)
+def get_masked_delta(n, delta, positions) :
+    # 生成掩码矩阵
+    _mask = numpy.zeros((n, n))
+    # 设置掩码矩阵
+    for i in range(len(positions)) :
+        # 已经在函数外完成转换
+        row = positions[i][0]
+        col = positions[i][1]
+        # 设置掩码值
+        _mask[row][col] = 1.0
+    # 屏蔽其他数据
+    return numpy.multiply(delta, _mask)
+
+@jit(nopython = True)
+def get_next_step(n, ais, bjs, delta, positions) :
+    # 生成掩码矩阵
+    _mask = numpy.zeros((n, n))
+    # 设置掩码矩阵
+    for i in range(len(positions)):
+        # 已经在函数外完成转换
+        row = positions[i][0]
+        col = positions[i][1]
+        # 设置掩码值
+        _mask[row][col] = 1.0
+    # 屏蔽其他数据
+    delta = numpy.multiply(delta, _mask)
+
+    # 求各个分量的平方和（相当于模长的平方）
+    _ais = numpy.sum(numpy.square(ais), axis = 1)
+    # 与numba兼容的写法
+    _ais = _ais.repeat(n).reshape((-1, n))
+
+    # 求各个分量的平方和（相当于模长的平方）
+    _bjs = numpy.sum(numpy.square(bjs), axis = 1)
+    # 与numba兼容的写法
+    _bjs = _bjs.repeat(n).reshape((-1, n)).T
+
+    # 计算系数矩阵
+    _w = numpy.multiply(delta, numpy.reciprocal(_bjs + _ais))
+    # 计算误差分量
+    _dai = numpy.dot(_w, bjs)
+    _dbj = numpy.dot(_w.T, ais)
+    # 返回结果
+    return _dai, _dbj
+
+# 获得掩码矩阵
+@jit(nopython = True)
+def get_max_positions(n, delta, length) :
+    # 检查参数
+    if length < 0 : length = 0
+    elif length >= n : length = n - 1
+    # 位置记录
+    positions = []
+    # 获得误差的绝对值
+    abs_delta = numpy.abs(delta)
+
+    # 查找最大值的位置
+    pos = numpy.argmax(abs_delta)
+    # 获得索引
+    row = pos // n
+    col = pos - row * n
+    max_delta = abs_delta[row][col]
+    # 记录位置
+    positions.append([row, col, max_delta])
+
+    # 检查结果
+    if max_delta > 1.0e-5 :
+        # 循环处理
+        for i in range(length) :
+            # 查找最大值的位置
+            pos = numpy.argmax(abs_delta)
+            # 获得索引
+            row = pos // n
+            col = pos - row * n
+            value = abs_delta[row][col]
+            # 检查结果
+            if value <= 1.0e-5 : break
+            # 记录位置
+            positions.append([row, col, value])
+            # 划去该位置的行列数据
+            abs_delta[row][:] = 0.0; abs_delta[:][col] = 0.0
+    # 返回结果
+    return positions
 
 class VectorGroup(ContentGroup) :
     # 初始化
@@ -721,46 +806,6 @@ class VectorGroup(ContentGroup) :
         # 返回结果
         return max_delta
 
-    # 获得掩码矩阵
-    def __get_max_positions(self, n, delta, length) :
-        # 检查参数
-        if length < 0 : length = 0
-        elif length >= n : length = n - 1
-        # 打印信息
-        #print(f"VectorGroup.__get_max_positions : {length + 1} required !")
-        # 位置记录
-        positions = []
-        # 获得误差的绝对值
-        abs_delta = numpy.abs(delta)
-
-        # 查找最大值的位置
-        pos = numpy.argmax(abs_delta)
-        # 获得索引
-        row = pos // n
-        col = pos - row * n
-        max_delta = abs_delta[row][col]
-        # 记录位置
-        positions.append([row, col, max_delta])
-
-        # 检查结果
-        if max_delta > self._error :
-            # 循环处理
-            for i in range(length) :
-                # 查找最大值的位置
-                pos = numpy.argmax(abs_delta)
-                # 获得索引
-                row = pos // n
-                col = pos - row * n
-                value = abs_delta[row][col]
-                # 检查结果
-                if value <= self._error: break
-                # 记录位置
-                positions.append([row, col, value])
-                # 划去该位置的行列数据
-                abs_delta[row][:] = 0.0; abs_delta[:][col] = 0.0
-        # 返回结果
-        return positions
-
     # 完成一次全量计算
     def fast_solving(self) :
         # 检查参数
@@ -829,19 +874,22 @@ class VectorGroup(ContentGroup) :
             # 计数器加一
             i += 1; j += 1
 
-            # 使用jit加速
-            delta = cal_delta(gammas, ais, bjs)
             # 获得计算值
-            #delta = gammas - numpy.dot(ais, bjs.T)
+            # 使用jit加速
+            delta = get_delta_matrix(gammas, ais, bjs)
 
             # 获得一系列误差最大值位置记录
-            positions = self.__get_max_positions(n, delta, length)
+            # 使用jit加速
+            positions = get_max_positions(n, delta, length)
             # 检查参数
             assert len(positions) >= 1
-            # 获得最大误差值
+            # 先获得最大误差值
+            max_delta = positions[0][2]
+            # numba会强制类型，数组均为浮点型，因此需要强制转换为整数类型
+            positions = numpy.array(positions).astype(numpy.int32)
+            # 转换后再取值
             row = positions[0][0]
             col = positions[0][1]
-            max_delta = positions[0][2]
             # 检查结果
             if max_delta <= self._error :
                 # 设置数值，并中断循环
@@ -866,30 +914,11 @@ class VectorGroup(ContentGroup) :
                 # 检查结果
                 if length > n // 2 : length = n // 2
 
-            # 生成掩码矩阵
-            _mask = numpy.zeros((n, n))
-            # 设置掩码矩阵
-            for pos in positions :
-                _mask[pos[0]][pos[1]] = 1.0
-            # 屏蔽其他数据
-            delta = numpy.multiply(delta, _mask)
-
             # 通过误差计算步长，并移至下一个步骤
-            # 计算模长
-            _Ais = numpy.sum(numpy.square(ais), axis = 1)
-            _Ais = numpy.reshape(_Ais, (n, 1))
-            _Ais = numpy.tile(_Ais, (1, n))
-            # 计算模长
-            _Bjs = numpy.sum(numpy.square(bjs), axis = 1)
-            _Bjs = numpy.reshape(_Bjs, (1, n))
-            _Bjs = numpy.tile(_Bjs, (n, 1))
-            # 计算系数矩阵
-            _L = numpy.multiply(delta, numpy.reciprocal(_Bjs + _Ais))
-            # 计算误差分量
-            _dAi = numpy.dot(_L, bjs)
-            _dBj = numpy.dot(_L.T, ais)
-            # 注意：分成两个步骤计算！！！
-            ais += _dAi; bjs += _dBj
+            # 使用jit加速
+            _dai, _dbj = get_next_step(n, ais, bjs, delta, positions)
+            # 注意：分成两个步骤计算
+            ais += _dai; bjs += _dbj
 
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
