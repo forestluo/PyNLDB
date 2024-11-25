@@ -514,8 +514,7 @@ class VectorGroup(ContentGroup) :
             pb.increase()
             # 检查计数
             # 至少需要的记录次数
-            if item.count >= \
-                2 * self._dimension :
+            if item.count >= 256 :
                 continue
             # 将无效数据加入删除队列中
             if item.content not in removed :
