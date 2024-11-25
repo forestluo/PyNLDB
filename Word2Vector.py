@@ -1,6 +1,9 @@
 import math
 import numpy
 
+from numba import jit
+from numba import cuda
+
 from Content import *
 from CommonTool import *
 
@@ -196,6 +199,11 @@ class VectorItem(ContentItem) :
         # | 0    , 0 |.| Bj | , | value, 0 |.| Bi |
         return numpy.matmul(numpy.array([[value, 0],[0, 0]]), t2.__matrix), \
                     numpy.matmul(numpy.array([[0, 0],[0, value]]), t1.__matrix)
+
+@jit
+def cal_delta(gammas, ais, bjs) :
+    # 返回结果
+    return gammas - numpy.dot(ais, bjs.T)
 
 class VectorGroup(ContentGroup) :
     # 初始化
@@ -821,8 +829,10 @@ class VectorGroup(ContentGroup) :
             # 计数器加一
             i += 1; j += 1
 
+            # 使用jit加速
+            delta = cal_delta(gammas, ais, bjs)
             # 获得计算值
-            delta = gammas - numpy.dot(ais, bjs.T)
+            #delta = gammas - numpy.dot(ais, bjs.T)
 
             # 获得一系列误差最大值位置记录
             positions = self.__get_max_positions(n, delta, length)
