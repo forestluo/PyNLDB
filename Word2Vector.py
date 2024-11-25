@@ -944,21 +944,31 @@ class VectorGroup(ContentGroup) :
             # 打印信息
             print(f"VectorGroup.drop({count}) : add(\"{value.content}\") !")
 
-            # 初始化
-            vectors.init_matrix = True
-            # 先解方程
-            max_delta = vectors.fast_solving()
+            # 标志位
+            flag = False
+            # 循环处理
+            for i in range(5) :
+                # 初始化
+                vectors.init_matrix = True
+                # 先解方程
+                max_delta = vectors.fast_solving()
+                # 检查结果
+                if max_delta < 1.0e-5 :
+                    # 设置标志位
+                    flag = True
+                    # 打印数据
+                    print(f"VectorGroup.drop({count}) : successfully done !")
+                    break
+                else :
+                    # 打印信息
+                    print(f"VectorGroup.drop({count}) : fail to solve !")
             # 检查结果
-            if max_delta < 1.0e-5 :
-                # 打印数据
-                print(f"VectorGroup.drop({count}) : successfully done !")
-            else :
+            if not flag :
                 # 删除数据
                 self.remove(value.content)
                 # 打印信息
-                print(f"VectorGroup.drop({count}) : fail to solve !")
-                # 打印信息
                 print(f"VectorGroup.drop({count}) : remove(\"{value.content}\") !")
+
         # 打印信息
         print(f"VectorGroup.drop : all done !")
         print(f"VectorGroup.drop : {len(self)} item(s) left !")
@@ -1021,7 +1031,7 @@ class VectorGroup(ContentGroup) :
 # 路径
 json_path = ".\\json\\"
 # 生成对象
-vectors = VectorGroup(64)
+vectors = VectorGroup(128)
 
 def init_vectors() :
     # 加载数文件
