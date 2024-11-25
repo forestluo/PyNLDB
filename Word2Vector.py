@@ -870,15 +870,15 @@ class VectorGroup(ContentGroup) :
             # 注意：分成两个步骤计算！！！
             ais += _dAi; bjs += _dBj
 
-            # 保存文件
-            with open("recorder.cvs", "a+") as file:
-                file.writelines(f"{i},{j},{length},{gammas[row][col]},{max_delta},{_last_delta - max_delta}\n")
-                file.close()
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
             print(f"\t<{length}>:Gamma = {gammas[row][col]}")
             print(f"\t∇Gamma[{i},{j}] = {max_delta}")
             if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {_last_delta - max_delta}")
+            # 保存文件
+            with open("recorder.cvs", "a+") as file:
+                file.writelines(f"{i},{j},{length},{gammas[row][col]},{max_delta},{_last_delta - max_delta}\n")
+                file.close()
 
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
