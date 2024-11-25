@@ -528,6 +528,7 @@ class VectorGroup(ContentGroup) :
         # 结束
         pb.end()
 
+        """
         # 进度条
         pb = ProgressBar(len(self))
         # 开始
@@ -551,6 +552,7 @@ class VectorGroup(ContentGroup) :
         pb.end()
         # 打印信息
         print(f"VectorGroup.clear_invalid : average ({int(numpy.mean(signs))}) relation(s) !")
+        """
 
         # 进度条
         pb = ProgressBar(len(self._words))
@@ -946,7 +948,7 @@ class VectorGroup(ContentGroup) :
 # 路径
 json_path = ".\\json\\"
 # 生成对象
-vectors = VectorGroup(1024)
+vectors = VectorGroup(2048)
 
 def init_vectors() :
     # 加载数文件
