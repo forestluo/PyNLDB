@@ -21,11 +21,6 @@ def get_normalized(matrix) :
     # 返回结果
     return (matrix.T * numpy.reciprocal(norm)).T
 
-@jit
-def get_zero_matrix(n) :
-    # 返回结果
-    return numpy.zeros((n, n))
-
 # 生成随机数组
 @jit
 def get_random_matrix(n, dimension) :
@@ -135,10 +130,6 @@ def cupy_normalized(matrix) :
     # 返回结果
     return (matrix.T * cupy.reciprocal(norm)).T
 
-def cupy_zero_matrix(n) :
-    # 返回结果
-    return cupy.zeros((n, n))
-
 # 生成随机数组
 def cupy_random_matrix(n, dimension) :
     # 返回结果
@@ -154,7 +145,8 @@ def cupy_next_step(n, ais, bjs, delta, positions) :
     _mask = cupy.zeros((n, n))
     # 设置掩码矩阵
     for i in range(len(positions)):
-        # 已经在函数外完成转换
+        # 必须强制转整数
+        # 否则矩阵值会不变！！！
         row = int(positions[i][0])
         col = int(positions[i][1])
         # 设置掩码值
