@@ -171,15 +171,15 @@ class VectorItem(ContentItem) :
                 t.__matrix[0][k] = matrix[0][t.index][k]  # Ai
         # 检查类型
         if isinstance(matrix[1], numpy.ndarray) :
-            t.__matrix[1] = matrix[1][t.index] # Ai
+            t.__matrix[1] = matrix[1][t.index] # Bj
         elif isinstance(matrix[1], cupy.ndarray) :
             t.__matrix[1] = \
-                cupy.asnumpy(matrix[1][t.index]) # Ai
+                cupy.asnumpy(matrix[1][t.index]) # Bj
         else :
             # 数值拷贝
             for k in range(matrix[1].shape[1]) :
                 # 设置矩阵
-                t.__matrix[1][k] = matrix[1][t.index][k]  # Ai
+                t.__matrix[1][k] = matrix[1][t.index][k]  # Bj
 
     # 求相关系数
     # 按照公式正常处置
