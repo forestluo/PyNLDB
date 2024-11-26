@@ -54,8 +54,8 @@ def get_next_step(n, ais, bjs, delta, positions) :
     # 设置掩码矩阵
     for i in range(len(positions)):
         # 已经在函数外完成转换
-        row = positions[i][0]
-        col = positions[i][1]
+        row = int(positions[i][0])
+        col = int(positions[i][1])
         # 设置掩码值
         _mask[row][col] = 1.0
     # 屏蔽其他数据

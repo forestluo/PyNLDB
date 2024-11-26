@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import time
 import math
 import cupy
 import numpy
@@ -692,8 +693,6 @@ class VectorGroup(ContentGroup) :
 
         # 最大误差
         max_delta = 0.0
-        # 最大误差位置
-        row = -1; col = -1
         # 循环处理
         for t1 in self.values() :
             # 循环处理
@@ -829,6 +828,8 @@ class VectorGroup(ContentGroup) :
         while i < self._max_loop :
             # 计数器加一
             i += 1; j += 1
+            # 开始计时
+            start = time.perf_counter()
 
             # 获得计算值
             delta = cupy_delta_matrix(gammas, ais, bjs) \
@@ -845,8 +846,8 @@ class VectorGroup(ContentGroup) :
             positions = cupy.array(positions).astype(cupy.int32) \
                 if self._use_cuda else numpy.array(positions).astype(numpy.int32)
             # 转换后再取值
-            row = positions[0][0]
-            col = positions[0][1]
+            row = int(positions[0][0])
+            col = int(positions[0][1])
             # 检查结果
             if max_delta <= self._error :
                 # 设置数值，并中断循环
@@ -877,11 +878,14 @@ class VectorGroup(ContentGroup) :
             # 注意：分成两个步骤计算
             ais += _dai; bjs += _dbj
 
+            # 计时结束
+            end = time.perf_counter()
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
-            print(f"\t<{length}>:Gamma = {gammas[row][col]}")
-            print(f"\t∇Gamma[{i},{j}] = {max_delta}")
-            if j > 1 : print(f"\t∇²Gamma[{i},{j}] = {_last_delta - max_delta}")
+            print(f"\tloop[{i},{j}] = {(end - start) * 1000} ms")
+            print(f"\tGamma = {gammas[row][col]} ({length})")
+            print(f"\t∇Gamma = {max_delta}")
+            if j > 1 : print(f"\t∇²Gamma = {_last_delta - max_delta}")
 
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
@@ -911,35 +915,6 @@ class VectorGroup(ContentGroup) :
             self._words.remove(content)
         # 打印计算值
         print("VectorGroup.kick_out : kick_out vectors !")
-        print(f"\tt1[{t1.index},\"{t1.content}\"].count = {t1.count}")
-        print(f"\tt2[{t2.index},\"{t2.content}\"].count = {t2.count}")
-        print(f"\tword(\"{word.content}\").count = {word.count} ({word.gamma})")
-
-    # 直接拟合两个词汇
-    def disturb(self, t1, t2) :
-        # 维度
-        n = len(self)
-        # 断言
-        assert t1 is not None and t2 is not None
-        # 删除该项目
-        content = t1.content + t2.content
-        # 设置相关系数
-        word = WordItem(content, 0); word.gamma = 0
-        # 检查参数
-        if content in self._words: word = self._words[content]
-
-        # 获得计算相关系数
-        gamma = VectorItem.cal_gamma(t1, t2)
-        # 计算两者的相关系数误差
-        delta = word.gamma - gamma
-        # 计算两者直接的误差分量
-        _dAi, _dBj = VectorItem.cal_delta(t1, t2, delta / 2)
-        # 直接纠正矢量
-        VectorItem.add_delta(t1, _dAi)
-        VectorItem.add_delta(t2, _dBj)
-
-        # 打印计算值
-        print("VectorGroup.disturb : disturb vectors !")
         print(f"\tt1[{t1.index},\"{t1.content}\"].count = {t1.count}")
         print(f"\tt2[{t2.index},\"{t2.content}\"].count = {t2.count}")
         print(f"\tword(\"{word.content}\").count = {word.count} ({word.gamma})")
