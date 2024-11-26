@@ -882,8 +882,8 @@ class VectorGroup(ContentGroup) :
             end = time.perf_counter()
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
-            print(f"\tloop[{i},{j}] = {(end - start) * 1000} ms")
-            print(f"\tGamma = {gammas[row][col]} ({length})")
+            print(f"\tloop[{j},{i},{length}] = {(end - start) * 1000} ms")
+            print(f"\tGamma = {gammas[row][col]}")
             print(f"\t∇Gamma = {max_delta}")
             if j > 1 : print(f"\t∇²Gamma = {_last_delta - max_delta}")
 
