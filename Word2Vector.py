@@ -860,9 +860,12 @@ class VectorGroup(ContentGroup) :
             # 检查结果
             if last_delta < max_delta :
                 # 呈上升趋势
+                length = 0
+                """
                 length -= 1
                 # 检查结果
                 if length < 0 : length = 0
+                """
             else :
                 # 呈下降趋势
                 i = 0; length += 1
