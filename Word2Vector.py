@@ -869,7 +869,7 @@ class VectorGroup(ContentGroup) :
                 # 保存上次误差
                 last_delta = max_delta
                 # 检查结果
-                if length > n // 2: length = n // 2
+                if length > n // 4 : length = n // 4
             # 通过误差计算步长，并移至下一个步骤
             _dai, _dbj = cupy_next_step(n, ais, bjs, delta, positions) \
                 if self._use_cupy else get_next_step(n, ais, bjs, delta, positions)
