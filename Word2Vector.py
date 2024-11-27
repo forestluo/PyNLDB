@@ -221,7 +221,7 @@ class VectorGroup(ContentGroup) :
         # 标志位
         self.init_matrix = True
         # 是否使用CUDA
-        self._use_cuda = True
+        self._use_cupy = True
         # 设置维度
         self._dimension = dimension
         # 循环次数
@@ -449,7 +449,7 @@ class VectorGroup(ContentGroup) :
             gammas[0][i][j] = 1.0
             gammas[1][i][j] = item.gamma
         # 返回结果
-        return cupy.asarray(gammas) if self._use_cuda else gammas
+        return cupy.asarray(gammas) if self._use_cupy else gammas
 
     # 初始化相关系数
     def __init_gammas(self) :
@@ -670,7 +670,7 @@ class VectorGroup(ContentGroup) :
                 pb.increase()
 
                 # 获得相关系数误差（快捷处置）
-                if not self._use_cuda :
+                if not self._use_cupy :
                     # 拷贝原始矩阵
                     matrix1 = t1.matrix
                     # 拷贝原始矩阵
@@ -740,7 +740,7 @@ class VectorGroup(ContentGroup) :
             # 复制过程不能破坏完整性
             # 复制过程将隔离原始数据和计算数据
             # 检查类型
-            if self._use_cuda :
+            if self._use_cupy :
                 if isinstance(item.matrix[0], cupy.ndarray) :
                     ais[index] = item.matrix[0]  # Ai
                 elif isinstance(item.matrix[0], numpy.ndarray) :
@@ -799,10 +799,10 @@ class VectorGroup(ContentGroup) :
 
         # 生成ais
         ais = cupy_random_matrix(n, self._dimension) \
-            if self._use_cuda else get_random_matrix(n, self._dimension)
+            if self._use_cupy else get_random_matrix(n, self._dimension)
         # 生成bjs
         bjs = cupy_random_matrix(n, self._dimension) \
-            if self._use_cuda else get_random_matrix(n, self._dimension)
+            if self._use_cupy else get_random_matrix(n, self._dimension)
         # 检查标记位
         if not self.init_matrix :
             # 拷贝数据
@@ -810,9 +810,9 @@ class VectorGroup(ContentGroup) :
         else :
             # 归一化
             ais = cupy_normalized(ais) \
-                if self._use_cuda else get_normalized(ais)
+                if self._use_cupy else get_normalized(ais)
             bjs = cupy_normalized(bjs) \
-                if self._use_cuda else get_normalized(bjs)
+                if self._use_cupy else get_normalized(bjs)
             # 清理标志位
             self.init_matrix = False
             # 初始化矩阵
@@ -836,10 +836,10 @@ class VectorGroup(ContentGroup) :
 
             # 获得计算值
             delta = cupy_delta_matrix(gammas, ais, bjs) \
-                if self._use_cuda else get_delta_matrix(gammas, ais, bjs)
+                if self._use_cupy else get_delta_matrix(gammas, ais, bjs)
             # 获得一系列误差最大值位置记录
             positions = cupy_max_positions(n, delta, length) \
-                if self._use_cuda else get_max_positions(n, delta, length)
+                if self._use_cupy else get_max_positions(n, delta, length)
             # 检查参数
             assert len(positions) >= 1
             # 先获得最大误差值
@@ -847,7 +847,7 @@ class VectorGroup(ContentGroup) :
             # 检查参数
             # numba会强制类型，数组均为浮点型，因此需要强制转换为整数类型
             positions = cupy.array(positions).astype(cupy.int32) \
-                if self._use_cuda else numpy.array(positions).astype(numpy.int32)
+                if self._use_cupy else numpy.array(positions).astype(numpy.int32)
             # 转换后再取值
             row = int(positions[0][0])
             col = int(positions[0][1])
@@ -872,7 +872,7 @@ class VectorGroup(ContentGroup) :
                 if length > n // 2: length = n // 2
             # 通过误差计算步长，并移至下一个步骤
             _dai, _dbj = cupy_next_step(n, ais, bjs, delta, positions) \
-                if self._use_cuda else get_next_step(n, ais, bjs, delta, positions)
+                if self._use_cupy else get_next_step(n, ais, bjs, delta, positions)
             # 注意：分成两个步骤计算
             ais += _dai; bjs += _dbj
 
@@ -880,7 +880,7 @@ class VectorGroup(ContentGroup) :
             end = time.perf_counter()
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
-            print(f"\tloop[{j},{i},{length}] = {(end - start) * 1000} ms")
+            print(f"\tloop[{j},{i},{length}] = {int((end - start) * 1000)} ms")
             print(f"\tGamma = {gammas[1][row][col]}")
             print(f"\t∇Gamma = {max_delta}")
             if j > 1 : print(f"\t∇²Gamma = {_last_delta - max_delta}")
