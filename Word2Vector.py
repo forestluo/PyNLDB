@@ -162,23 +162,19 @@ class VectorItem(ContentItem) :
         if isinstance(matrix[0], numpy.ndarray) :
             t.__matrix[0] = matrix[0][t.index] # Ai
         elif isinstance(matrix[0], cupy.ndarray) :
-            t.__matrix[0] = \
-                cupy.asnumpy(matrix[0][t.index]) # Ai
+            t.__matrix[0] = cupy.asnumpy(matrix[0][t.index]) # Ai
         else :
             # 数值拷贝
             for k in range(matrix[0].shape[1]) :
-                # 设置矩阵
                 t.__matrix[0][k] = matrix[0][t.index][k]  # Ai
         # 检查类型
         if isinstance(matrix[1], numpy.ndarray) :
             t.__matrix[1] = matrix[1][t.index] # Bj
         elif isinstance(matrix[1], cupy.ndarray) :
-            t.__matrix[1] = \
-                cupy.asnumpy(matrix[1][t.index]) # Bj
+            t.__matrix[1] = cupy.asnumpy(matrix[1][t.index]) # Bj
         else :
             # 数值拷贝
             for k in range(matrix[1].shape[1]) :
-                # 设置矩阵
                 t.__matrix[1][k] = matrix[1][t.index][k]  # Bj
 
     # 求相关系数
@@ -479,7 +475,7 @@ class VectorGroup(ContentGroup) :
             c = item.content
             # 检查数值
             if f <= 0 :
-                item.gamma = 0.0; continue
+                item.gamma = -1.0; continue
 
             # 检查数据
             assert len(c) == 2
@@ -489,24 +485,24 @@ class VectorGroup(ContentGroup) :
             # 检查数据
             if c1 not in self :
                 # 设置为无效值
-                item.gamma = 0.0; continue
+                item.gamma = -1.0; continue
             # 获得频次
             f1 = self[c1].count
             # 检查数据
             if f1 <= 0 :
-                item.gamma = 0.0; continue
+                item.gamma = -1.0; continue
 
             # 获得单词
             c2 = c[-1]
             # 检查数据
             if c2 not in self :
                 # 设置为无效值
-                item.gamma = 0.0; continue
+                item.gamma = -1.0; continue
             # 获得频次
             f2 = self[c2].count
             # 检查数据
             if f2 <= 0 :
-                item.gamma = 0.0; continue
+                item.gamma = -1.0; continue
 
             # 设置标记位
             self[c1].index |= 0x01
@@ -514,8 +510,6 @@ class VectorGroup(ContentGroup) :
             # 计算相关系数
             item.gamma = 0.5 * float(f) \
                 * (1.0 / float(f1) + 1.0 / float(f2))
-            # 检查结果
-            if item.gamma > 1.0 : item.gamma = 0.0
         # 结束
         pb.end()
 
@@ -758,6 +752,41 @@ class VectorGroup(ContentGroup) :
         # 返回结果
         return max_delta
 
+    def __copy_vectors(self, ais, bjs) :
+        # 进度条
+        pb = ProgressBar(n)
+        # 开始
+        pb.begin(f"VectorGroup.__copy_vectors : copy matrix[{n}] !")
+        # 循环处理
+        for item in self.values():
+            # 进度条
+            pb.increase()
+            # 获得索引值
+            index = item.index
+            # 循环处理
+            # 复制过程不能破坏完整性
+            # 复制过程将隔离原始数据和计算数据
+            # 检查类型
+            if isinstance(item.matrix[0], numpy.ndarray) :
+                ais[index] = item.matrix[0]  # Ai
+            elif isinstance(item.matrix[0], cupy.ndarray) :
+                ais[index] = cupy.asnumpy(item.matrix[0])  # Ai
+            else:
+                # 数值拷贝
+                for k in range(item.matrix[0].shape[1]):
+                    ais[index][k] = item.matrix[0][k]  # Ai
+            # 检查类型
+            if isinstance(item.matrix[1], numpy.ndarray) :
+                bjs[index] = item.matrix[1]  # Ai
+            elif isinstance(item.matrix[1], cupy.ndarray) :
+                bjs[index] = cupy.asnumpy(item.matrix[1])  # Bj
+            else:
+                # 数值拷贝
+                for k in range(item.matrix[1].shape[1]) :
+                    bjs[index] = item.matrix[1][k]  # Bj
+        # 结束
+        pb.end()
+
     # 完成一次全量计算
     def fast_solving(self) :
         # 检查参数
@@ -784,26 +813,8 @@ class VectorGroup(ContentGroup) :
             if self._use_cuda else get_random_matrix(n, self._dimension)
         # 检查标记位
         if not self.init_matrix :
-            # 进度条
-            pb = ProgressBar(n)
-            # 开始
-            pb.begin(f"VectorGroup.fast_solving : copy matrix[{n}] !")
-            # 循环处理
-            for item in self.values() :
-                # 进度条
-                pb.increase()
-                # 获得索引值
-                index = item.index
-                # 循环处理
-                # 复制过程不能破坏完整性
-                # 复制过程将隔离原始数据和计算数据
-                for k in range(self._dimension) :
-                    # 复制Ai
-                    ais[index][k] = item.matrix[0][k]
-                    # 复制Bi
-                    bjs[index][k] = item.matrix[1][k]
-            # 结束
-            pb.end()
+            # 拷贝数据
+            self.__copy_vectors(ais, bjs)
         else :
             # 归一化
             ais = cupy_normalized(ais) \
