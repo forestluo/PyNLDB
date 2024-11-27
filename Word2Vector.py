@@ -422,7 +422,7 @@ class VectorGroup(ContentGroup) :
         # 获得维度
         n = len(self)
         # 生成数据
-        gammas = numpy.zeros((n, n))
+        gammas = - numpy.zeros((n, n))
         # 初始化相关系数
         for item in self._words.values() :
             # 获得内容
