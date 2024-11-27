@@ -448,8 +448,7 @@ class VectorGroup(ContentGroup) :
             j = self[c2].index
 
             # 设置数值
-            gammas[i][j] = item.gamma \
-                if 0 <= item.gamma <= 1.0 else 0.0
+            gammas[i][j] = item.gamma
         # 返回结果
         return cupy.asarray(gammas) \
             if self._use_cuda else gammas
