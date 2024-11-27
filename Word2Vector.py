@@ -415,14 +415,16 @@ class VectorGroup(ContentGroup) :
         return len(self)
 
     # 获得标准数据
-    def _get_gammas(self) :
+    def __get_gammas(self) :
         # 初始化索引值
         for index, t in enumerate(self.values()) : t.index = index
 
         # 获得维度
         n = len(self)
         # 生成数据
-        gammas = - numpy.zeros((n, n))
+        masks = numpy.zeros((n, n))
+        # 生成数据
+        gammas = - numpy.ones((n, n))
         # 初始化相关系数
         for item in self._words.values() :
             # 获得内容
@@ -448,10 +450,11 @@ class VectorGroup(ContentGroup) :
             j = self[c2].index
 
             # 设置数值
+            masks[i][j] = 1.0
             gammas[i][j] = item.gamma
         # 返回结果
-        return cupy.asarray(gammas) \
-            if self._use_cuda else gammas
+        return cupy.asarray(masks) if self._use_cuda else masks, \
+                cupy.asarray(gammas) if self._use_cuda else gammas,
 
     # 初始化相关系数
     def __init_gammas(self) :
@@ -549,7 +552,7 @@ class VectorGroup(ContentGroup) :
         # 开始
         pb.begin("VectorGroup.clear_invalid : clear invalid vectors !")
         # 获得相关系数
-        gammas = self._get_gammas()
+        masks, gammas = self.__get_gammas()
         # 获得关系系数符号矩阵
         signs = numpy.sum(numpy.abs(numpy.sign(gammas)), axis = 1)
         # 循环检查
@@ -629,7 +632,7 @@ class VectorGroup(ContentGroup) :
         # 初始化相关系数
         self._init_gammas()
         # 相关系数矩阵
-        gammas = self._get_gammas()
+        masks, gammas = self.__get_gammas()
         # 检查标记位
         if self.init_matrix:
             # 清除标记位
@@ -821,7 +824,7 @@ class VectorGroup(ContentGroup) :
         # 有删除无效数据的行为
         n = self._init_gammas()
         # 相关系数矩阵
-        gammas = self._get_gammas()
+        masks, gammas = self.__get_gammas()
 
         # 生成ais
         ais = cupy_random_matrix(n, self._dimension) \
@@ -861,8 +864,8 @@ class VectorGroup(ContentGroup) :
             start = time.perf_counter()
 
             # 获得计算值
-            delta = cupy_delta_matrix(gammas, ais, bjs) \
-                if self._use_cuda else get_delta_matrix(gammas, ais, bjs)
+            delta = cupy_delta_matrix(masks, gammas, ais, bjs) \
+                if self._use_cuda else get_delta_matrix(masks, gammas, ais, bjs)
             # 获得一系列误差最大值位置记录
             positions = cupy_max_positions(n, delta, length) \
                 if self._use_cuda else get_max_positions(n, delta, length)
@@ -951,7 +954,7 @@ class VectorGroup(ContentGroup) :
 # 路径
 json_path = ".\\json\\"
 # 生成对象
-vectors = VectorGroup(2048)
+vectors = VectorGroup(512)
 
 def init_vectors() :
     # 加载数文件

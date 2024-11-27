@@ -30,9 +30,9 @@ def get_random_matrix(n, dimension) :
     numpy.random.random((n, dimension))
 
 @jit
-def get_delta_matrix(gammas, ais, bjs) :
+def get_delta_matrix(masks, gammas, ais, bjs) :
     # 返回结果
-    return gammas - numpy.dot(ais, bjs.T)
+    return numpy.multiply(masks, gammas - numpy.dot(ais, bjs.T))
 
 @jit
 def get_masked_delta(n, delta, positions) :
@@ -137,9 +137,9 @@ def cupy_random_matrix(n, dimension) :
     return 1.0 - 2.0 * \
         cupy.random.random((n, dimension))
 
-def cupy_delta_matrix(gammas, ais, bjs) :
+def cupy_delta_matrix(masks, gammas, ais, bjs) :
     # 返回结果
-    return gammas - cupy.dot(ais, bjs.T)
+    return cupy.multiply(masks, gammas - cupy.dot(ais, bjs.T))
 
 def cupy_next_step(n, ais, bjs, delta, positions) :
     # 生成掩码矩阵
