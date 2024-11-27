@@ -767,23 +767,42 @@ class VectorGroup(ContentGroup) :
             # 复制过程不能破坏完整性
             # 复制过程将隔离原始数据和计算数据
             # 检查类型
-            if isinstance(item.matrix[0], numpy.ndarray) :
-                ais[index] = item.matrix[0]  # Ai
-            elif isinstance(item.matrix[0], cupy.ndarray) :
-                ais[index] = cupy.asnumpy(item.matrix[0])  # Ai
-            else:
-                # 数值拷贝
-                for k in range(item.matrix[0].shape[1]):
-                    ais[index][k] = item.matrix[0][k]  # Ai
-            # 检查类型
-            if isinstance(item.matrix[1], numpy.ndarray) :
-                bjs[index] = item.matrix[1]  # Ai
-            elif isinstance(item.matrix[1], cupy.ndarray) :
-                bjs[index] = cupy.asnumpy(item.matrix[1])  # Bj
-            else:
-                # 数值拷贝
-                for k in range(item.matrix[1].shape[1]) :
-                    bjs[index] = item.matrix[1][k]  # Bj
+            if self._use_cuda :
+                if isinstance(item.matrix[0], cupy.ndarray) :
+                    ais[index] = item.matrix[0]  # Ai
+                elif isinstance(item.matrix[0], numpy.ndarray) :
+                    ais[index] = cupy.asarray(item.matrix[0])  # Ai
+                else:
+                    # 数值拷贝
+                    for k in range(item.matrix[0].shape[1]):
+                        ais[index][k] = item.matrix[0][k]  # Ai
+                # 检查类型
+                if isinstance(item.matrix[1], cupy.ndarray) :
+                    bjs[index] = item.matrix[1]  # Bj
+                if isinstance(item.matrix[1], numpy.ndarray) :
+                    bjs[index] = cupy.asarray(item.matrix[1])  # Ai
+                else:
+                    # 数值拷贝
+                    for k in range(item.matrix[1].shape[1]) :
+                        bjs[index] = item.matrix[1][k]  # Bj
+            else :
+                if isinstance(item.matrix[0], numpy.ndarray) :
+                    ais[index] = item.matrix[0]  # Ai
+                elif isinstance(item.matrix[0], cupy.ndarray) :
+                    ais[index] = cupy.asnumpy(item.matrix[0])  # Ai
+                else:
+                    # 数值拷贝
+                    for k in range(item.matrix[0].shape[1]):
+                        ais[index][k] = item.matrix[0][k]  # Ai
+                # 检查类型
+                if isinstance(item.matrix[1], numpy.ndarray) :
+                    bjs[index] = item.matrix[1]  # Ai
+                elif isinstance(item.matrix[1], cupy.ndarray) :
+                    bjs[index] = cupy.asnumpy(item.matrix[1])  # Bj
+                else:
+                    # 数值拷贝
+                    for k in range(item.matrix[1].shape[1]) :
+                        bjs[index] = item.matrix[1][k]  # Bj
         # 结束
         pb.end()
 
