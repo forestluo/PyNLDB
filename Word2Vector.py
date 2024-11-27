@@ -229,7 +229,7 @@ class VectorGroup(ContentGroup) :
         # 误差
         self._error = 1.0e-5
         # 最小记录次数
-        self._min_count = 1024
+        self._min_count = 512
         # 设置词汇组
         self._words = WordContent()
 
@@ -860,7 +860,9 @@ class VectorGroup(ContentGroup) :
             # 检查结果
             if last_delta < max_delta :
                 # 呈上升趋势
-                length = 0
+                length -= 1
+                # 检查结果
+                if length < 0 : length = 0
             else :
                 # 呈下降趋势
                 i = 0; length += 1
@@ -868,7 +870,6 @@ class VectorGroup(ContentGroup) :
                 last_delta = max_delta
                 # 检查结果
                 if length > n // 2: length = n // 2
-
             # 通过误差计算步长，并移至下一个步骤
             _dai, _dbj = cupy_next_step(n, ais, bjs, delta, positions) \
                 if self._use_cuda else get_next_step(n, ais, bjs, delta, positions)
