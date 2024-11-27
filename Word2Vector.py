@@ -601,7 +601,7 @@ class VectorGroup(ContentGroup) :
             return numpy.inf
 
         # 初始化相关系数
-        self._init_gammas()
+        n = self._init_gammas()
         # 相关系数矩阵
         gammas = self.__get_gammas(n)
         # 检查标记位
@@ -632,7 +632,7 @@ class VectorGroup(ContentGroup) :
             # 检查结果
             if delta > self._error:
                 # 求平均值
-                self._traverse(VectorItem.mul_delta, 1.0 / float(len(self)))
+                self._traverse(VectorItem.mul_delta, 1.0 / float(n))
                 # 进行加和计算
                 self._traverse(VectorItem.add_delta)
                 # 重置无效的数据
