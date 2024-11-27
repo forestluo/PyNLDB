@@ -884,7 +884,6 @@ class VectorGroup(ContentGroup) :
             print(f"\tGamma = {gammas[1][row][col]}")
             print(f"\t∇Gamma = {max_delta}")
             if j > 1 : print(f"\t∇²Gamma = {_last_delta - max_delta}")
-
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
         # 打印信息
