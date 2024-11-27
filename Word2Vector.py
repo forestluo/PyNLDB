@@ -541,32 +541,6 @@ class VectorGroup(ContentGroup) :
         # 结束
         pb.end()
 
-        """
-        # 进度条
-        pb = ProgressBar(len(self))
-        # 开始
-        pb.begin("VectorGroup.clear_invalid : clear invalid vectors !")
-        # 获得相关系数
-        masks, gammas = self.__get_gammas()
-        # 获得关系系数符号矩阵
-        signs = numpy.sum(numpy.abs(numpy.sign(gammas)), axis = 1)
-        # 循环检查
-        for item in self.values() :
-            # 进度条
-            pb.increase()
-            # 获得索引
-            index = item.index
-            # 检查结果
-            if signs[index] < 2 * self._dimension :
-                # 相关关系数量不能低于维度
-                # 关系方程不足，则方程必定无解
-                if item.content not in removed : removed.add_item(item)
-        # 结束
-        pb.end()
-        # 打印信息
-        print(f"VectorGroup.clear_invalid : average ({int(numpy.mean(signs))}) relation(s) !")
-        """
-
         # 进度条
         pb = ProgressBar(len(self._words))
         # 开始
@@ -821,7 +795,7 @@ class VectorGroup(ContentGroup) :
         # 有删除无效数据的行为
         n = self._init_gammas()
         # 相关系数矩阵
-        masks, gammas = self.__get_gammas(n)
+        gammas = self.__get_gammas(n)
 
         # 生成ais
         ais = cupy_random_matrix(n, self._dimension) \
@@ -906,7 +880,7 @@ class VectorGroup(ContentGroup) :
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
             print(f"\tloop[{j},{i},{length}] = {(end - start) * 1000} ms")
-            print(f"\tGamma = {gammas[row][col]}")
+            print(f"\tGamma = {gammas[1][row][col]}")
             print(f"\t∇Gamma = {max_delta}")
             if j > 1 : print(f"\t∇²Gamma = {_last_delta - max_delta}")
 
