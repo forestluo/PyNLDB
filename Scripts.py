@@ -49,6 +49,26 @@ def get_masked_delta(n, delta, positions) :
     return numpy.multiply(delta, _mask)
 
 @jit
+def get_next_steps(n, ais, bjs, delta) :
+    # 求各个分量的平方和（相当于模长的平方）
+    _ais = numpy.sum(numpy.square(ais), axis = 1)
+    # 与numba兼容的写法
+    _ais = _ais.repeat(n).reshape((-1, n))
+
+    # 求各个分量的平方和（相当于模长的平方）
+    _bjs = numpy.sum(numpy.square(bjs), axis = 1)
+    # 与numba兼容的写法
+    _bjs = _bjs.repeat(n).reshape((-1, n)).T
+
+    # 计算系数矩阵
+    _w = numpy.multiply(delta, numpy.reciprocal(_bjs + _ais)) / n
+    # 计算误差分量
+    _dai = numpy.dot(_w, bjs)
+    _dbj = numpy.dot(_w.T, ais)
+    # 返回结果
+    return _dai, _dbj
+
+@jit
 def get_next_step(n, ais, bjs, delta, positions) :
     # 生成掩码矩阵
     _mask = numpy.zeros((n, n))
@@ -140,6 +160,25 @@ def cupy_random_matrix(n, dimension) :
 def cupy_delta_matrix(gammas, ais, bjs) :
     # 返回结果
     return cupy.multiply(gammas[0], gammas[1] - cupy.dot(ais, bjs.T))
+
+def cupy_next_steps(n, ais, bjs, delta) :
+    # 求各个分量的平方和（相当于模长的平方）
+    _ais = cupy.sum(cupy.square(ais), axis = 1)
+    # 与numba兼容的写法
+    _ais = _ais.repeat(n).reshape((-1, n))
+
+    # 求各个分量的平方和（相当于模长的平方）
+    _bjs = cupy.sum(cupy.square(bjs), axis = 1)
+    # 与numba兼容的写法
+    _bjs = _bjs.repeat(n).reshape((-1, n)).T
+
+    # 计算系数矩阵
+    _w = cupy.multiply(delta, cupy.reciprocal(_bjs + _ais)) / n
+    # 计算误差分量
+    _dai = cupy.dot(_w, bjs)
+    _dbj = cupy.dot(_w.T, ais)
+    # 返回结果
+    return _dai, _dbj
 
 def cupy_next_step(n, ais, bjs, delta, positions) :
     # 生成掩码矩阵

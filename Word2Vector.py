@@ -858,20 +858,22 @@ class VectorGroup(ContentGroup) :
             # 临时记录
             _last_delta = last_delta
             # 检查结果
-            if last_delta < max_delta :
-                # 呈上升趋势
-                length = 0
-            else :
+            if last_delta > max_delta :
                 # 呈下降趋势
                 i = 0; length += 1
                 # 保存上次误差
                 last_delta = max_delta
                 # 检查结果
-                if length > n // 2 : length = n // 2
-
-            # 通过误差计算步长，并移至下一个步骤
-            _dai, _dbj = cupy_next_step(n, ais, bjs, delta, positions) \
-                if self._use_cuda else get_next_step(n, ais, bjs, delta, positions)
+                if length > n // 2: length = n // 2
+                # 通过误差计算步长，并移至下一个步骤
+                _dai, _dbj = cupy_next_steps(n, ais, bjs, delta) \
+                    if self._use_cuda else get_next_steps(n, ais, bjs, delta)
+            else :
+                # 呈上升趋势
+                length = 0
+                # 通过误差计算步长，并移至下一个步骤
+                _dai, _dbj = cupy_next_step(n, ais, bjs, delta, positions) \
+                    if self._use_cuda else get_next_step(n, ais, bjs, delta, positions)
             # 注意：分成两个步骤计算
             ais += _dai; bjs += _dbj
 
