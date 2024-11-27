@@ -619,15 +619,17 @@ class VectorGroup(ContentGroup) :
     def solving(self):
         # 检查参数
         assert 0 < self._error < 1.0
+        # 维度
+        n = len(self)
         # 检查内容
-        if len(self) < 2:
+        if n < 2 :
             print("VectorGroup.solving : insufficient vectors !")
             return numpy.inf
 
         # 初始化相关系数
         self._init_gammas()
         # 相关系数矩阵
-        masks, gammas = self.__get_gammas()
+        gammas = self.__get_gammas(n)
         # 检查标记位
         if self.init_matrix:
             # 清除标记位
@@ -646,7 +648,7 @@ class VectorGroup(ContentGroup) :
             # 设置初始误差矩阵
             self._traverse(VectorItem.init_delta)
             # 求解方程
-            delta = self.__solving(gammas)
+            delta = self.__solving(gammas[1])
             # 打印信息
             print(f"VectorGroup.solving : ΔGamma[{i}, {j}] = {delta} !")
             # 检查结果
@@ -749,11 +751,11 @@ class VectorGroup(ContentGroup) :
         # 返回结果
         return max_delta
 
-    def __copy_matrixs(self, n, ais, bjs) :
+    def __copy_matrices(self, n, ais, bjs) :
         # 进度条
         pb = ProgressBar(n)
         # 开始
-        pb.begin(f"VectorGroup.__copy_matrixs : copy matrix[{n}] !")
+        pb.begin(f"VectorGroup.__copy_matrices : copy matrix[{n}] !")
         # 循环处理
         for item in self.values():
             # 进度条
@@ -830,7 +832,7 @@ class VectorGroup(ContentGroup) :
         # 检查标记位
         if not self.init_matrix :
             # 拷贝数据
-            self.__copy_matrixs(n, ais, bjs)
+            self.__copy_matrices(n, ais, bjs)
         else :
             # 归一化
             ais = cupy_normalized(ais) \
