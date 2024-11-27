@@ -415,16 +415,12 @@ class VectorGroup(ContentGroup) :
         return len(self)
 
     # 获得标准数据
-    def __get_gammas(self) :
+    def __get_gammas(self, n) :
         # 初始化索引值
         for index, t in enumerate(self.values()) : t.index = index
 
-        # 获得维度
-        n = len(self)
         # 生成数据
-        masks = numpy.zeros((n, n))
-        # 生成数据
-        gammas = - numpy.ones((n, n))
+        gammas = numpy.zeros((2, n, n))
         # 初始化相关系数
         for item in self._words.values() :
             # 获得内容
@@ -450,11 +446,10 @@ class VectorGroup(ContentGroup) :
             j = self[c2].index
 
             # 设置数值
-            masks[i][j] = 1.0
-            gammas[i][j] = item.gamma
+            gammas[0][i][j] = 1.0
+            gammas[1][i][j] = item.gamma
         # 返回结果
-        return cupy.asarray(masks) if self._use_cuda else masks, \
-                cupy.asarray(gammas) if self._use_cuda else gammas,
+        return cupy.asarray(gammas) if self._use_cuda else gammas
 
     # 初始化相关系数
     def __init_gammas(self) :
@@ -477,7 +472,7 @@ class VectorGroup(ContentGroup) :
             c = item.content
             # 检查数值
             if f <= 0 :
-                item.gamma = -1.0; continue
+                item.gamma = 0.0; continue
 
             # 检查数据
             assert len(c) == 2
@@ -487,24 +482,24 @@ class VectorGroup(ContentGroup) :
             # 检查数据
             if c1 not in self :
                 # 设置为无效值
-                item.gamma = -1.0; continue
+                item.gamma = 0.0; continue
             # 获得频次
             f1 = self[c1].count
             # 检查数据
             if f1 <= 0 :
-                item.gamma = -1.0; continue
+                item.gamma = 0.0; continue
 
             # 获得单词
             c2 = c[-1]
             # 检查数据
             if c2 not in self :
                 # 设置为无效值
-                item.gamma = -1.0; continue
+                item.gamma = 0.0; continue
             # 获得频次
             f2 = self[c2].count
             # 检查数据
             if f2 <= 0 :
-                item.gamma = -1.0; continue
+                item.gamma = 0.0; continue
 
             # 设置标记位
             self[c1].index |= 0x01
@@ -754,11 +749,11 @@ class VectorGroup(ContentGroup) :
         # 返回结果
         return max_delta
 
-    def __copy_vectors(self, ais, bjs) :
+    def __copy_matrixs(self, n, ais, bjs) :
         # 进度条
         pb = ProgressBar(n)
         # 开始
-        pb.begin(f"VectorGroup.__copy_vectors : copy matrix[{n}] !")
+        pb.begin(f"VectorGroup.__copy_matrixs : copy matrix[{n}] !")
         # 循环处理
         for item in self.values():
             # 进度条
@@ -824,7 +819,7 @@ class VectorGroup(ContentGroup) :
         # 有删除无效数据的行为
         n = self._init_gammas()
         # 相关系数矩阵
-        masks, gammas = self.__get_gammas()
+        masks, gammas = self.__get_gammas(n)
 
         # 生成ais
         ais = cupy_random_matrix(n, self._dimension) \
@@ -835,7 +830,7 @@ class VectorGroup(ContentGroup) :
         # 检查标记位
         if not self.init_matrix :
             # 拷贝数据
-            self.__copy_vectors(ais, bjs)
+            self.__copy_matrixs(n, ais, bjs)
         else :
             # 归一化
             ais = cupy_normalized(ais) \
@@ -864,8 +859,8 @@ class VectorGroup(ContentGroup) :
             start = time.perf_counter()
 
             # 获得计算值
-            delta = cupy_delta_matrix(masks, gammas, ais, bjs) \
-                if self._use_cuda else get_delta_matrix(masks, gammas, ais, bjs)
+            delta = cupy_delta_matrix(gammas, ais, bjs) \
+                if self._use_cuda else get_delta_matrix(gammas, ais, bjs)
             # 获得一系列误差最大值位置记录
             positions = cupy_max_positions(n, delta, length) \
                 if self._use_cuda else get_max_positions(n, delta, length)
@@ -890,12 +885,6 @@ class VectorGroup(ContentGroup) :
             if last_delta < max_delta :
                 # 呈上升趋势
                 length = 0
-                """
-                # 呈上升趋势
-                length -= 1
-                # 检查结果
-                if length < 0 : length = 0
-                """
             else :
                 # 呈下降趋势
                 i = 0; length += 1
