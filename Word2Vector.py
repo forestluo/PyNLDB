@@ -509,7 +509,10 @@ class VectorGroup(ContentGroup) :
             item.gamma = 0.5 * float(f) \
                 * (1.0 / float(f1) + 1.0 / float(f2))
             # 检查相关结果
-            if item.gamma < 0.001 : item.gamma = 0
+            # 将结果值限定在范围内
+            if item.gamma > 1.0 : item.gamma = 1.0
+            elif item.gamma <= self._error : item.gamma = 0.0
+
         # 结束
         pb.end()
 
