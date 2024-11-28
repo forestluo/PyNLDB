@@ -229,7 +229,7 @@ class VectorGroup(ContentGroup) :
         # 误差
         self._error = 1.0e-5
         # 最小记录次数
-        self._min_count = 512
+        self._min_count = 1024
         # 设置词汇组
         self._words = WordContent()
 
