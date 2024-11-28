@@ -446,8 +446,8 @@ class VectorGroup(ContentGroup) :
             j = self[c2].index
 
             # 设置数值
-            gammas[0][i][j] = 1.0
-            gammas[1][i][j] = item.gamma
+            gammas[1][i][j] = 1.0
+            gammas[0][i][j] = item.gamma
         # 返回结果
         return cupy.asarray(gammas) if self._use_cupy else gammas
 
@@ -507,6 +507,8 @@ class VectorGroup(ContentGroup) :
             # 计算相关系数
             item.gamma = 0.5 * float(f) \
                 * (1.0 / float(f1) + 1.0 / float(f2))
+            # 检查相关结果
+            if item.gamma < 0.001 : item.gamma = 0
         # 结束
         pb.end()
 
@@ -622,7 +624,7 @@ class VectorGroup(ContentGroup) :
             # 设置初始误差矩阵
             self._traverse(VectorItem.init_delta)
             # 求解方程
-            delta = self.__solving(gammas[1])
+            delta = self.__solving(gammas[0])
             # 打印信息
             print(f"VectorGroup.solving : ΔGamma[{i}, {j}] = {delta} !")
             # 检查结果
@@ -884,7 +886,7 @@ class VectorGroup(ContentGroup) :
             # 打印信息
             print(f"VectorGroup.fast_solving : show result !")
             print(f"\tloop[{j},{i},{length}] = {int((end - start) * 1000)} ms")
-            print(f"\tGamma = {gammas[1][row][col]}")
+            print(f"\tGamma = {gammas[0][row][col]}")
             print(f"\t∇Gamma = {max_delta}")
             if j > 1 : print(f"\t∇²Gamma = {_last_delta - max_delta}")
         # 设置数据矩阵

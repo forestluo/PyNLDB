@@ -7,7 +7,6 @@ import numba
 from numba import jit
 from numba import cuda
 
-
 # 归一化处理
 #@jit (axis 选项不支持)
 def get_normalized(matrix) :
@@ -32,8 +31,8 @@ def get_random_matrix(n, dimension) :
 @jit
 def get_delta_matrix(gammas, ais, bjs) :
     # 返回结果
-    return gammas[1] - numpy.dot(ais, bjs.T)
-    #return numpy.multiply(gammas[0], gammas[1] - numpy.dot(ais, bjs.T))
+    return gammas[0] - numpy.dot(ais, bjs.T)
+    #return numpy.multiply(gammas[1], gammas[0] - numpy.dot(ais, bjs.T))
 
 @jit
 def get_masked_delta(n, delta, positions) :
@@ -160,8 +159,8 @@ def cupy_random_matrix(n, dimension) :
 
 def cupy_delta_matrix(gammas, ais, bjs) :
     # 返回结果
-    return gammas[1] - cupy.dot(ais, bjs.T)
-    #return cupy.multiply(gammas[0], gammas[1] - cupy.dot(ais, bjs.T))
+    #return gammas[0] - cupy.dot(ais, bjs.T)
+    return cupy.multiply(gammas[1], gammas[0] - cupy.dot(ais, bjs.T))
 
 def cupy_next_steps(n, ais, bjs, delta) :
     # 求各个分量的平方和（相当于模长的平方）
