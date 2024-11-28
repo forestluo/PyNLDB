@@ -31,8 +31,8 @@ def get_random_matrix(n, dimension) :
 @jit
 def get_delta_matrix(gammas, ais, bjs) :
     # 返回结果
-    return gammas[0] - numpy.dot(ais, bjs.T)
-    #return numpy.multiply(gammas[1], gammas[0] - numpy.dot(ais, bjs.T))
+    #return gammas[0] - numpy.dot(ais, bjs.T)
+    return numpy.multiply(gammas[1], gammas[0] - numpy.dot(ais, bjs.T))
 
 @jit
 def get_masked_delta(n, delta, positions) :

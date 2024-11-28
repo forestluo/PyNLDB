@@ -227,7 +227,7 @@ class VectorGroup(ContentGroup) :
         # 循环次数
         self._max_loop = 10
         # 误差
-        self._error = 1.0e-5
+        self._error = 1.0e-4
         # 最小记录次数
         self._min_count = 1024
         # 设置词汇组
@@ -880,8 +880,12 @@ class VectorGroup(ContentGroup) :
                 # 检查结果
                 if length > n // 4 : length = n // 4
             # 通过误差计算步长，并移至下一个步骤
+            _dai, _dbj = cupy_next_steps(n, ais, bjs, delta) \
+                if self._use_cupy else get_next_steps(n, ais, bjs, delta)
+            """
             _dai, _dbj = cupy_next_step(n, ais, bjs, delta, positions) \
                 if self._use_cupy else get_next_step(n, ais, bjs, delta, positions)
+            """
             # 注意：分成两个步骤计算
             ais += _dai; bjs += _dbj
 
