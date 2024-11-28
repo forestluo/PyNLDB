@@ -446,8 +446,9 @@ class VectorGroup(ContentGroup) :
             j = self[c2].index
 
             # 设置数值
-            gammas[1][i][j] = 1.0
             gammas[0][i][j] = item.gamma
+            # 检查结果
+            if item.gamma > self._error : gammas[1][i][j] = 1.0
         # 返回结果
         return cupy.asarray(gammas) if self._use_cupy else gammas
 
