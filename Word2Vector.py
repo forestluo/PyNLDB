@@ -891,12 +891,14 @@ class VectorGroup(ContentGroup) :
 
             # 计时结束
             end = time.perf_counter()
-            # 打印信息
-            print(f"VectorGroup.fast_solving : show result !")
-            print(f"\tloop[{j},{i},{length}] = {int((end - start) * 1000)} ms")
-            print(f"\tGamma = {gammas[0][row][col]}")
-            print(f"\t∇Gamma = {max_delta}")
-            if j > 1 : print(f"\t∇²Gamma = {_last_delta - max_delta}")
+            # 间隔打印
+            if numpy.remainder(j, 100) == 99 :
+                # 打印信息
+                print(f"VectorGroup.fast_solving : show result !")
+                print(f"\tloop[{j},{i},{length}] = {int((end - start) * 1000)} ms")
+                print(f"\tGamma = {gammas[0][row][col]}")
+                print(f"\t∇Gamma = {max_delta}")
+                if j > 1 : print(f"\t∇²Gamma = {_last_delta - max_delta}")
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
         # 打印信息
