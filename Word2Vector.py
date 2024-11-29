@@ -225,9 +225,9 @@ class VectorGroup(ContentGroup) :
         # 设置维度
         self._dimension = dimension
         # 循环次数
-        self._max_loop = 10
+        self._max_loop = 100
         # 误差
-        self._error = 1.0e-4
+        self._error = 0.00001
         # 最小记录次数
         self._min_count = 1024
         # 设置词汇组
@@ -622,7 +622,7 @@ class VectorGroup(ContentGroup) :
         # 最大行和范数
         last_delta = numpy.inf
         # 循环直至误差符合要求，或者收敛至最小误差
-        while i < self._max_loop:
+        while i < self._max_loop :
             # 计数器加一
             i += 1; j += 1
             # 设置初始误差矩阵
@@ -904,35 +904,10 @@ class VectorGroup(ContentGroup) :
         # 返回结果
         return last_delta
 
-    def kick_out(self, t1, t2) :
-        # 维度
-        n = len(self)
-        # 断言
-        assert t1 is not None and t2 is not None
-        # 删除该项目
-        content = t1.content + t2.content
-        # 设置相关系数
-        word = WordItem(content, 0); word.gamma = 0
-        # 检查参数
-        if content in self._words: word = self._words[content]
-
-        # 删除项目
-        if t1.content in self :
-            self.remove(t1.content)
-        if t2.content in self :
-            self.remove(t2.content)
-        if word.content in self._words :
-            self._words.remove(content)
-        # 打印计算值
-        print("VectorGroup.kick_out : kick_out vectors !")
-        print(f"\tt1[{t1.index},\"{t1.content}\"].count = {t1.count}")
-        print(f"\tt2[{t2.index},\"{t2.content}\"].count = {t2.count}")
-        print(f"\tword(\"{word.content}\").count = {word.count} ({word.gamma})")
-
 # 路径
 json_path = ".\\json\\"
 # 生成对象
-vectors = VectorGroup(512)
+vectors = VectorGroup(256)
 
 def init_vectors() :
     # 加载数文件
