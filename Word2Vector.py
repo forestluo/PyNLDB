@@ -896,7 +896,7 @@ class VectorGroup(ContentGroup) :
                 # 打印信息
                 print(f"VectorGroup.fast_solving : show result !")
                 print(f"\tloop[{j},{i},{length}] = {int((end - start) * 1000)} ms")
-                print(f"\tGamma = {gammas[0][row][col]}")
+                #print(f"\tGamma = {gammas[0][row][col]}")
                 print(f"\t∇Gamma = {max_delta}")
                 if j > 1 : print(f"\t∇²Gamma = {_last_delta - max_delta}")
         # 设置数据矩阵
