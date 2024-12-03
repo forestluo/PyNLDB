@@ -1,8 +1,9 @@
 /md/
 /db/
 /tmp/
+/csv/
 /json/
+/matlab/
 /*.json
 /*.db
 /*.db-journal
-/matlab/*.asv
