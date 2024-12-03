@@ -1,4 +1,32 @@
 # PyNLDB
+---
+2024年12月3日
+
+（1）对代码的结构做调整。所有的工具命令都迁移至tool目录中。
+
+GenerateData : 从NLDB3语料库之中提取文件数据。
+
+OperateData : 对随机语料数据，进行提取句子和数量量词的测试。
+
+SQLite3Operator : 将提取的文件数据转移至SQLite3中。如果全部转移成功，数据库能有90G左右。
+
+Word2Vector : 以相关系数为基础，对单字进行矢量化。主要方法有两种，目前推荐使用梯度算法。
+
+（2）增加了相关系数矢量化的方法（包括梯度算法）。
+
+我的NLP（自然语言处理）历程（20）——矢量化：https://zhuanlan.zhihu.com/p/9525651467
+
+（3）核心功能函数，包括以下三个：
+
+ContentTool.normalize_content ：清洗原始语料。
+
+SentenceTemplate.extract ：按照模板提取句子。
+
+QuantityTemplate.extract ：按照模板提取数量词。
+
+分词方面的功能，因为之前已经做过多次，可以暂时先放一下。这里优先尝试词汇的矢量化算法。
+
+---
 
  基于Python3（PyCharm 2024）和NLDB的数据处理程序。主要是实现断句，分词和词性检测等功能。
 
