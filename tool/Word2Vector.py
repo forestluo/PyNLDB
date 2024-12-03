@@ -85,12 +85,12 @@ def _classic_solving() :
     max_delta = vectors.classic_solving()
     # 检查结果
     if max_delta > 1.0e-5 :
-        # 保存数据
-        vectors.save(json_path + "vectors.json")
         # 打印信息
         print("Word2Vector._classic_solving : fail to solve !")
     else :
         print("Word2Vector._classic_solving : successfully done !")
+    # 保存数据
+    vectors.save(json_path + "vectors.json")
 
 def classic_solving() :
     # 检查参数
@@ -122,12 +122,12 @@ def _peanut_solving() :
     max_delta = vectors.peanut_solving()
     # 检查结果
     if max_delta > 1.0e-5 :
-        # 保存数据
-        vectors.save(json_path + "vectors.json")
         # 打印信息
         print("Word2Vector._peanut_solving : fail to solve !")
     else :
         print("Word2Vector._peanut_solving : successfully done !")
+    # 保存数据
+    vectors.save(json_path + "vectors.json")
 
 def peanut_solving() :
     # 检查参数
@@ -165,6 +165,8 @@ def _gradient_solving() :
         print("Word2Vector._gradient_solving : fail to solve !")
     else :
         print("Word2Vector._gradient_solving : successfully done !")
+    # 保存数据
+    vectors.save(json_path + "vectors.json")
 
 def gradient_solving() :
     # 检查参数
