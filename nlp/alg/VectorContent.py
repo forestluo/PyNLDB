@@ -684,12 +684,12 @@ class VectorContent(ContentGroup) :
             # 间隔打印
             if numpy.remainder(j, self._max_loop) == 0 :
                 # 获得最大值
-                sigma = cupy.sum(cupy.square(delta)) \
+                sigma_delta = cupy.sum(cupy.square(delta)) \
                     if self._use_cupy else numpy.sum(numpy.square(delta))
                 # 打印信息
                 print(f"VectorContent.peanut_solving : show result !")
                 print(f"\tloop[{j},{i},{length}] = {int((end - start) * 1000)} ms")
-                print(f"\tΣ(∇Gamma²) = {sigma}")
+                print(f"\tΣ(∇Gamma²) = {sigma_delta}")
                 print(f"\t∇Gamma = {max_delta}")
                 if j > 1 : print(f"\t∇²Gamma = {_last_delta - max_delta}")
         # 设置数据矩阵
