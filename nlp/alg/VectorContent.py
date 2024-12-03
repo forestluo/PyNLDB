@@ -27,6 +27,8 @@ class VectorContent(ContentGroup) :
         self._error = 0.00001
         # 最小记录次数
         self._min_count = 1024
+        # 主动中断循环
+        self.break_loop = False
         # 设置词汇组
         self._words = WordContent()
 
@@ -420,6 +422,8 @@ class VectorContent(ContentGroup) :
         last_delta = numpy.inf
         # 循环直至误差符合要求，或者收敛至最小误差
         while i < self._max_loop :
+            # 检查标志位
+            if self.break_loop : break
             # 计数器加一
             i += 1; j += 1
             # 设置初始误差矩阵
@@ -448,6 +452,8 @@ class VectorContent(ContentGroup) :
                 # 打印结果
                 print(f"VectorContent.classic_solving : delta_norm[{j}] = {delta_norm[0]} !")
                 break
+        # 清除标记
+        self.break_loop = False
         # 返回结果
         return last_delta
 
@@ -465,8 +471,13 @@ class VectorContent(ContentGroup) :
         max_delta = 0.0
         # 循环处理
         for t1 in self.values() :
+            # 检查标志位
+            if self.break_loop : break
             # 循环处理
             for t2 in self.values() :
+                # 检查标志位
+                if self.break_loop : break
+
                 # 相关系数
                 gamma = gammas[t1.index][t2.index]
                 # 增加计数
@@ -632,6 +643,9 @@ class VectorContent(ContentGroup) :
         last_delta = numpy.inf
         # 循环直至误差符合要求，或者收敛至最小误差
         while i < self._max_loop :
+            # 检查标志位
+            if self.break_loop : break
+
             # 计数器加一
             i += 1; j += 1
             # 开始计时
@@ -663,9 +677,7 @@ class VectorContent(ContentGroup) :
             # 检查结果
             if last_delta < max_delta :
                 # 呈上升趋势
-                length -= 1
-                # 检查结果
-                if length < 0 : length = 0
+                length = 0
             else :
                 # 呈下降趋势
                 i = 0; length += 1
@@ -692,6 +704,8 @@ class VectorContent(ContentGroup) :
                 print(f"\tΣ(∇Gamma²) = {sigma_delta}")
                 print(f"\t∇Gamma = {max_delta}")
                 if j > 1 : print(f"\t∇²Gamma = {_last_delta - max_delta}")
+        # 清除标记
+        self.break_loop = False
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
         # 打印信息
@@ -751,6 +765,9 @@ class VectorContent(ContentGroup) :
         last_delta = numpy.inf
         # 循环直至误差符合要求，或者收敛至最小误差
         while i < self._max_loop :
+            # 检查标志位
+            if self.break_loop : break
+
             # 计数器加一
             i += 1; j += 1
             # 开始计时
@@ -771,9 +788,7 @@ class VectorContent(ContentGroup) :
             # 检查结果
             if last_delta < max_delta :
                 # 呈上升趋势
-                multiple -= 1
-                # 检查结果
-                if multiple <= 0 : multiple = 1
+                multiple = 1
             else :
                 # 呈下降趋势
                 i = 0
@@ -804,6 +819,8 @@ class VectorContent(ContentGroup) :
                 print(f"\tΣ(∇Gamma²) = {max_delta}")
                 print(f"\t∇Gamma = {positions[0][2]}")
                 if j > 1 : print(f"\t∇Σ(∇Gamma²) = {_last_delta - max_delta}")
+        # 清除标记
+        self.break_loop = False
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
         # 打印信息
