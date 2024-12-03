@@ -5,7 +5,7 @@ from nlp.alg.VectorContent import *
 # 路径
 json_path = "..\\json\\"
 # 生成对象
-vectors = VectorContent(256)
+vectors = VectorContent(64)
 
 def init_vectors() :
     # 加载数文件
@@ -79,48 +79,44 @@ def verify_vectors() :
         if w1 in vectors and w2 in vectors :
             print(f"\tGamma12 (from vector calculation) = {VectorItem.cal_gamma(vectors[w1], vectors[w2])}")
 
-def normal_solving() :
+def classic_solving() :
     # 检查参数
     if len(vectors) <= 0 :
         # 打印信息
-        print("Word2Vector.normal_solving : insufficient vectors !")
+        print("Word2Vector.classic_solving : insufficient vectors !")
         return
 
-    # 计数器
-    i = 0
     while True :
-        # 计数器加一
-        i += 1
         # 求解
-        max_delta = vectors.solving()
+        max_delta = vectors.classic_solving()
         # 检查结果
         if max_delta > 1.0e-5 :
+            # 保存数据
+            vectors.save(json_path + "vectors.json")
             # 打印信息
-            print("Word2Vector.normal_solving : fail to solve !")
+            print("Word2Vector.classic_solving : fail to solve !")
         else :
-            print("Word2Vector.normal_solving : successfully done !"); break
+            print("Word2Vector.classic_solving : successfully done !"); break
 
-def fast_solving() :
+def peanut_solving() :
     # 检查参数
     if len(vectors) <= 0 :
         # 打印信息
-        print("Word2Vector.fast_solving : insufficient vectors !")
+        print("Word2Vector.peanut_solving : insufficient vectors !")
         return
 
-    # 计数器
-    i = 0
     # 循环处理
     while True :
-        # 计数器加一
-        i += 1
         # 求解
-        max_delta = vectors.fast_solving()
+        max_delta = vectors.peanut_solving()
         # 检查结果
         if max_delta > 1.0e-5 :
+            # 保存数据
+            vectors.save(json_path + "vectors.json")
             # 打印信息
-            print("Word2Vector.fast_solving : fail to solve !")
+            print("Word2Vector.peanut_solving : fail to solve !")
         else :
-            print("Word2Vector.fast_solving : successfully done !"); break
+            print("Word2Vector.peanut_solving : successfully done !"); break
 
 def gradient_solving() :
     # 检查参数
@@ -129,21 +125,19 @@ def gradient_solving() :
         print("Word2Vector.gradient_solving : insufficient vectors !")
         return
 
-    # 计数器
-    i = 0
     while True :
-        # 计数器加一
-        i += 1
         # 求解
         max_delta = vectors.gradient_solving()
         # 检查结果
         if max_delta > 1.0e-5 :
+            # 保存数据
+            vectors.save(json_path + "vectors.json")
             # 打印信息
             print("Word2Vector.gradient_solving : fail to solve !")
         else :
             print("Word2Vector.gradient_solving : successfully done !"); break
 
-def fast_calculation_example():
+def peanut_calculation_example():
     # 生成对象
     vectors.clear()
 
@@ -165,10 +159,10 @@ def fast_calculation_example():
     # 设置标记位
     vectors.init_matrix = True
     # 求解
-    if vectors.fast_solving() > 1.0e-5 :
-        print("Word2Vector.fast_calculation_example : fail to solve !")
+    if vectors.peanut_solving() > 1.0e-5 :
+        print("Word2Vector.peanut_calculation_example : fail to solve !")
     else :
-        print("Word2Vector.fast_calculation_example : successfully done !")
+        print("Word2Vector.peanut_calculation_example : successfully done !")
     # 打印数据
     for item in vectors.values() : item.dump(dump_delta = False)
 
@@ -211,12 +205,12 @@ def main() :
             "init vectors",
             "load vectors",
             "save vectors",
-            "fast solving vectors",
-            "normal solving vectors",
+            "peanut solving vectors",
+            "classic solving vectors",
             "gradient solving vectors",
             "verify vectors",
-            "fast calculation example",
-            "normal calculation example",
+            "peanut calculation example",
+            "classic calculation example",
         ]
 
     # 提示信息
@@ -251,10 +245,10 @@ def main() :
             save_vectors()
         elif user_input == '4' :
             # 求解
-            fast_solving()
+            peanut_solving()
         elif user_input == '5' :
             # 求解
-            normal_solving()
+            classic_solving()
         elif user_input == '6' :
             # 梯度下降法
             gradient_solving()
@@ -263,10 +257,10 @@ def main() :
             verify_vectors()
         elif user_input == '8' :
             # 计算例子
-            fast_calculation_example()
+            peanut_calculation_example()
         elif user_input == '9' :
             # 计算例子
-            normal_calculation_example()
+            classic_calculation_example()
         else :
             print("Word2Vector.main : unknown choice !")
 

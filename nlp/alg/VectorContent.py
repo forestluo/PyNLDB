@@ -22,7 +22,7 @@ class VectorContent(ContentGroup) :
         # 设置维度
         self._dimension = dimension
         # 循环次数
-        self._max_loop = 1000
+        self._max_loop = 100
         # 误差
         self._error = 0.00001
         # 最小记录次数
@@ -393,14 +393,14 @@ class VectorContent(ContentGroup) :
         print(f"VectorContent.clear_invalid : total {len(removed)} item(s) removed !")
 
     # 完成一次全量计算
-    def solving(self):
+    def classic_solving(self):
         # 检查参数
         assert 0 < self._error < 1.0
         # 维度
         n = len(self)
         # 检查内容
         if n < 2 :
-            print("VectorContent.solving : insufficient vectors !")
+            print("VectorContent.classic_solving : insufficient vectors !")
             return numpy.inf
 
         # 初始化相关系数
@@ -427,7 +427,7 @@ class VectorContent(ContentGroup) :
             # 求解方程
             delta = self.__solving(gammas[0])
             # 打印信息
-            print(f"VectorContent.solving : ΔGamma[{i}, {j}] = {delta} !")
+            print(f"VectorContent.classic_solving : ΔGamma[{i}, {j}] = {delta} !")
             # 检查结果
             if last_delta > delta:
                 # 呈下降趋势
@@ -446,19 +446,19 @@ class VectorContent(ContentGroup) :
                 # 获得误差矩阵的最大行和范数
                 self._traverse(VectorItem.max_delta, delta_norm)
                 # 打印结果
-                print(f"VectorContent.solving : delta_norm[{j}] = {delta_norm[0]} !")
+                print(f"VectorContent.classic_solving : delta_norm[{j}] = {delta_norm[0]} !")
                 break
         # 返回结果
         return last_delta
 
     # 完成一次全量计算
-    def __solving(self, gammas) :
+    def __classic_solving(self, gammas) :
         # 获得总数
         total = len(self) * len(self)
         # 进度条
         pb = ProgressBar(total)
         # 打印信息
-        #pb.begin(f"VectorContent.__solving : try to process {total} relation(s) !")
+        #pb.begin(f"VectorContent.__classic_solving : try to process {total} relation(s) !")
         pb.begin()
 
         # 最大误差
@@ -524,7 +524,7 @@ class VectorContent(ContentGroup) :
 
         # 打印信息
         pb.end()
-        #pb.end(f"VectorContent.__solving : {total} relations(s) processed !")
+        #pb.end(f"VectorContent.__classic_solving : {total} relations(s) processed !")
         # 返回结果
         return max_delta
 
@@ -583,7 +583,7 @@ class VectorContent(ContentGroup) :
         pb.end()
 
     # 完成一次全量计算
-    def fast_solving(self) :
+    def peanut_solving(self) :
         # 检查参数
         assert 0 < self._error < 1.0
         # 总数
@@ -591,7 +591,7 @@ class VectorContent(ContentGroup) :
         n = len(self)
         # 检查内容
         if n < 2:
-            print("VectorContent.fast_solving : insufficient vectors !")
+            print("VectorContent.peanut_solving : insufficient vectors !")
             return numpy.inf
 
         # 初始化相关系数
@@ -622,7 +622,7 @@ class VectorContent(ContentGroup) :
             # 将初始化值，拷贝至隔离区（数值拷贝）
             self.traverse(VectorItem.init_matrix, [ais, bjs])
             # 打印信息
-            print(f"VectorContent.fast_solving : matrix[{n}] initialized !")
+            print(f"VectorContent.peanut_solving : matrix[{n}] initialized !")
 
         # 搜索长度
         length = 0
@@ -663,7 +663,9 @@ class VectorContent(ContentGroup) :
             # 检查结果
             if last_delta < max_delta :
                 # 呈上升趋势
-                length = 0
+                length -= 1
+                # 检查结果
+                if length < 0 : length = 0
             else :
                 # 呈下降趋势
                 i = 0; length += 1
@@ -680,17 +682,20 @@ class VectorContent(ContentGroup) :
             # 计时结束
             end = time.perf_counter()
             # 间隔打印
-            if numpy.remainder(j, 100) == 99 :
+            if numpy.remainder(j, self._max_loop) == 0 :
+                # 获得最大值
+                sigma = cupy.sum(cupy.square(delta)) \
+                    if self._use_cupy else numpy.sum(numpy.square(delta))
                 # 打印信息
-                print(f"VectorContent.fast_solving : show result !")
+                print(f"VectorContent.peanut_solving : show result !")
                 print(f"\tloop[{j},{i},{length}] = {int((end - start) * 1000)} ms")
-                #print(f"\tGamma = {gammas[0][row][col]}")
+                print(f"\tΣ(∇Gamma²) = {sigma}")
                 print(f"\t∇Gamma = {max_delta}")
                 if j > 1 : print(f"\t∇²Gamma = {_last_delta - max_delta}")
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
         # 打印信息
-        print(f"VectorContent.fast_solving : final matrix[{n}] copied !")
+        print(f"VectorContent.peanut_solving : final matrix[{n}] copied !")
         # 返回结果
         return last_delta
 
@@ -745,7 +750,7 @@ class VectorContent(ContentGroup) :
         # 最大行和范数
         last_delta = numpy.inf
         # 循环直至误差符合要求，或者收敛至最小误差
-        while last_delta > self._error :
+        while i < self._max_loop :
             # 计数器加一
             i += 1; j += 1
             # 开始计时
@@ -766,10 +771,14 @@ class VectorContent(ContentGroup) :
             # 检查结果
             if last_delta < max_delta :
                 # 呈上升趋势
-                multiple = 1
+                multiple -= 1
+                # 检查结果
+                if multiple <= 0 : multiple = 1
             else :
                 # 呈下降趋势
-                i = 0; multiple += 1
+                i = 0
+                # 乘数加一
+                multiple += 1
                 # 保存上次误差
                 last_delta = max_delta
                 # 检查结果
@@ -783,7 +792,7 @@ class VectorContent(ContentGroup) :
             # 计时结束
             end = time.perf_counter()
             # 间隔打印
-            if numpy.remainder(j, 100) == 99 :
+            if numpy.remainder(j, self._max_loop) == 0 :
                 # 获得一系列误差最大值位置记录
                 positions = cupy_max_positions(n, delta, 0) \
                     if self._use_cupy else get_max_positions(n, delta, 0)
