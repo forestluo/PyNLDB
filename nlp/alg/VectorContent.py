@@ -760,7 +760,7 @@ class VectorContent(ContentGroup) :
         # 步长倍数
         multiple = 1
         # 步长
-        step = 1.0 / float(n)
+        step = self._error
         # 最大行和范数
         last_delta = numpy.inf
         # 循环直至误差符合要求，或者收敛至最小误差
@@ -797,7 +797,7 @@ class VectorContent(ContentGroup) :
                 # 保存上次误差
                 last_delta = max_delta
                 # 检查结果
-                if multiple > n // 4 : multiple = n // 4
+                if multiple > n : multiple = n
             # 通过误差计算步长，并移至下一个步骤
             _dai, _dbj = cupy_gradient_step(multiple, step, delta, ais, bjs) \
                 if self._use_cupy else get_gradient_step(multiple, step, delta, ais, bjs)
