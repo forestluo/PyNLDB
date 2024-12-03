@@ -6,7 +6,7 @@
 
 GenerateData : 从NLDB3语料库之中提取文件数据。
 
-OperateData : 对随机语料数据，进行提取句子和数量量词的测试。
+OperateData : 对随机语料数据，进行操作测试。包括：提取句子和提取数量词。
 
 SQLite3Operator : 将提取的文件数据转移至SQLite3中。如果全部转移成功，数据库能有90G左右。
 
