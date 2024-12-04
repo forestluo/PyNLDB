@@ -394,15 +394,29 @@ class VectorContent(ContentGroup) :
         print(f"VectorContent.clear_invalid : {len(self._words)} word(s) left !")
         print(f"VectorContent.clear_invalid : total {len(removed)} item(s) removed !")
 
+    def solving(self, algorithm = 0) :
+        # 检查算法名称
+        if algorithm == 1 :
+            return self._l1_solving()
+        elif algorithm == 2 :
+            # 返回结果
+            return self._l2_solving()
+        elif algorithm >= 3 :
+            # 返回结果
+            return self._linf_solving()
+        else :
+            # 返回结果
+            return self._classic_solving()
+
     # 完成一次全量计算
-    def classic_solving(self):
+    def _classic_solving(self):
         # 检查参数
         assert 0 < self._error < 1.0
         # 维度
         n = len(self)
         # 检查内容
         if n < 2 :
-            print("VectorContent.classic_solving : insufficient vectors !")
+            print("VectorContent._classic_solving : insufficient vectors !")
             return numpy.inf
 
         # 初始化相关系数
@@ -429,9 +443,9 @@ class VectorContent(ContentGroup) :
             # 设置初始误差矩阵
             self._traverse(VectorItem.init_delta)
             # 求解方程
-            delta = self.__solving(gammas[0])
+            delta = self.__classic_solving(gammas[0])
             # 打印信息
-            print(f"VectorContent.classic_solving : ΔGamma[{i}, {j}] = {delta} !")
+            print(f"VectorContent._classic_solving : ΔGamma[{i}, {j}] = {delta} !")
             # 检查结果
             if last_delta > delta:
                 # 呈下降趋势
@@ -450,7 +464,7 @@ class VectorContent(ContentGroup) :
                 # 获得误差矩阵的最大行和范数
                 self._traverse(VectorItem.max_delta, delta_norm)
                 # 打印结果
-                print(f"VectorContent.classic_solving : delta_norm[{j}] = {delta_norm[0]} !")
+                print(f"VectorContent._classic_solving : delta_norm[{j}] = {delta_norm[0]} !")
                 break
         # 清除标记
         self.break_loop = False
@@ -594,7 +608,7 @@ class VectorContent(ContentGroup) :
         pb.end()
 
     # 完成一次全量计算
-    def peanut_solving(self) :
+    def _linf_solving(self) :
         # 检查参数
         assert 0 < self._error < 1.0
         # 总数
@@ -602,7 +616,7 @@ class VectorContent(ContentGroup) :
         n = len(self)
         # 检查内容
         if n < 2:
-            print("VectorContent.peanut_solving : insufficient vectors !")
+            print("VectorContent._linf_solving : insufficient vectors !")
             return numpy.inf
 
         # 初始化相关系数
@@ -633,7 +647,7 @@ class VectorContent(ContentGroup) :
             # 将初始化值，拷贝至隔离区（数值拷贝）
             self.traverse(VectorItem.init_matrix, [ais, bjs])
             # 打印信息
-            print(f"VectorContent.peanut_solving : matrix[{n}] initialized !")
+            print(f"VectorContent._linf_solving : matrix[{n}] initialized !")
 
         # 搜索长度
         length = 0
@@ -696,25 +710,25 @@ class VectorContent(ContentGroup) :
             # 间隔打印
             if numpy.remainder(j, self._max_loop) == 0 :
                 # 获得最大值
-                sigma_delta = cupy.sum(cupy.square(delta)) \
+                sigma = cupy.sum(cupy.square(delta)) \
                     if self._use_cupy else numpy.sum(numpy.square(delta))
                 # 打印信息
-                print(f"VectorContent.peanut_solving : show result !")
+                print(f"VectorContent._linf_solving : show result !")
                 print(f"\tloop[{j},{i},{length}] = {int((end - start) * 1000)} ms")
-                print(f"\tΣ(∇Gamma²) = {sigma_delta}")
-                print(f"\t∇Gamma = {max_delta}")
-                if j > 1 : print(f"\t∇²Gamma = {_last_delta - max_delta}")
+                print(f"\tMax(|Δγᵢⱼ|) = ({row},{col},{positions[0][2]})")
+                if j > 1 : print(f"\tΔMax(|Δγᵢⱼ|) = {_last_delta - max_delta}")
+                print(f"\t……Σ(|Δγᵢⱼ|²) = {sigma}")
         # 清除标记
         self.break_loop = False
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
         # 打印信息
-        print(f"VectorContent.peanut_solving : final matrix[{n}] copied !")
+        print(f"VectorContent._linf_solving : final matrix[{n}] copied !")
         # 返回结果
         return last_delta
 
     # 完成一次全量计算
-    def gradient_solving(self) :
+    def _l2_solving(self) :
         # 检查参数
         assert 0 < self._error < 1.0
         # 总数
@@ -722,7 +736,7 @@ class VectorContent(ContentGroup) :
         n = len(self)
         # 检查内容
         if n < 2:
-            print("VectorContent.gradient_solving : insufficient vectors !")
+            print("VectorContent._l2_solving : insufficient vectors !")
             return numpy.inf
 
         # 初始化相关系数
@@ -753,7 +767,7 @@ class VectorContent(ContentGroup) :
             # 将初始化值，拷贝至隔离区（数值拷贝）
             self.traverse(VectorItem.init_matrix, [ais, bjs])
             # 打印信息
-            print(f"VectorContent.gradient_solving : matrix[{n}] initialized !")
+            print(f"VectorContent._l2_solving : matrix[{n}] initialized !")
 
         # 循环计数
         i = 0; j = 0
@@ -808,22 +822,145 @@ class VectorContent(ContentGroup) :
             end = time.perf_counter()
             # 间隔打印
             if numpy.remainder(j, self._max_loop) == 0 :
+                # 获得最大值
+                sigma = cupy.sum(cupy.abs(delta)) \
+                    if self._use_cupy else numpy.sum(numpy.abs(delta))
                 # 获得一系列误差最大值位置记录
                 positions = cupy_max_positions(n, delta, 0) \
                     if self._use_cupy else get_max_positions(n, delta, 0)
                 # 检查参数
                 assert len(positions) >= 1
                 # 打印信息
-                print(f"VectorContent.gradient_solving : show result !")
+                print(f"VectorContent._l2_solving : show result !")
                 print(f"\tloop[{j},{i},{multiple}] = {int((end - start) * 1000)} ms")
-                print(f"\tΣ(∇Gamma²) = {max_delta}")
-                print(f"\t∇Gamma = {positions[0][2]}")
-                if j > 1 : print(f"\t∇Σ(∇Gamma²) = {_last_delta - max_delta}")
+                print(f"\tΣ(|Δγᵢⱼ|²)  = {max_delta}")
+                if j > 1 : print(f"\t∇Σ(|Δγᵢⱼ|²) = {_last_delta - max_delta}")
+                row = int(positions[0][0])
+                col = int(positions[0][1])
+                print(f"\t……Σ|Δγᵢⱼ| = {sigma}")
+                print(f"\t……Max(|Δγᵢⱼ|) = ({row},{col},{positions[0][2]})")
         # 清除标记
         self.break_loop = False
         # 设置数据矩阵
         self.traverse(VectorItem.init_matrix, [ais, bjs])
         # 打印信息
-        print(f"VectorContent.gradient_solving : final matrix[{n}] copied !")
+        print(f"VectorContent._l2_solving : final matrix[{n}] copied !")
+        # 返回结果
+        return last_delta
+
+    # 完成一次全量计算
+    def _l1_solving(self) :
+        # 检查参数
+        assert 0 < self._error < 1.0
+        # 总数
+        # 也是维度之一
+        n = len(self)
+        # 检查内容
+        if n < 2:
+            print("VectorContent._l1_solving : insufficient vectors !")
+            return numpy.inf
+
+        # 初始化相关系数
+        # 有删除无效数据的行为
+        n = self._init_gammas()
+        # 相关系数矩阵
+        gammas = self.__get_gammas(n)
+
+        # 生成ais
+        ais = cupy_random_matrix(n, self._dimension) \
+            if self._use_cupy else get_random_matrix(n, self._dimension)
+        # 生成bjs
+        bjs = cupy_random_matrix(n, self._dimension) \
+            if self._use_cupy else get_random_matrix(n, self._dimension)
+        # 检查标记位
+        if not self.init_matrix :
+            # 拷贝数据
+            self.__copy_matrices(n, ais, bjs)
+        else :
+            # 归一化
+            ais = cupy_normalized(ais) \
+                if self._use_cupy else get_normalized(ais)
+            bjs = cupy_normalized(bjs) \
+                if self._use_cupy else get_normalized(bjs)
+            # 清理标志位
+            self.init_matrix = False
+            # 初始化矩阵
+            # 将初始化值，拷贝至隔离区（数值拷贝）
+            self.traverse(VectorItem.init_matrix, [ais, bjs])
+            # 打印信息
+            print(f"VectorContent._l1_solving : matrix[{n}] initialized !")
+
+        # 乘数
+        multiple = 1
+        # 循环计数
+        i = 0; j = 0
+        # 最大行和范数
+        last_delta = numpy.inf
+        # 循环直至误差符合要求，或者收敛至最小误差
+        while i < self._max_loop :
+            # 检查标志位
+            if self.break_loop : break
+
+            # 计数器加一
+            i += 1; j += 1
+            # 开始计时
+            start = time.perf_counter()
+
+            # 获得计算值
+            delta = cupy_delta_matrix(gammas, ais, bjs) \
+                if self._use_cupy else get_delta_matrix(gammas, ais, bjs)
+            # 获得误差值
+            max_delta = cupy.sum(cupy.abs(delta)) \
+                if self._use_cupy else numpy.sum(numpy.abs(delta))
+            # 检查结果
+            if max_delta <= self._error :
+                # 设置数值，并中断循环
+                last_delta = max_delta; break
+            # 临时记录
+            _last_delta = last_delta
+            # 检查结果
+            if last_delta < max_delta :
+                # 呈上升趋势
+                multiple = 1
+            else :
+                # 呈下降趋势
+                i = 0; multiple += 1
+                # 保存上次误差
+                last_delta = max_delta
+                # 检查结果
+                if multiple > n : multiple = n
+            # 通过误差计算步长，并移至下一个步骤
+            _dai, _dbj = cupy_next_steps(multiple, n, ais, bjs, delta) \
+                if self._use_cupy else get_next_step(multiple, n, ais, bjs, delta)
+            # 注意：分成两个步骤计算
+            ais += _dai; bjs += _dbj
+
+            # 计时结束
+            end = time.perf_counter()
+            # 间隔打印
+            if numpy.remainder(j, self._max_loop) == 0 :
+                # 获得最大值
+                sigma = cupy.sum(cupy.square(delta)) \
+                    if self._use_cupy else numpy.sum(numpy.square(delta))
+                # 获得一系列误差最大值位置记录
+                positions = cupy_max_positions(n, delta, 0) \
+                    if self._use_cupy else get_max_positions(n, delta, 0)
+                # 检查参数
+                assert len(positions) >= 1
+                # 打印信息
+                print(f"VectorContent._l1_solving : show result !")
+                print(f"\tloop[{j},{i},{multiple}] = {int((end - start) * 1000)} ms")
+                print(f"\tΣ|Δγᵢⱼ| = {max_delta}")
+                if j > 1 : print(f"\tΔΣ|Δγᵢⱼ| = {_last_delta - max_delta}")
+                print(f"\t……Σ(|Δγᵢⱼ|²) = {sigma}")
+                row = int(positions[0][0])
+                col = int(positions[0][1])
+                print(f"\t……Max(|Δγᵢⱼ|) = ({row},{col},{positions[0][2]})")
+        # 清除标记
+        self.break_loop = False
+        # 设置数据矩阵
+        self.traverse(VectorItem.init_matrix, [ais, bjs])
+        # 打印信息
+        print(f"VectorContent._l1_solving : final matrix[{n}] copied !")
         # 返回结果
         return last_delta

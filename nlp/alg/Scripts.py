@@ -49,7 +49,7 @@ def get_masked_delta(n, delta, positions) :
     return numpy.multiply(delta, _mask)
 
 @jit
-def get_next_steps(n, ais, bjs, delta) :
+def get_next_steps(multiple, n, ais, bjs, delta) :
     # 求各个分量的平方和（相当于模长的平方）
     _ais = numpy.sum(numpy.square(ais), axis = 1)
     # 与numba兼容的写法
@@ -62,6 +62,7 @@ def get_next_steps(n, ais, bjs, delta) :
 
     # 计算系数矩阵
     _w = numpy.multiply(delta, numpy.reciprocal(_bjs + _ais)) / n
+    _w = numpy.multiply(multiple, _w)
     # 计算误差分量
     _dai = numpy.dot(_w, bjs)
     _dbj = numpy.dot(_w.T, ais)
@@ -167,7 +168,7 @@ def cupy_delta_matrix(gammas, ais, bjs) :
     #return gammas[0] - cupy.dot(ais, bjs.T)
     return cupy.multiply(gammas[1], gammas[0] - cupy.dot(ais, bjs.T))
 
-def cupy_next_steps(n, ais, bjs, delta) :
+def cupy_next_steps(multiple, n, ais, bjs, delta) :
     # 求各个分量的平方和（相当于模长的平方）
     _ais = cupy.sum(cupy.square(ais), axis = 1)
     # 与numba兼容的写法
@@ -180,6 +181,7 @@ def cupy_next_steps(n, ais, bjs, delta) :
 
     # 计算系数矩阵
     _w = cupy.multiply(delta, cupy.reciprocal(_bjs + _ais)) / n
+    _w = cupy.multiply(multiple, _w)
     # 计算误差分量
     _dai = cupy.dot(_w, bjs)
     _dbj = cupy.dot(_w.T, ais)

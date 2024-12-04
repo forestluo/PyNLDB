@@ -80,27 +80,34 @@ def verify_vectors() :
         if w1 in vectors and w2 in vectors :
             print(f"\tGamma12 (from vector calculation) = {VectorItem.cal_gamma(vectors[w1], vectors[w2])}")
 
-def _classic_solving() :
+def _solving(name, algorithm = 0) :
     # 求解
-    max_delta = vectors.classic_solving()
+    max_delta = vectors.solving(algorithm)
     # 检查结果
     if max_delta > 1.0e-5 :
         # 打印信息
-        print("Word2Vector._classic_solving : fail to solve !")
+        print(f"Word2Vector._solving(\"{name}\") : fail to solve !")
     else :
-        print("Word2Vector._classic_solving : successfully done !")
+        print(f"Word2Vector._solving(\"{name}\") : successfully done !")
     # 保存数据
     vectors.save(json_path + "vectors.json")
 
-def classic_solving() :
+def solving(algorithm = 0) :
     # 检查参数
     if len(vectors) <= 0 :
         # 打印信息
-        print("Word2Vector.classic_solving : insufficient vectors !")
+        print("Word2Vector.solving : insufficient vectors !")
         return
 
+    # 名称
+    # 检查参数
+    if algorithm == 1 : name = "L₁"
+    elif algorithm == 2 : name = "L₂"
+    elif algorithm >= 3 : name = "L∞"
+    else : name = "classic"
+
     # 生成线程
-    thread = threading.Thread(target = _classic_solving)
+    thread = threading.Thread(target = _solving, args = (name, algorithm))
     # 启动线程
     thread.start()
     # 继续选择输入
@@ -115,85 +122,9 @@ def classic_solving() :
     # 清理标记
     vectors.break_loop = False
     # 打印信息
-    print("Word2Vector.classic_solving : thread stopped !")
+    print("Word2Vector.solving : thread stopped !")
 
-def _peanut_solving() :
-    # 求解
-    max_delta = vectors.peanut_solving()
-    # 检查结果
-    if max_delta > 1.0e-5 :
-        # 打印信息
-        print("Word2Vector._peanut_solving : fail to solve !")
-    else :
-        print("Word2Vector._peanut_solving : successfully done !")
-    # 保存数据
-    vectors.save(json_path + "vectors.json")
-
-def peanut_solving() :
-    # 检查参数
-    if len(vectors) <= 0 :
-        # 打印信息
-        print("Word2Vector.peanut_solving : insufficient vectors !")
-        return
-
-    # 生成线程
-    thread = threading.Thread(target = _peanut_solving)
-    # 启动线程
-    thread.start()
-    # 继续选择输入
-    while True :
-        # 等待输入
-        user_input = input("Enter '0' to exit : ")
-        # 检查结果
-        if user_input == '0' :
-            vectors.break_loop = True; break
-    # 等待线程停止
-    thread.join()
-    # 清理标记
-    vectors.break_loop = False
-    # 打印信息
-    print("Word2Vector.peanut_solving : thread stopped !")
-
-def _gradient_solving() :
-    # 求解
-    max_delta = vectors.gradient_solving()
-    # 检查结果
-    if max_delta > 1.0e-5 :
-        # 保存数据
-        vectors.save(json_path + "vectors.json")
-        # 打印信息
-        print("Word2Vector._gradient_solving : fail to solve !")
-    else :
-        print("Word2Vector._gradient_solving : successfully done !")
-    # 保存数据
-    vectors.save(json_path + "vectors.json")
-
-def gradient_solving() :
-    # 检查参数
-    if len(vectors) <= 0 :
-        # 打印信息
-        print("Word2Vector.gradient_solving : insufficient vectors !")
-        return
-
-    # 生成线程
-    thread = threading.Thread(target = _gradient_solving)
-    # 启动线程
-    thread.start()
-    # 继续选择输入
-    while True :
-        # 等待输入
-        user_input = input("Enter '0' to exit : ")
-        # 检查结果
-        if user_input == '0' :
-            vectors.break_loop = True; break
-    # 等待线程停止
-    thread.join()
-    # 清理标记
-    vectors.break_loop = False
-    # 打印信息
-    print("Word2Vector.gradient_solving : thread stopped !")
-
-def peanut_calculation_example():
+def calculation_example(algorithm = 0):
     # 生成对象
     vectors.clear()
 
@@ -210,46 +141,22 @@ def peanut_calculation_example():
     vectors.add_word("运动", 175908)
     vectors.add_word("动运", 1122)
 
-    # 打印数据
-    for item in vectors.values() : item.dump(dump_delta = False)
-    # 设置标记位
-    vectors.init_matrix = True
-    # 求解
-    if vectors.peanut_solving() > 1.0e-5 :
-        print("Word2Vector.peanut_calculation_example : fail to solve !")
-    else :
-        print("Word2Vector.peanut_calculation_example : successfully done !")
-    # 打印数据
-    for item in vectors.values() : item.dump(dump_delta = False)
-
-def normal_calculation_example():
-    # 生成对象
-    vectors.clear()
-
-    # 生成对象
-    v1 = vectors.new_item("运")
-    v1.count = 937002
-    vectors.add_item(v1)
-
-    # 生成对象
-    v2 = vectors.new_item("动")
-    v2.count = 2363927
-    vectors.add_item(v2)
-
-    vectors.add_word("运运", 343)
-    vectors.add_word("动动", 1753)
-    vectors.add_word("运动", 175908)
-    vectors.add_word("动运", 1122)
+    # 名称
+    # 检查参数
+    if algorithm == 1 : name = "L₁"
+    elif algorithm == 2 : name = "L₂"
+    elif algorithm >= 3 : name = "L∞"
+    else : name = "classic"
 
     # 打印数据
     for item in vectors.values() : item.dump(dump_delta = False)
     # 设置标记位
     vectors.init_matrix = True
     # 求解
-    if vectors.solving() > 1.0e-5 :
-        print("Word2Vector.normal_calculation_example : fail to solve !")
+    if vectors.solving(algorithm) > 1.0e-5 :
+        print(f"Word2Vector.calculation_example(\"{name}\") : fail to solve !")
     else :
-        print("Word2Vector.normal_calculation_example : successfully done !")
+        print(f"Word2Vector.calculation_example(\"{name}\") : successfully done !")
     # 打印数据
     for item in vectors.values() : item.dump(dump_delta = False)
 
@@ -261,11 +168,13 @@ def main() :
             "init vectors",
             "load vectors",
             "save vectors",
-            "peanut solving vectors",
-            "classic solving vectors",
-            "gradient solving vectors",
+            "L₁ solving vectors",
+            "L₂ solving vectors",
+            "L∞ solving vectors",
             "verify vectors",
-            "peanut calculation example",
+            "L₁ calculation example",
+            "L₂ calculation example",
+            "L∞ calculation example",
             "classic calculation example",
         ]
 
@@ -301,22 +210,28 @@ def main() :
             save_vectors()
         elif user_input == '4' :
             # 求解
-            peanut_solving()
+            solving(1)
         elif user_input == '5' :
             # 求解
-            classic_solving()
+            solving(2)
         elif user_input == '6' :
             # 梯度下降法
-            gradient_solving()
+            solving(3)
         elif user_input == '7' :
             # 验证
             verify_vectors()
         elif user_input == '8' :
             # 计算例子
-            peanut_calculation_example()
+            calculation_example(1)
         elif user_input == '9' :
             # 计算例子
-            classic_calculation_example()
+            calculation_example(2)
+        elif user_input == '10':
+            # 计算例子
+            calculation_example(3)
+        elif user_input == '11':
+            # 计算例子
+            calculation_example(0)
         else :
             print("Word2Vector.main : unknown choice !")
 
