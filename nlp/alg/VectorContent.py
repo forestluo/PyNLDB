@@ -553,57 +553,63 @@ class VectorContent(ContentGroup) :
         # 返回结果
         return max_delta
 
-    def __copy_matrices(self, n, ais, bjs) :
+    # 初始化ais和bjs
+    def __init_matrices(self, n) :
+        # 生成ais
+        ais = cupy_random_matrix(n, self._dimension) \
+            if self._use_cupy else get_random_matrix(n, self._dimension)
+        # 生成bjs
+        bjs = cupy_random_matrix(n, self._dimension) \
+            if self._use_cupy else get_random_matrix(n, self._dimension)
+        # 归一化
+        ais = cupy_normalized(ais) \
+            if self._use_cupy else get_normalized(ais)
+        bjs = cupy_normalized(bjs) \
+            if self._use_cupy else get_normalized(bjs)
+        # 返回结果
+        return ais, bjs
+
+    # 从ais和bjs矩阵拷贝至Vector
+    def __copy_from(self, n, ais, bjs) :
         # 进度条
         pb = ProgressBar(n)
         # 开始
-        pb.begin(f"VectorContent.__copy_matrices : copy matrix[{n}] !")
+        pb.begin(f"VectorContent.__copy_from : copy matrix[{n}] !")
         # 循环处理
-        for item in self.values():
+        for item in self.values() :
             # 进度条
             pb.increase()
             # 获得索引值
             index = item.index
-            # 循环处理
-            # 复制过程不能破坏完整性
-            # 复制过程将隔离原始数据和计算数据
-            # 检查类型
-            if self._use_cupy :
-                if isinstance(item.matrix[0], cupy.ndarray) :
-                    ais[index] = item.matrix[0]  # Ai
-                elif isinstance(item.matrix[0], numpy.ndarray) :
-                    ais[index] = cupy.asarray(item.matrix[0])  # Ai
-                else:
-                    # 数值拷贝
-                    for k in range(item.matrix[0].shape[1]):
-                        ais[index][k] = item.matrix[0][k]  # Ai
-                # 检查类型
-                if isinstance(item.matrix[1], cupy.ndarray) :
-                    bjs[index] = item.matrix[1]  # Bj
-                if isinstance(item.matrix[1], numpy.ndarray) :
-                    bjs[index] = cupy.asarray(item.matrix[1])  # Ai
-                else:
-                    # 数值拷贝
-                    for k in range(item.matrix[1].shape[1]) :
-                        bjs[index] = item.matrix[1][k]  # Bj
+            # 检查参数
+            if not self._use_cupy :
+                item.matrix[0] = ais[index] # Ai
+                item.matrix[1] = bjs[index] # Bj
             else :
-                if isinstance(item.matrix[0], numpy.ndarray) :
-                    ais[index] = item.matrix[0]  # Ai
-                elif isinstance(item.matrix[0], cupy.ndarray) :
-                    ais[index] = cupy.asnumpy(item.matrix[0])  # Ai
-                else:
-                    # 数值拷贝
-                    for k in range(item.matrix[0].shape[1]):
-                        ais[index][k] = item.matrix[0][k]  # Ai
-                # 检查类型
-                if isinstance(item.matrix[1], numpy.ndarray) :
-                    bjs[index] = item.matrix[1]  # Ai
-                elif isinstance(item.matrix[1], cupy.ndarray) :
-                    bjs[index] = cupy.asnumpy(item.matrix[1])  # Bj
-                else:
-                    # 数值拷贝
-                    for k in range(item.matrix[1].shape[1]) :
-                        bjs[index] = item.matrix[1][k]  # Bj
+                item.matrix[0] = cupy.asnumpy(ais[index]) # Ai
+                item.matrix[1] = cupy.asnumpy(bjs[index]) # Bj
+        # 结束
+        pb.end()
+
+    # 从Vector拷贝至ais和bjs矩阵
+    def __copy_to(self, n, ais, bjs) :
+        # 进度条
+        pb = ProgressBar(n)
+        # 开始
+        pb.begin(f"VectorContent.__copy_to : copy matrix[{n}] !")
+        # 循环处理
+        for item in self.values() :
+            # 进度条
+            pb.increase()
+            # 获得索引值
+            index = item.index
+            # 检查参数
+            if not self._use_cupy :
+                ais[index] = item.matrix[0]  # Ai
+                bjs[index] = item.matrix[1]  # Bj
+            else :
+                ais[index] = cupy.asarray(item.matrix[0])  # Ai
+                bjs[index] = cupy.asarray(item.matrix[1])  # Bj
         # 结束
         pb.end()
 
@@ -624,30 +630,17 @@ class VectorContent(ContentGroup) :
         n = self._init_gammas()
         # 相关系数矩阵
         gammas = self.__get_gammas(n)
-
-        # 生成ais
-        ais = cupy_random_matrix(n, self._dimension) \
-            if self._use_cupy else get_random_matrix(n, self._dimension)
-        # 生成bjs
-        bjs = cupy_random_matrix(n, self._dimension) \
-            if self._use_cupy else get_random_matrix(n, self._dimension)
+        # 初始化矢量矩阵
+        ais, bjs = self.__init_matrices(n)
         # 检查标记位
-        if not self.init_matrix :
-            # 拷贝数据
-            self.__copy_matrices(n, ais, bjs)
-        else :
-            # 归一化
-            ais = cupy_normalized(ais) \
-                if self._use_cupy else get_normalized(ais)
-            bjs = cupy_normalized(bjs) \
-                if self._use_cupy else get_normalized(bjs)
+        if self.init_matrix :
             # 清理标志位
             self.init_matrix = False
-            # 初始化矩阵
-            # 将初始化值，拷贝至隔离区（数值拷贝）
-            self.traverse(VectorItem.init_matrix, [ais, bjs])
-            # 打印信息
-            print(f"VectorContent._linf_solving : matrix[{n}] initialized !")
+        else :
+            # 拷贝数据
+            self.__copy_to(n, ais, bjs)
+        # 打印信息
+        print(f"VectorContent._linf_solving : matrix[{n}] initialized !")
 
         # 搜索长度
         length = 0
@@ -717,11 +710,11 @@ class VectorContent(ContentGroup) :
                 print(f"\tloop[{j},{i},{length}] = {int((end - start) * 1000)} ms")
                 print(f"\tMax(|Δγᵢⱼ|) = ({row},{col},{positions[0][2]})")
                 if j > 1 : print(f"\tΔMax(|Δγᵢⱼ|) = {_last_delta - max_delta}")
-                print(f"\t……Σ(|Δγᵢⱼ|²) = {sigma}")
+                print(f"\t\tΣ(|Δγᵢⱼ|²) = {sigma}")
         # 清除标记
         self.break_loop = False
         # 设置数据矩阵
-        self.traverse(VectorItem.init_matrix, [ais, bjs])
+        self.__copy_from(n, ais, bjs)
         # 打印信息
         print(f"VectorContent._linf_solving : final matrix[{n}] copied !")
         # 返回结果
@@ -744,30 +737,17 @@ class VectorContent(ContentGroup) :
         n = self._init_gammas()
         # 相关系数矩阵
         gammas = self.__get_gammas(n)
-
-        # 生成ais
-        ais = cupy_random_matrix(n, self._dimension) \
-            if self._use_cupy else get_random_matrix(n, self._dimension)
-        # 生成bjs
-        bjs = cupy_random_matrix(n, self._dimension) \
-            if self._use_cupy else get_random_matrix(n, self._dimension)
+        # 初始化矢量矩阵
+        ais, bjs = self.__init_matrices(n)
         # 检查标记位
-        if not self.init_matrix :
-            # 拷贝数据
-            self.__copy_matrices(n, ais, bjs)
-        else :
-            # 归一化
-            ais = cupy_normalized(ais) \
-                if self._use_cupy else get_normalized(ais)
-            bjs = cupy_normalized(bjs) \
-                if self._use_cupy else get_normalized(bjs)
+        if self.init_matrix :
             # 清理标志位
             self.init_matrix = False
-            # 初始化矩阵
-            # 将初始化值，拷贝至隔离区（数值拷贝）
-            self.traverse(VectorItem.init_matrix, [ais, bjs])
-            # 打印信息
-            print(f"VectorContent._l2_solving : matrix[{n}] initialized !")
+        else :
+            # 拷贝数据
+            self.__copy_to(n, ais, bjs)
+        # 打印信息
+        print(f"VectorContent._l2_solving : matrix[{n}] initialized !")
 
         # 循环计数
         i = 0; j = 0
@@ -837,12 +817,12 @@ class VectorContent(ContentGroup) :
                 if j > 1 : print(f"\t∇Σ(|Δγᵢⱼ|²) = {_last_delta - max_delta}")
                 row = int(positions[0][0])
                 col = int(positions[0][1])
-                print(f"\t……Σ|Δγᵢⱼ| = {sigma}")
-                print(f"\t……Max(|Δγᵢⱼ|) = ({row},{col},{positions[0][2]})")
+                print(f"\t\tΣ|Δγᵢⱼ| = {sigma}")
+                print(f"\t\tMax(|Δγᵢⱼ|) = ({row},{col},{positions[0][2]})")
         # 清除标记
         self.break_loop = False
         # 设置数据矩阵
-        self.traverse(VectorItem.init_matrix, [ais, bjs])
+        self.__copy_from(n, ais, bjs)
         # 打印信息
         print(f"VectorContent._l2_solving : final matrix[{n}] copied !")
         # 返回结果
@@ -865,30 +845,17 @@ class VectorContent(ContentGroup) :
         n = self._init_gammas()
         # 相关系数矩阵
         gammas = self.__get_gammas(n)
-
-        # 生成ais
-        ais = cupy_random_matrix(n, self._dimension) \
-            if self._use_cupy else get_random_matrix(n, self._dimension)
-        # 生成bjs
-        bjs = cupy_random_matrix(n, self._dimension) \
-            if self._use_cupy else get_random_matrix(n, self._dimension)
+        # 初始化矢量矩阵
+        ais, bjs = self.__init_matrices(n)
         # 检查标记位
-        if not self.init_matrix :
-            # 拷贝数据
-            self.__copy_matrices(n, ais, bjs)
-        else :
-            # 归一化
-            ais = cupy_normalized(ais) \
-                if self._use_cupy else get_normalized(ais)
-            bjs = cupy_normalized(bjs) \
-                if self._use_cupy else get_normalized(bjs)
+        if self.init_matrix :
             # 清理标志位
             self.init_matrix = False
-            # 初始化矩阵
-            # 将初始化值，拷贝至隔离区（数值拷贝）
-            self.traverse(VectorItem.init_matrix, [ais, bjs])
-            # 打印信息
-            print(f"VectorContent._l1_solving : matrix[{n}] initialized !")
+        else :
+            # 拷贝数据
+            self.__copy_to(n, ais, bjs)
+        # 打印信息
+        print(f"VectorContent._l1_solving : matrix[{n}] initialized !")
 
         # 乘数
         multiple = 1
@@ -952,14 +919,14 @@ class VectorContent(ContentGroup) :
                 print(f"\tloop[{j},{i},{multiple}] = {int((end - start) * 1000)} ms")
                 print(f"\tΣ|Δγᵢⱼ| = {max_delta}")
                 if j > 1 : print(f"\tΔΣ|Δγᵢⱼ| = {_last_delta - max_delta}")
-                print(f"\t……Σ(|Δγᵢⱼ|²) = {sigma}")
+                print(f"\t\tΣ(|Δγᵢⱼ|²) = {sigma}")
                 row = int(positions[0][0])
                 col = int(positions[0][1])
-                print(f"\t……Max(|Δγᵢⱼ|) = ({row},{col},{positions[0][2]})")
+                print(f"\t\tMax(|Δγᵢⱼ|) = ({row},{col},{positions[0][2]})")
         # 清除标记
         self.break_loop = False
         # 设置数据矩阵
-        self.traverse(VectorItem.init_matrix, [ais, bjs])
+        self.__copy_from(n, ais, bjs)
         # 打印信息
         print(f"VectorContent._l1_solving : final matrix[{n}] copied !")
         # 返回结果

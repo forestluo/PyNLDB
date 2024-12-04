@@ -144,30 +144,9 @@ class VectorItem(ContentItem) :
     # 给矩阵赋予随机数值
     @staticmethod
     def init_matrix(t, matrix = None) :
-        # 检查参数
-        if matrix is None :
-            # 设置矩阵
-            t.__matrix = 1 - 2 * \
-                numpy.random.random(t.__matrix.shape)
-            return
-        # 检查类型
-        if isinstance(matrix[0], numpy.ndarray) :
-            t.__matrix[0] = matrix[0][t.index] # Ai
-        elif isinstance(matrix[0], cupy.ndarray) :
-            t.__matrix[0] = cupy.asnumpy(matrix[0][t.index]) # Ai
-        else :
-            # 数值拷贝
-            for k in range(matrix[0].shape[1]) :
-                t.__matrix[0][k] = matrix[0][t.index][k]  # Ai
-        # 检查类型
-        if isinstance(matrix[1], numpy.ndarray) :
-            t.__matrix[1] = matrix[1][t.index] # Bj
-        elif isinstance(matrix[1], cupy.ndarray) :
-            t.__matrix[1] = cupy.asnumpy(matrix[1][t.index]) # Bj
-        else :
-            # 数值拷贝
-            for k in range(matrix[1].shape[1]) :
-                t.__matrix[1][k] = matrix[1][t.index][k]  # Bj
+        # 设置矩阵
+        t.__matrix = 1 - 2 * \
+            numpy.random.random(t.__matrix.shape)
 
     # 求相关系数
     # 按照公式正常处置
