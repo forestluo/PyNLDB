@@ -61,11 +61,6 @@ class VectorContent(ContentGroup) :
         # 返回结果
         return None
 
-    # 清理
-    def clear_words(self) :
-        # 调用函数
-        return self._words.clear()
-
     # 加载数据
     def load_words(self, file_name) :
         # 再调用父类加载数据

@@ -28,8 +28,6 @@ def load_vectors() :
     else :
         # 打印信息
         print("Word2Vector.load_vectors : vectors.json has been loaded !")
-    # 清理
-    vectors.clear_words()
     # 加载数文件
     if vectors.load_words(json_path + "words2.json") <= 0 :
         # 打印信息
