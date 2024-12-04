@@ -215,7 +215,7 @@ class VectorContent(ContentGroup) :
         # 初始化索引值
         for index, t in enumerate(self.values()) :
             # 进度条
-            pb.inrease()
+            pb.increase()
             # 设置索引
             t.index = index
         # 结束
