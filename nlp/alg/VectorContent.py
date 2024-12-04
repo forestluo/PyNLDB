@@ -47,12 +47,10 @@ class VectorContent(ContentGroup) :
 
     # 加载数据
     def load(self, file_name):
-        # 清理矢量
-        super().clear()
-        # 再调用父类加载数据
-        super().load(file_name)
         # 设置初始化标志位
         self.init_matrix = False
+        # 再调用父类加载数据
+        return super().load(file_name)
 
     # 通过索引获得词
     def get_item(self, index) :
@@ -62,6 +60,16 @@ class VectorContent(ContentGroup) :
             if item.index == index : return item
         # 返回结果
         return None
+
+    # 清理
+    def clear_words(self) :
+        # 调用函数
+        return self._words.clear()
+
+    # 加载数据
+    def load_words(self, file_name) :
+        # 再调用父类加载数据
+        return self._words.load(file_name)
 
     # 获得词汇描述
     def get_word(self, value) :

@@ -18,10 +18,23 @@ def init_vectors() :
         print("Word2Vector.init_vectors : all files have been loaded !")
 
 def load_vectors() :
+    # 清理
+    vectors.clear()
     # 加载数文件
-    if not vectors.load(json_path + "vectors.json") :
+    if vectors.load(json_path + "vectors.json") <= 0 :
         # 打印信息
         print("Word2Vector.load_vectors : fail to load file !")
+        return
+    else :
+        # 打印信息
+        print("Word2Vector.load_vectors : vectors.json has been loaded !")
+    # 清理
+    vectors.clear_words()
+    # 加载数文件
+    if vectors.load_words(json_path + "words2.json") <= 0 :
+        # 打印信息
+        print("Word2Vector.load_vectors : fail to load file !")
+        return
     else :
         # 打印信息
         print("Word2Vector.load_vectors : vectors.json has been loaded !")
