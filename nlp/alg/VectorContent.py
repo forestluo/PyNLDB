@@ -208,8 +208,18 @@ class VectorContent(ContentGroup) :
         # 打印信息
         print("VectorContent._init_gammas : %d row(s) left !" % len(self))
         print("VectorContent._init_gammas : useless vectors removed !")
+        # 进度条
+        pb = ProgressBar(len(self))
+        # 开始
+        pb.begin(f"VectorContent._init_gammas : reindex vectors !")
         # 初始化索引值
-        for index, t in enumerate(self.values()) : t.index = index
+        for index, t in enumerate(self.values()) :
+            # 进度条
+            pb.inrease()
+            # 设置索引
+            t.index = index
+        # 结束
+        pb.end(f"VectorContent._init_gammas : {len(self)} vector(s) indexed !")
         # 返回结果
         return len(self)
 
