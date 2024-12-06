@@ -25,9 +25,9 @@ class VectorContent(ContentGroup) :
         # 循环次数
         self._max_loop = 100
         # 误差
-        self._error = 0.00001
+        self._error = 1.0e-6
         # 最小记录次数
-        self._min_count = 1024
+        self._min_count = 512
         # 主动中断循环
         self.break_loop = False
         # 设置词汇组
