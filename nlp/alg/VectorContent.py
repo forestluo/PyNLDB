@@ -2,6 +2,7 @@
 
 import time
 
+import cupy
 import numpy
 
 from nlp.alg.Scripts import *
@@ -566,22 +567,6 @@ class VectorContent(ContentGroup) :
         # 返回结果
         return max_delta
 
-    # 初始化ais和bjs
-    def __init_matrices(self, n) :
-        # 生成ais
-        ais = cupy_random_matrix(n, self._dimension) \
-            if self._use_cupy else get_random_matrix(n, self._dimension)
-        # 生成bjs
-        bjs = cupy_random_matrix(n, self._dimension) \
-            if self._use_cupy else get_random_matrix(n, self._dimension)
-        # 归一化
-        ais = cupy_normalized(ais) \
-            if self._use_cupy else get_normalized(ais)
-        bjs = cupy_normalized(bjs) \
-            if self._use_cupy else get_normalized(bjs)
-        # 返回结果
-        return ais, bjs
-
     # 从ais和bjs矩阵拷贝至Vector
     def __copy_from(self, n, ais, bjs) :
         # 进度条
@@ -625,6 +610,20 @@ class VectorContent(ContentGroup) :
                 bjs[index] = cupy.asarray(item.matrix[1])  # Bj
         # 结束
         pb.end()
+
+    # 初始化ais和bjs
+    def __init_matrices(self, n) :
+        # 生成ais
+        ais = cupy_random_matrix(n, self._dimension) \
+            if self._use_cupy else get_random_matrix(n, self._dimension)
+        # 生成bjs
+        bjs = cupy_random_matrix(n, self._dimension) \
+            if self._use_cupy else get_random_matrix(n, self._dimension)
+        # 归一化
+        ais = cupy_normalized(ais) if self._use_cupy else get_normalized(ais)
+        bjs = cupy_normalized(bjs) if self._use_cupy else get_normalized(bjs)
+        # 返回结果
+        return ais, bjs
 
     # 完成一次全量计算
     def _linf_solving(self) :

@@ -1,5 +1,5 @@
 function [words] = ReadWords(fileName)
-    % 读取tokens.json文件
+    % 读取words.json文件
     json_path = '..\json\';
     % 打开文件
     [file, message] = fopen(strcat(json_path, fileName), 'r');
