@@ -1,5 +1,37 @@
 # PyNLDB
 
+2024年12月13日
+
+（1）对代码结构做了调整。
+
+Word2Vector : 单独成为一个算法功能。
+
+W2VOperator : 作为一个Word2Vector的工具使用。
+
+    "load words"：       加载words2.json。
+    "load cores"：       加载cores.json。
+    "load example"：     加载内部例程数据；用于校验算法。
+    "load dictionary"：  加载dictionary.json。
+    "load vectors"：     加载vectors.json。
+    "save vectors"：     保存vectors.json。
+    "auto initialize"：  自动初始化原始数据。为进一步计算做准备。
+    "solving vectors"：  选择算法类型，并进行计算。
+    "verify vectors"：   校验计算结果。
+
+（2）增加了两个分词算法。
+
+SegmentTool : 分词工具。均需要依赖cores.json词典。
+
+SegmentTool.l2r : 从左至右，按照最大匹配法进行分词。
+
+SegmentTool.r2l : 从右至左，按照最大匹配法进行分词。
+
+SegmentTool.mid : 从中间某个位置分成两段。然后左侧段使用从右至左最大匹配算法，右侧段使用从左至右最大匹配算法。
+
+（3）将相关系数计算合并至GammaTool中
+
+---
+
 2024年12月3日
 
 （1）对代码的结构做调整。所有的工具命令都迁移至tool目录中。
