@@ -71,3 +71,53 @@ class WordContent(ContentGroup) :
                 elif item.is_chinese() :
                     # 增加项目
                     self[word] = self.new_item(word, item.count)
+
+    # 初始化相关系数
+    def init_gammas(self) :
+        # 总数
+        total = len(self)
+        # 进度条
+        pb = ProgressBar(total)
+        # 开始
+        pb.begin(f"WordContent.init_gammas : init gammas[{total}] !")
+        # 初始化相关系数
+        for item in self.values() :
+            # 进度条
+            pb.increase()
+            # 获得内容
+            f = item.count
+            c = item.content
+            # 检查数值
+            if f <= 0 :
+                item.gamma = 0.0; continue
+
+            # 检查数据
+            assert len(c) == 2
+
+            # 获得单词
+            c1 = c[:1]
+            # 检查数据
+            if c1 not in self :
+                # 设置为无效值
+                item.gamma = 0.0; continue
+            # 获得频次
+            f1 = self[c1].count
+            # 检查数据
+            if f1 <= 0 :
+                item.gamma = 0.0; continue
+
+            # 获得单词
+            c2 = c[-1]
+            # 检查数据
+            if c2 not in self :
+                # 设置为无效值
+                item.gamma = 0.0; continue
+            # 获得频次
+            f2 = self[c2].count
+            # 检查数据
+            if f2 <= 0 :
+                item.gamma = 0.0; continue
+
+            # 计算相关系数
+            item.gamma = 0.5 * float(f) \
+                * (1.0 / float(f1) + 1.0 / float(f2))

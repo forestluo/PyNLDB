@@ -3,6 +3,9 @@
 __all__ = \
     [
         "Neuron",
-        "VectorItem",
-        "VectorContent",
+        "Word2Vector",
+
+        "CL1Solution",
+        "CL2Solution",
+        "CLinfSolution",
     ]
