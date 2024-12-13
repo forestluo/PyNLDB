@@ -55,7 +55,7 @@ def load_dictionary() :
 
 def save_vectors() :
     # 加载数文件
-    w2v.save(json_path + "vectors.json")
+    w2v.save_vectors(json_path + "vectors.json")
     # 打印信息
     print("W2VOperator.save_vectors : vectors.json has been saved !")
 
