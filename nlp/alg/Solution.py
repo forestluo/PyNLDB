@@ -23,6 +23,17 @@ class Solution(Thread) :
         # 矩阵维度
         self._dimension = w2v.dimension
 
+    # 从矢量组拷贝至计算域
+    def _copy_to(self) :
+        # 打印信息
+        print(f"Solution._copy_to : do nothing !")
+
+    # 从计算域拷贝至矢量组
+    def _copy_from(self) :
+        # 打印信息
+        print(f"Solution._copy_from : do nothing !")
+
+    # 新建相关系数矩阵
     def __new_gamma(self) :
         # 创建矢量矩阵
         # 只有这样定义二维数组才能防止“粘连”

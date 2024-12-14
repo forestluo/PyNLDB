@@ -26,11 +26,14 @@ class NumpySolution(Solution) :
         super().__init__(w2v)
 
     # 从Vector拷贝至ais和bjs矩阵
-    def __copy_to(self, ais, bjs) :
+    def _copy_to(self, ais = None, bjs = None) :
+        # 检查参数
+        assert ais is not None
+        assert bjs is not None
         # 进度条
         pb = ProgressBar(self._size)
         # 开始
-        pb.begin(f"NumpySolution.__copy_to : copy matrix[{self._size}] !")
+        pb.begin(f"NumpySolution._copy_to : copy square[{self._size}] matrix !")
         # 循环处理
         for item in self._w2v.vectors() :
             # 进度条
@@ -41,14 +44,17 @@ class NumpySolution(Solution) :
             ais[index] = numpy.asarray(item.matrix[0])  # Ai
             bjs[index] = numpy.asarray(item.matrix[1])  # Bj
         # 结束
-        pb.end(f"NumpySolution.__copy_to : matrix[{self._size}] copied !")
+        pb.end(f"NumpySolution._copy_to : square[{self._size}] matrix copied !")
 
     # 从ais和bjs矩阵拷贝至Vector
-    def __copy_from(self, ais, bjs) :
+    def _copy_from(self, ais = None, bjs = None) :
+        # 检查参数
+        assert ais is not None
+        assert bjs is not None
         # 进度条
         pb = ProgressBar(self._size)
         # 开始
-        pb.begin(f"NumpySolution.__copy_from : copy matrix[{self._size}] !")
+        pb.begin(f"NumpySolution._copy_from : copy square[{self._size}] matrix !")
         # 循环处理
         for item in self._w2v.vectors() :
             # 进度条
@@ -59,7 +65,7 @@ class NumpySolution(Solution) :
             item.matrix[0] = ais[index].tolist() # Ai
             item.matrix[1] = bjs[index].tolist() # Bj
         # 结束
-        pb.end(f"NumpySolution.__copy_from : matrix[{self._size}] copied !")
+        pb.end(f"NumpySolution._copy_from : matrix[{self._size}] copied !")
 
     # 必须重载
     def _solving(self, gammas, ais, bjs) :
@@ -86,7 +92,7 @@ class NumpySolution(Solution) :
             bjs = numpy.zeros((self._size, self._dimension))
             # 拷贝数据
             # 由存储对象拷贝至矢量组
-            self.__copy_to(ais, bjs)
+            self._copy_to(ais, bjs)
         else :
             # 初始化ais和bjs
             # 打印信息
@@ -115,6 +121,6 @@ class NumpySolution(Solution) :
             print(f"NumpySolution._run : successfully done !")
 
         # 将数据拷贝回至矢量组
-        self.__copy_from(ais, bjs)
+        self._copy_from(ais, bjs)
         # 打印信息
         print(f"NumpySolution._run : result[{self._size}] copied !")

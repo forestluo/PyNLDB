@@ -13,6 +13,7 @@ class SimpleSolution(Solution) :
         # 调用父类初始化
         super().__init__(w2v)
 
+    # 新建误差矩阵
     def __new_delta(self) :
         # 创建矢量矩阵
         # 只有这样定义二维数组才能防止“粘连”

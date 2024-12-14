@@ -442,7 +442,8 @@ def main() :
     # 生成对象
     w2v = Word2Vector(32)
 
-    options = 0
+    # 选项
+    options = 2
     # 检查选项
     if options == 0 :
         # 加载例程
@@ -474,7 +475,7 @@ def main() :
     # 打印信息
     print("Word2Vector.main : successfully loaded !")
     # 获得求解器
-    solution = w2v.get_solution("classic")
+    solution = w2v.get_solution("cupy.l2")
     # 检查结果
     if solution is None :
         # 打印信息
