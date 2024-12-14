@@ -16,9 +16,7 @@ class VectorItem(ContentItem) :
         # 矩阵
         # 只有这样定义二维数组才能防止数的粘连
         # 即，数组中有数值之间形成了完全绑定关系
-        self.__matrix = [[]] * 2
-        self.__matrix[0] = [1.0] * dimension
-        self.__matrix[1] = [1.0] * dimension
+        self.__matrix = [[1.0 for _ in range(dimension)] for _ in range(2)]
 
     @property
     def norm(self) :

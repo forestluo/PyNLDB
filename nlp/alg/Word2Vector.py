@@ -44,11 +44,19 @@ class Word2Vector :
 
     @property
     def wsize(self) :
+        # 返回结果
         return len(self._words)
 
     @property
     def vsize(self) :
+        # 返回结果
         return len(self._vectors)
+
+    def clear(self) :
+        # 清理
+        self._words.clear()
+        # 清理
+        self._vectors.clear()
 
     def words(self) :
         # 返回结果
@@ -165,11 +173,10 @@ class Word2Vector :
         for item in self.words() :
             # 进度条
             pb.increase()
-            # 获得内容
-            f = item.count
+            # 获得频次
             c = item.content
             # 检查数值
-            if f <= 0 :
+            if item.count <= 0 :
                 item.gamma = 0.0; continue
 
             # 检查数据
@@ -177,34 +184,34 @@ class Word2Vector :
 
             # 获得单词
             c1 = c[:1]
+            # 获得矢量
+            v1 = self.vector(c1)
             # 检查数据
-            if c1 not in self._vectors :
-                # 设置为无效值
+            if v1 is None :
                 item.gamma = 0.0; continue
-            # 获得频次
-            f1 = self._vectors[c1].count
             # 检查数据
-            if f1 <= 0 :
+            if v1.count <= 0 :
                 item.gamma = 0.0; continue
 
             # 获得单词
             c2 = c[-1]
+            # 获得矢量
+            v2 = self.vector(c2)
             # 检查数据
-            if c2 not in self._vectors :
+            if v2 is None :
                 # 设置为无效值
                 item.gamma = 0.0; continue
-            # 获得频次
-            f2 = self._vectors[c2].count
             # 检查数据
-            if f2 <= 0 :
+            if v2.count <= 0 :
                 item.gamma = 0.0; continue
 
             # 设置标记位
-            self._vectors[c1].index |= 0x01
-            self._vectors[c2].index |= 0x02
+            v1.index |= 0x01
+            # 设置标记位
+            v2.index |= 0x02
             # 计算相关系数
-            item.gamma = 0.5 * float(f) \
-                * (1.0 / float(f1) + 1.0 / float(f2))
+            item.gamma = 0.5 * float(item.count) \
+                * (1.0 / float(v1.count) + 1.0 / float(v2.count))
         # 结束
         pb.end()
 
@@ -341,21 +348,17 @@ class Word2Vector :
             size = (len(v.matrix[0]) +
                 len(v.matrix[1])) // 2
             # 检查数据
-            if size != dimension :
-                # 检查参数
-                if dimension < 0 :
-                    dimension = size
-                # 检查维度
-                elif size != dimension :
-                    # 打印信息
-                    print(f"Word2Vector.load_vectors : incorrect dimension{size} !")
-                    return -1
+            if dimension < 0 : dimension = size
+            elif size != dimension :
+                # 打印信息
+                print(f"Word2Vector.load_vectors : incorrect dimension({size}) !")
+                return -1
         # 结束
         pb.end()
         # 检查维度
         if dimension < 2 :
             # 打印信息
-            print(f"Word2Vector.load_vectors : incorrect dimension{dimension} !")
+            print(f"Word2Vector.load_vectors : incorrect dimension({dimension}) !")
             return -1
         # 设置矢量
         self._vectors = vectors
@@ -433,35 +436,45 @@ class Word2Vector :
         # 打印信息
         print(f"Word2Vector.load_example : index of vectors rebuilt !")
 
+# 测试代码
 def main() :
 
     # 生成对象
     w2v = Word2Vector(32)
-    # 加载例程
-    #w2v.load_example()
-    """
-    # 初始化
-    if not w2v.initialize("..\\..\\json\\") :
+
+    options = 0
+    # 检查选项
+    if options == 0 :
+        # 加载例程
+        w2v.load_example()
+    elif options == 1 :
+        # 初始化
+        if not w2v.initialize("..\\..\\json\\") :
+            # 打印信息
+            print("Word2Vector.main : fail to initialize !")
+            return
         # 打印信息
-        print("Word2Vector.main : fail to initialize !")
-        return
-    # 打印信息
-    print("Word2Vector.main : successfully initialized !")
-    """
-    # 加载数据
-    if w2v.load_vectors("..\\..\\json\\vectors.json") <= 0 :
+        print("Word2Vector.main : successfully initialized !")
+    elif options == 2 :
+        # 加载数据
+        if w2v.load_vectors("..\\..\\json\\vectors.json") <= 0 :
+            # 打印信息
+            print("Word2Vector.main : fail to load vectors.json !")
+            return
+        # 加载数据
+        if w2v.load_words("..\\..\\json\\cores.json") <= 0 :
+            # 打印信息
+            print("Word2Vector.main : fail to load cores.json !")
+            return
+    else :
         # 打印信息
-        print("Word2Vector.main : fail to load vectors.json !")
+        print(f"Word2Vector.main : unknown options({options}) !")
         return
-    # 加载数据
-    if w2v.load_words("..\\..\\json\\cores.json") <= 0 :
-        # 打印信息
-        print("Word2Vector.main : fail to load cores.json !")
-        return
+
     # 打印信息
     print("Word2Vector.main : successfully loaded !")
     # 获得求解器
-    solution = w2v.get_solution("cupy.l2")
+    solution = w2v.get_solution("classic")
     # 检查结果
     if solution is None :
         # 打印信息
@@ -478,8 +491,10 @@ def main() :
     # 打印信息
     print("Word2Vector.main : successfully stopped solving !")
 
-    # 打印数据
-    #for v in w2v.vectors() : v.dump()
+    # 检查参数
+    if options == 0 :
+        # 打印数据
+        for v in w2v.vectors() : v.dump()
 
 if __name__ == '__main__':
     try:

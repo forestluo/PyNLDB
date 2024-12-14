@@ -11,29 +11,19 @@ class SimpleSolution(Solution) :
     # 初始化
     def __init__(self, w2v) :
         # 调用父类初始化
-        super().__init__()
-        # 设置对象
-        self._w2v = w2v
-        # 误差
-        self._error = 1.0e-5
-        # 循环次数
-        self._max_loop = 100
-        # 矩阵尺寸
-        self._size = w2v.vsize
-        # 矩阵维度
-        self._dimension = w2v.dimension
+        super().__init__(w2v)
+
+    def __new_delta(self) :
+        # 创建矢量矩阵
+        # 只有这样定义二维数组才能防止“粘连”
+        # 即，数组中有数值之间形成了完全绑定关系
+        return [[[0.0
+            for _ in range(self._dimension)]
+            for _ in range(2)] for _ in range(self._size)]
 
     def _solving(self) :
         # 打印信息
-        print(f"SimpleSolution._solving : dump properties !")
-        print(f"\terror = {self._error}")
-        print(f"\tmax_loop = {self._max_loop}")
-        print(f"\tvsize = {self._w2v.vsize}")
-        print(f"\twsize = {self._w2v.wsize}")
-        print(f"\tdimension = {self._w2v.dimension}")
-        print(f"\tmin_count = {self._w2v.min_count}")
-        print(f"\tcopy_data = {self._w2v.copy_data}")
-
+        self.dump()
         # 重新建立索引
         self._w2v.index_vectors()
         # 打印信息
@@ -47,16 +37,9 @@ class SimpleSolution(Solution) :
         while i < self._max_loop :
             # 检查标记
             if self._break_loop : break
-            # 创建矢量矩阵
-            # 只有这样定义二维数组才能防止数的粘连
-            # 即，数组中有数值之间形成了完全绑定关系
-            delta = [[[]]] * self._size
-            # 循环处理
-            for k in range(self._size) :
-                delta[k] = [[]] * 2
-                delta[k][0] = [0.0] * self._dimension
-                delta[k][1] = [0.0] * self._dimension
 
+            # 获得误差矩阵
+            delta = self.__new_delta()
             # 计数器加一
             i += 1; j += 1
             # 运算结果
