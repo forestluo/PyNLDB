@@ -6,6 +6,7 @@ __all__ = \
         "RawContent",
         "TokenContent",
         "WordContent",
+        "VectorContent",
         "SegmentContent",
         "SentenceContent",
         "DictionaryContent",

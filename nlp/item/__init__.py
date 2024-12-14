@@ -7,6 +7,7 @@ __all__ = \
         "CoreItem",
         "TokenItem",
         "WordItem",
+        "VectorItem",
         "SegmentItem",
         "SentenceItem",
         "DictionaryItem",
