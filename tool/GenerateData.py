@@ -15,8 +15,8 @@ from nlp.content.SegmentContent import *
 from nlp.content.SentenceContent import *
 from nlp.content.DictionaryContent import *
 
-from nldb.sqlserver.SQLServerRaw import *
-from nldb.sqlserver.SQLServerDictionary import *
+from nldb.sqlserver.SQLRaw import *
+from nldb.sqlserver.SQLDictionary import *
 
 json_path = "..\\json\\"
 
@@ -24,7 +24,7 @@ def generate_raw() :
     # 打印信息
     print("GenerateData.generate_raw : generate raw.json !")
     # 生成对象
-    raw = SQLServerRaw()
+    raw = SQLRaw()
     # 打开数据库
     raw.open()
     # 保存数据文件
@@ -38,7 +38,7 @@ def generate_dict() :
     # 打印信息
     print("GenerateData.generate_dict : generate dict.json !")
     # 生成对象
-    dictionary = SQLServerDictionary()
+    dictionary = SQLDictionary()
     # 打开数据库
     dictionary.open()
     # 保存数据文件

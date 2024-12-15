@@ -3,12 +3,12 @@
 __all__ = \
     [
         "SQLite3",
-        "NLDB3Content",
+        "SQContent.py",
 
-        "NLDB3Raw",
-        "NLDB3Tokens",
-        "NLDB3Words",
-        "NLDB3Segments",
-        "NLDB3Sentences",
-        "NLDB3Dictionary",
+        "SQRaw.py",
+        "SQTokens.py",
+        "SQWords.py",
+        "SQSegments.py",
+        "SQSentences.py",
+        "SQDictionary.py",
     ]

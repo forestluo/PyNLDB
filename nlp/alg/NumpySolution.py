@@ -21,9 +21,9 @@ def _init_random_matrix(size, dimension) :
 
 class NumpySolution(Solution) :
     # 初始化
-    def __init__(self, w2v) :
+    def __init__(self, vz) :
         # 调用父类初始化
-        super().__init__(w2v)
+        super().__init__(vz)
 
     # 从Vector拷贝至ais和bjs矩阵
     def _copy_to(self, ais = None, bjs = None) :
@@ -35,7 +35,7 @@ class NumpySolution(Solution) :
         # 开始
         pb.begin(f"NumpySolution._copy_to : copy square[{self._size}] matrix !")
         # 循环处理
-        for item in self._w2v.vectors() :
+        for item in self._vz.vectors() :
             # 进度条
             pb.increase()
             # 获得索引值
@@ -56,7 +56,7 @@ class NumpySolution(Solution) :
         # 开始
         pb.begin(f"NumpySolution._copy_from : copy square[{self._size}] matrix !")
         # 循环处理
-        for item in self._w2v.vectors() :
+        for item in self._vz.vectors() :
             # 进度条
             pb.increase()
             # 获得索引值
@@ -77,11 +77,11 @@ class NumpySolution(Solution) :
     # 执行函数
     def _run(self) :
         # 矩阵尺寸
-        self._size = self._w2v.vsize
+        self._size = self._vz.vsize
         # 矩阵维度
-        self._dimension = self._w2v.dimension
+        self._dimension = self._vz.dimension
         # 检查标记位
-        if self._w2v.copy_data :
+        if self._vz.copy_data :
             # 打印信息
             print(f"NumpySolution._run : initialize ais !")
             # 创建矢量矩阵
@@ -109,7 +109,7 @@ class NumpySolution(Solution) :
         # 清理标记
         self._break_loop = False
         # 获得相关系数
-        gammas = self._get_gammas()
+        gammas = self._vz.get_gammas(self._error)
         # 执行解方程过程
         result = self._solving(numpy.asarray(gammas), ais, bjs)
         # 检查结果

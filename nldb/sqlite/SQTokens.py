@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from nldb.sqlite.NLDB3Content import *
+from nldb.sqlite.SQContent import *
 
-class NLDB3Tokens(NLDB3Content) :
+class SQTokens(SQContent) :
     # 初始化函数
     def __init__(self) :
         # 调用父类函数
@@ -20,5 +20,4 @@ class NLDB3Tokens(NLDB3Content) :
         assert isinstance(item, TokenItem)
         # 返回结果
         return self._insert_table(self._table_name,
-        "(length, count, content, unicode) VALUES (?, ?, ?, ?)",
-        (item.length, item.count, item.content, ord(item.content)))
+            {"length" : item.length, "count" : item.count, "content" : item.content, "unicode" : ord(item.content)})

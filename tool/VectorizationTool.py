@@ -1,73 +1,73 @@
 # -*- coding: utf-8 -*-
 import threading
 
-from nlp.alg.Word2Vector import *
+from nlp.alg.WordVectorization import *
 
 # 路径
 json_path = "..\\json\\"
 # 生成对象
-w2v = Word2Vector(32)
+w2v = WordVectorization(32)
 
 def auto_initialize() :
     # 加载数文件
     if not w2v.initialize(json_path) :
         # 打印信息
-        print("W2VOperator.auto_initialize : fail to load files !")
+        print("VectorizationTool.auto_initialize : fail to load files !")
     else :
         # 打印信息
-        print("W2VOperator.auto_initialize : all files have been loaded !")
+        print("VectorizationTool.auto_initialize : all files have been loaded !")
 
 def load_example() :
     # 加载例程数据
     w2v.load_example()
     # 打印信息
-    print("W2VOperator.load_example : example was loaded !")
+    print("VectorizationTool.load_example : example was loaded !")
 
 def load_words() :
     # 加载数文件
     if w2v.load_words(json_path + "words2.json") <= 0 :
         # 打印信息
-        print("W2VOperator.load_words : fail to load file !")
+        print("VectorizationTool.load_words : fail to load file !")
         return
     else :
         # 打印信息
-        print("W2VOperator.load_words : words2.json has been loaded !")
+        print("VectorizationTool.load_words : words2.json has been loaded !")
 
 def load_cores() :
     # 加载数文件
     if w2v.load_words(json_path + "cores.json") <= 0 :
         # 打印信息
-        print("W2VOperator.load_cores : fail to load file !")
+        print("VectorizationTool.load_cores : fail to load file !")
         return
     else :
         # 打印信息
-        print("W2VOperator.load_cores : cores.json has been loaded !")
+        print("VectorizationTool.load_cores : cores.json has been loaded !")
 
 def load_dictionary() :
     # 加载数文件
     if w2v.load_words(json_path + "dictionary.json") <= 0 :
         # 打印信息
-        print("W2VOperator.load_dictionary : fail to load file !")
+        print("VectorizationTool.load_dictionary : fail to load file !")
         return
     else :
         # 打印信息
-        print("W2VOperator.load_dictionary : dictionary.json has been loaded !")
+        print("VectorizationTool.load_dictionary : dictionary.json has been loaded !")
 
 def save_vectors() :
     # 加载数文件
     w2v.save_vectors(json_path + "vectors.json")
     # 打印信息
-    print("W2VOperator.save_vectors : vectors.json has been saved !")
+    print("VectorizationTool.save_vectors : vectors.json has been saved !")
 
 def load_vectors() :
     # 加载数文件
     if w2v.load_vectors(json_path + "vectors.json") <= 0 :
         # 打印信息
-        print("W2VOperator.load_vectors : fail to load file !")
+        print("VectorizationTool.load_vectors : fail to load file !")
         return
     else :
         # 打印信息
-        print("W2VOperator.load_vectors : vectors.json has been loaded !")
+        print("VectorizationTool.load_vectors : vectors.json has been loaded !")
 
 def solving_vectors() :
     # 解算方法
@@ -81,9 +81,12 @@ def solving_vectors() :
         print("")
         # 小写
         user_input = \
-            user_input.lower()
+            user_input.lower().strip()
         # 检查输入结果
-        if user_input == '0' :
+        if len(user_input) <= 0 :
+            continue
+        # 检查输入结果
+        elif user_input == '0' :
             # 检查方法
             if solution is not None \
                 and solution.is_alive() :
@@ -99,7 +102,7 @@ def solving_vectors() :
             if solution is not None \
                 and solution.is_alive() :
                 # 打印信息
-                print("W2VOperator.solving_vectors : thread is alive !")
+                print("VectorizationTool.solving_vectors : thread is alive !")
                 continue
             # 检查状态
             if solution is None \
@@ -109,12 +112,12 @@ def solving_vectors() :
                 # 检查结果
                 if solution is None :
                     # 打印信息
-                    print("W2VOperator.solving_vectors : fail to get solution !")
+                    print("VectorizationTool.solving_vectors : fail to get solution !")
                 else :
                     # 启动
                     solution.start()
                     # 打印信息
-                    print("W2VOperator.solving_vectors : successfully start solving !")
+                    print("VectorizationTool.solving_vectors : successfully start solving !")
 
 def verify_vectors() :
     # 清理输入项目
@@ -160,10 +163,10 @@ def verify_vectors() :
             word.dump()
         else :
             # 打印信息
-            print("W2VOperator.verify_vectors : invalid input !")
+            print("VectorizationTool.verify_vectors : invalid input !")
 
         # 打印信息
-        print("W2VOperator.verify_vectors : show results !")
+        print("VectorizationTool.verify_vectors : show results !")
         print(f"\tGamma12 (from words) = {gamma}")
         if v1 is not None and v2 is not None :
             print(f"\tGamma12 (from vector calculation) ="
@@ -205,7 +208,7 @@ def main() :
         # 开始执行
         if user_input == '0' :
             # 打印信息
-            print("W2VOperator.main : user exit !"); break
+            print("VectorizationTool.main : user exit !"); break
         elif user_input == '1' :
             # 加载
             load_words()
@@ -234,7 +237,7 @@ def main() :
             # 验算
             verify_vectors()
         else :
-            print("W2VOperator.main : unknown choice !")
+            print("VectorizationTool.main : unknown choice !")
 
 if __name__ == '__main__':
     try:
@@ -242,5 +245,5 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         traceback.print_exc()
-        print("W2VOperator.main :__main__ : ", str(e))
-        print("W2VOperator.main :__main__ : unexpected exit !")
+        print("VectorizationTool.main :__main__ : ", str(e))
+        print("VectorizationTool.main :__main__ : unexpected exit !")

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from nldb.sqlite.NLDB3Content import *
+from nldb.sqlite.SQContent import *
 
-class NLDB3Raw(NLDB3Content) :
+class SQRaw(SQContent) :
     # 初始化函数
     def __init__(self) :
         # 调用父类函数
@@ -20,5 +20,4 @@ class NLDB3Raw(NLDB3Content) :
         assert isinstance(item, RawItem)
         # 返回结果
         return self._insert_table(self._table_name,
-        "(length, content, source) VALUES (?, ?, ?)",
-        (item.length, item.content, item.source))
+            {"length" : item.length, "content" : item.content, "source" : item.source})

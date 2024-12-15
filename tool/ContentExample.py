@@ -23,7 +23,7 @@ if raw.load(json_path + "raw.json") > 0 :
     # 获得所有项目
     raw_items = [item for item in raw.values()]
 else :
-    print("OperateData.OperateData : fail to load file !")
+    print("ContentExample.ContentExample : fail to load file !")
 
 def random_quantity() :
     # 清理输入项目
@@ -37,7 +37,7 @@ def random_quantity() :
         #original = "中国奥运代表团旗手仍定男篮 王治郅易建联２选１"
         normalized = ContentTool.normalize_content(original)
         # 打印结果
-        print("OperateData.random_quantity : normalized result !")
+        print("ContentExample.random_quantity : normalized result !")
         print("\t", end = ""); print("original   =\"%s\"" % original)
         print("\t", end = ""); print("normalized =\"%s\"" % normalized)
         # 提取数量词
@@ -48,7 +48,7 @@ def random_quantity() :
             group.dump()
         else :
             # 打印信息
-            print("OperateData.random_quantity : no matched !")
+            print("ContentExample.random_quantity : no matched !")
         # 继续选择输入
         user_input = input("Enter '0' to exit : ")
 
@@ -63,19 +63,19 @@ def random_sentence() :
         original = raw_items[index].content
         normalized = ContentTool.normalize_content(original)
         # 打印结果
-        print("OperateData.random_sentence : normalized result !")
+        print("ContentExample.random_sentence : normalized result !")
         print("\t", end = ""); print("original   =\"%s\"" % original)
         print("\t", end = ""); print("normalized =\"%s\"" % normalized)
         # 打散和标记
         segments = SentenceTool.split(normalized)
         # 打印结果
-        print("OperateData.random_sentence : split result !")
+        print("ContentExample.random_sentence : split result !")
         # 打印结果
         for segment in segments: print("\t%s" % segment)
         # 合并
         segments = SentenceTool.merge(segments)
         # 打印结果
-        print("OperateData.random_sentence : merged result !")
+        print("ContentExample.random_sentence : merged result !")
         # 打印结果
         for segment in segments: print("\t%s" % segment)
         # 继续选择输入
@@ -86,7 +86,7 @@ def update_core_gammas() :
     cores = CoreContent()
     # 加载数据
     if cores.load(json_path + "cores.json") <= 0 :
-        print("OperateData.update_core_gammas : fail to load file !")
+        print("ContentExample.update_core_gammas : fail to load file !")
     # 更新数据
     cores.update_gammas()
     # 保存数据
@@ -122,7 +122,7 @@ def main() :
         # 开始执行
         if user_input == '0' :
             # 打印信息
-            print("OperateData.main : user exit !"); break
+            print("ContentExample.main : user exit !"); break
         elif user_input == '1' :
             # 随机选择一条内容，提取数量词
             random_quantity()
@@ -133,7 +133,7 @@ def main() :
             # 更新Gamma数值
             update_core_gammas()
         else :
-            print("OperateData.main : unknown choice !")
+            print("ContentExample.main : unknown choice !")
 
 if __name__ == '__main__':
     try:
@@ -141,5 +141,5 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         traceback.print_exc()
-        print("OperateData.main :__main__ : ", str(e))
-        print("OperateData.main :__main__ : unexpected exit !")
+        print("ContentExample.main :__main__ : ", str(e))
+        print("ContentExample.main :__main__ : unexpected exit !")

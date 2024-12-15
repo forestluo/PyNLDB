@@ -9,9 +9,9 @@ from nlp.item.VectorItem import *
 
 class SimpleSolution(Solution) :
     # 初始化
-    def __init__(self, w2v) :
+    def __init__(self, vz) :
         # 调用父类初始化
-        super().__init__(w2v)
+        super().__init__(vz)
 
     # 新建误差矩阵
     def __new_delta(self) :
@@ -26,7 +26,7 @@ class SimpleSolution(Solution) :
         # 打印信息
         self.dump()
         # 重新建立索引
-        self._w2v.index_vectors()
+        self._vz.index_vectors()
         # 打印信息
         print(f"SimpleSolution._solving : index of vectors rebuilt !")
 
@@ -66,7 +66,7 @@ class SimpleSolution(Solution) :
                     delta[index][0][k] *= scale
                     delta[index][1][k] *= scale
             # 叠加结果
-            for v in self._w2v.vectors() :
+            for v in self._vz.vectors() :
                 for k in range(self._dimension) :
                     v.matrix[0][k] += delta[v.index][0][k]
                     v.matrix[1][k] += delta[v.index][1][k]
@@ -76,13 +76,13 @@ class SimpleSolution(Solution) :
     # 必须重载
     def __solving(self, delta) :
         # 进度条
-        pb = ProgressBar(self._w2v.wsize)
+        pb = ProgressBar(self._vz.wsize)
         # 开始
         #pb.begin(f"SimpleSolution._solving : begin processing !")
         # 最大误差
         max_delta = 0.0
         # 循环处理
-        for w in self._w2v.words() :
+        for w in self._vz.words() :
             # 检查标志位
             if self._break_loop : break
 
@@ -94,14 +94,14 @@ class SimpleSolution(Solution) :
             # 获得前置
             c1 = w.content[:1]
             # 查询矢量
-            v1 = self._w2v.vector(c1) # Ai
+            v1 = self._vz.vector(c1) # Ai
             # 检查结果
             if v1 is None : continue
 
             # 获得后置
             c2 = w.content[-1]
             # 查询矢量
-            v2 = self._w2v.vector(c2) # Bj
+            v2 = self._vz.vector(c2) # Bj
             # 检查结果
             if v2 is None : continue
 
@@ -134,11 +134,11 @@ class SimpleSolution(Solution) :
     # 执行函数
     def _run(self) :
         # 矩阵尺寸
-        self._size = self._w2v.vsize
+        self._size = self._vz.vsize
         # 矩阵维度
-        self._dimension = self._w2v.dimension
+        self._dimension = self._vz.dimension
         # 检查标记位
-        if not self._w2v.copy_data :
+        if not self._vz.copy_data :
             # 打印信息
             print(f"SimpleSolution._run : initialize matrix !")
             # 进度条
@@ -146,7 +146,7 @@ class SimpleSolution(Solution) :
             # 开始
             pb.begin(f"SimpleSolution._run : set random values !")
             # 循环
-            for v in self._w2v.vectors() :
+            for v in self._vz.vectors() :
                 # 进度条
                 pb.increase()
                 # 随机赋值

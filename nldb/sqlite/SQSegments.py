@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from nldb.sqlite.NLDB3Content import *
+from nldb.sqlite.SQContent import *
 
-class NLDB3Segments(NLDB3Content) :
+class SQSegments(SQContent) :
     # 初始化函数
     def __init__(self) :
         # 调用父类函数

@@ -3,7 +3,7 @@
 __all__ = \
     [
         "Neuron",
-        "Word2Vector",
+        "WordVectorization.py",
 
         "CL1Solution",
         "CL2Solution",

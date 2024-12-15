@@ -14,6 +14,7 @@ from nlp.alg.CL1Solution import *
 from nlp.alg.CL2Solution import *
 from nlp.alg.CLinfSolution import *
 
+from nlp.alg.WordVector import *
 from nlp.alg.SimpleSolution import *
 
 from nlp.item.WordItem import *
@@ -22,49 +23,37 @@ from nlp.content.CoreContent import *
 from nlp.content.WordContent import *
 from nlp.content.VectorContent import *
 
-class Word2Vector :
+class WordVectorization(WordVector) :
     # 初始化
     def __init__(self, dimension) :
-        # 检查参数
-        assert dimension >= 2
-        # 最小记录次数
-        self.min_count = 512
-        # 拷贝数据
-        self.copy_data = False
+        # 调用父类初始化
+        super().__init__(dimension)
         # 设置词汇组
         self._words = WordContent()
-        # 设置是两组
-        self._vectors = VectorContent(dimension)
 
-    # 维度
-    @property
-    def dimension(self) :
-        # 返回结果
-        return self._vectors.dimension
+    # 析构
+    def __del__(self) :
+        # 调用父类函数
+        super().__del__()
+        # 清除
+        self._words.clear()
+        # 删除
+        del self._words
 
     @property
     def wsize(self) :
         # 返回结果
         return len(self._words)
 
-    @property
-    def vsize(self) :
-        # 返回结果
-        return len(self._vectors)
-
     def clear(self) :
+        # 调用父类函数
+        super().clear()
         # 清理
         self._words.clear()
-        # 清理
-        self._vectors.clear()
 
     def words(self) :
         # 返回结果
         return self._words.values()
-
-    def vectors(self) :
-        # 返回结果
-        return self._vectors.values()
 
     # 获得词汇
     def word(self, key) :
@@ -75,56 +64,82 @@ class Word2Vector :
         # 返回结果
         return None
 
-    # 获得词汇
-    def vector(self, key) :
-        # 检查参数
-        if key in self._vectors :
-            # 返回结果
-            return self._vectors[key]
+    # 获得标准数据
+    def get_gammas(self, error) :
+        # 重建索引
+        self.index_vectors()
+        # 结束
+        print(f"WordVectorization.get_gammas : finished reindexing vectors !")
+
+        # 创建矩阵
+        gammas = self._new_gamma()
+        # 进度条
+        pb = ProgressBar(self.wsize)
+        # 开始
+        pb.begin(f"WordVectorization.get_gammas : building matrix !")
+        # 初始化相关系数
+        for item in self.words() :
+            # 进度条
+            pb.increase()
+
+            # 获得内容
+            f = item.count
+            c = item.content
+            # 检查数据
+            assert len(c) == 2
+            # 检查数值
+            if f <= 0 : continue
+
+            # 获得单词
+            c1 = c[:1]
+            # 检查数据
+            v1 = self.vector(c1)
+            # 检查结果
+            if v1 is None : continue
+
+            # 获得单词
+            c2 = c[-1]
+            # 检查数据
+            v2 = self.vector(c2)
+            # 检查结果
+            if v2 is None : continue
+
+            # 设置数值
+            gammas[0][v1.index][v2.index] = item.gamma
+            # 检查结果
+            if item.gamma > error : \
+                    gammas[1][v1.index][v2.index] = 1.0
+        # 结束
+        pb.end(f"WordVectorization.get_gammas : finished building matrix !")
         # 返回结果
-        return None
+        return gammas
 
     # 初始化
     def initialize(self, path) :
         # 加载数文件
         if not self.__load_words(path):
             # 打印信息
-            print(f"Word2Vector.initialize : fail to load words !")
+            print(f"WordVectorization.initialize : fail to load words !")
             return False
         # 设置标记
         self.copy_data = False
         # 打印信息
-        print(f"Word2Vector.initialize : words have been loaded !")
+        print(f"WordVectorization.initialize : words have been loaded !")
         # 初始化相关系数
         # 需要使用索引作为临时标记位
         self.__init_gammas()
         # 打印信息
-        print(f"Word2Vector.initialize : gammas initialized !")
+        print(f"WordVectorization.initialize : gammas initialized !")
         # 清理无效数据
         self.__clear_invalid()
         # 打印信息
-        print(f"Word2Vector.initialize : invalid data cleared !")
+        print(f"WordVectorization.initialize : invalid data cleared !")
         # 重建索引
         self.index_vectors()
         # 打印信息
-        print(f"Word2Vector.initialize : index of vectors rebuilt !")
+        print(f"WordVectorization.initialize : index of vectors rebuilt !")
         # 返回结果
         return True
-
-    # 重建索引
-    def index_vectors(self) :
-        # 进度条
-        pb = ProgressBar(self.vsize)
-        # 开始
-        pb.begin(f"Word2Vector.index_vectors : reindex vectors !")
-        # 初始化索引值
-        for index, v in enumerate(self.vectors()) :
-            # 进度条
-            pb.increase()
-            # 设置索引
-            v.index = index
-        # 结束
-        pb.end(f"Word2Vector.index_vectors : {self.vsize} vector(s) indexed !")
 
     # 加载数据
     def __load_words(self, path) :
@@ -135,7 +150,7 @@ class Word2Vector :
             # 加载数据
             if self._words.load(path + "words1.json") <= 0 :
                 # 打印信息
-                print("Word2Vector.__load_words : fail to load words1.json !")
+                print("WordVectorization.__load_words : fail to load words1.json !")
                 return False
         # 清理数据
         self._vectors.clear()
@@ -143,7 +158,7 @@ class Word2Vector :
         # 自动设置元素的维度
         self._words.traverse(self._vectors.add_item)
         # 打印信息
-        print("Word2Vector.__load_words : all vectors added !")
+        print("WordVectorization.__load_words : all vectors added !")
         # 清理
         self._words.clear()
         # 检查文件是否存在
@@ -151,10 +166,10 @@ class Word2Vector :
             # 加载数据
             if self._words.load(path + "words2.json") <= 0 :
                 # 打印信息
-                print("Word2Vector.__load_words : fail to load words2.json !")
+                print("WordVectorization.__load_words : fail to load words2.json !")
                 return False
         # 打印信息
-        print("Word2Vector.__load_words : all vectors initialized !")
+        print("WordVectorization.__load_words : all vectors initialized !")
         # 返回结果
         return True
 
@@ -168,7 +183,7 @@ class Word2Vector :
         # 进度条
         pb = ProgressBar(total)
         # 开始
-        pb.begin(f"Word2Vector.__init_gammas : init gammas[{total}] !")
+        pb.begin(f"WordVectorization.__init_gammas : init gammas[{total}] !")
         # 初始化相关系数
         for item in self.words() :
             # 进度条
@@ -221,7 +236,7 @@ class Word2Vector :
         # 进度条
         pb = ProgressBar(self.vsize)
         # 开始
-        pb.begin(f"Word2Vector.__clear_invalid : clear invalid vectors !")
+        pb.begin(f"WordVectorization.__clear_invalid : clear invalid vectors !")
         # 创建对象
         removed = WordContent()
         # 循环处理
@@ -238,7 +253,7 @@ class Word2Vector :
         # 进度条
         pb = ProgressBar(self.wsize)
         # 开始
-        pb.begin(f"Word2Vector.__clear_invalid : clear invalid words !")
+        pb.begin(f"WordVectorization.__clear_invalid : clear invalid words !")
         # 清理词汇
         for item in self.words() :
             # 进度条
@@ -258,7 +273,7 @@ class Word2Vector :
         # 进度条
         pb = ProgressBar(len(removed))
         # 开始
-        pb.begin(f"Word2Vector.__clear_invalid : remove all items !")
+        pb.begin(f"WordVectorization.__clear_invalid : remove all items !")
         # 清理词汇
         for item in removed.values() :
             # 进度条
@@ -269,9 +284,9 @@ class Word2Vector :
         # 结束
         pb.end()
         # 打印信息
-        print(f"Word2Vector.__clear_invalid : {self.wsize} word(s) left !")
-        print(f"Word2Vector.__clear_invalid : {self.vsize} vector(s) left !")
-        print(f"Word2Vector.__clear_invalid : total {len(removed)} item(s) removed !")
+        print(f"WordVectorization.__clear_invalid : {self.wsize} word(s) left !")
+        print(f"WordVectorization.__clear_invalid : {self.vsize} vector(s) left !")
+        print(f"WordVectorization.__clear_invalid : total {len(removed)} item(s) removed !")
 
     # 加载数据
     def load_words(self, file_name) :
@@ -282,7 +297,7 @@ class Word2Vector :
         # 检查结果
         if result <= 0 :
             # 打印信息
-            print(f"Word2Vector.load_words : loading({file_name}) failed !")
+            print(f"WordVectorization.load_words : loading({file_name}) failed !")
             return result
         # 进度条
         pb = ProgressBar(len(words))
@@ -301,109 +316,21 @@ class Word2Vector :
         # 结束
         pb.end()
         # 打印信息
-        print(f"Word2Vector.load_words : total {self.wsize} item(s) loaded !")
+        print(f"WordVectorization.load_words : total {self.wsize} item(s) loaded !")
         # 初始化相关系数
         self.__init_gammas()
         # 打印信息
-        print(f"Word2Vector.load_words : gammas initialized !")
+        print(f"WordVectorization.load_words : gammas initialized !")
         # 清理无效数据
         self.__clear_invalid()
         # 打印信息
-        print(f"Word2Vector.load_words : invalid data cleared !")
+        print(f"WordVectorization.load_words : invalid data cleared !")
         # 重建索引
         self.index_vectors()
         # 打印信息
-        print(f"Word2Vector.load_words : index of vectors rebuilt !")
+        print(f"WordVectorization.load_words : index of vectors rebuilt !")
         # 返回结果
         return result
-
-    # 保存数据
-    def save_vectors(self, file_name) :
-        # 保存文件
-        self._vectors.save(file_name)
-        # 打印信息
-        print(f"Word2Vector.save_vectors : file was saved !")
-
-    # 加载数据
-    def load_vectors(self, file_name) :
-        # 清理
-        vectors = VectorContent(self.dimension)
-        # 加载矢量数据
-        result = vectors.load(file_name)
-        # 检查结果
-        if result <= 0 : return result
-        # 打印信息
-        print(f"Word2Vector.load_vectors : file was loaded !")
-        # 进度条
-        pb = ProgressBar(len(vectors))
-        # 开始
-        pb.begin(f"Word2Vector.load_vectors : checking dimension of vectors !")
-        # 维度
-        dimension = -1
-        # 循环处理
-        for v in vectors.values() :
-            # 进度条
-            pb.increase()
-            # 获得矩阵
-            size = (len(v.matrix[0]) +
-                len(v.matrix[1])) // 2
-            # 检查数据
-            if dimension < 0 : dimension = size
-            elif size != dimension :
-                # 打印信息
-                print(f"Word2Vector.load_vectors : incorrect dimension({size}) !")
-                return -1
-        # 结束
-        pb.end()
-        # 检查维度
-        if dimension < 2 :
-            # 打印信息
-            print(f"Word2Vector.load_vectors : incorrect dimension({dimension}) !")
-            return -1
-        # 设置矢量
-        self._vectors = vectors
-        # 打印信息
-        print(f"Word2Vector.load_words : vectors were set !")
-        # 重建索引
-        self.index_vectors()
-        # 打印信息
-        print(f"Word2Vector.load_words : index of vectors rebuilt !")
-        # 设置维度
-        self._vectors.dimension = dimension
-        # 打印信息
-        print(f"Word2Vector.load_vectors : vectors(dimension = {dimension}) loaded !")
-        # 返回结果
-        return result
-
-    # 取得求解器
-    def get_solution(self, method = "classic") :
-        # 检查参数
-        assert isinstance(method, str)
-        # 变成小写
-        method = method.lower()
-        # 匹配
-        if re.match("^classic|((numpy|jit|cupy).(l1|l2|linf))$", method) :
-            # 检查模块名
-            if method.startswith("jit") :
-                # 检查算法名
-                if method.endswith("l1") : return JL1Solution(self)
-                elif method.endswith("l2") : return JL2Solution(self)
-                elif method.endswith("linf") : return JLinfSolution(self)
-            elif method.startswith("cupy") :
-                # 检查算法名
-                if method.endswith("l1") : return CL1Solution(self)
-                elif method.endswith("l2") : return CL2Solution(self)
-                elif method.endswith("linf") : return CLinfSolution(self)
-            elif method.startswith("numpy") :
-                # 检查算法名
-                if method.endswith("l1") : return NL1Solution(self)
-                elif method.endswith("l2") : return NL2Solution(self)
-                elif method.endswith("linf") : return NLinfSolution(self)
-            elif method.startswith("classic") : return SimpleSolution(self)
-        # 打印信息
-        print(f"Word2Vector.get_solution : unrecognized method(\"{method}\") !")
-        # 返回结果
-        return None
 
     # 加载测试数据
     def load_example(self) :
@@ -430,72 +357,72 @@ class Word2Vector :
         # 初始化相关系数
         self.__init_gammas()
         # 打印信息
-        print(f"Word2Vector.load_example : gammas initialized !")
+        print(f"WordVectorization.load_example : gammas initialized !")
         # 重建索引
         self.index_vectors()
         # 打印信息
-        print(f"Word2Vector.load_example : index of vectors rebuilt !")
+        print(f"WordVectorization.load_example : index of vectors rebuilt !")
 
 # 测试代码
 def main() :
 
     # 生成对象
-    w2v = Word2Vector(32)
+    wv = WordVectorization(32)
 
     # 选项
     options = 2
     # 检查选项
     if options == 0 :
         # 加载例程
-        w2v.load_example()
+        wv.load_example()
     elif options == 1 :
         # 初始化
-        if not w2v.initialize("..\\..\\json\\") :
+        if not wv.initialize("..\\..\\json\\") :
             # 打印信息
-            print("Word2Vector.main : fail to initialize !")
+            print("WordVectorization.main : fail to initialize !")
             return
         # 打印信息
-        print("Word2Vector.main : successfully initialized !")
+        print("WordVectorization.main : successfully initialized !")
     elif options == 2 :
         # 加载数据
-        if w2v.load_vectors("..\\..\\json\\vectors.json") <= 0 :
+        if wv.load_vectors("..\\..\\json\\vectors.json") <= 0 :
             # 打印信息
-            print("Word2Vector.main : fail to load vectors.json !")
+            print("WordVectorization.main : fail to load vectors.json !")
             return
         # 加载数据
-        if w2v.load_words("..\\..\\json\\cores.json") <= 0 :
+        if wv.load_words("..\\..\\json\\cores.json") <= 0 :
             # 打印信息
-            print("Word2Vector.main : fail to load cores.json !")
+            print("WordVectorization.main : fail to load cores.json !")
             return
     else :
         # 打印信息
-        print(f"Word2Vector.main : unknown options({options}) !")
+        print(f"WordVectorization.main : unknown options({options}) !")
         return
 
     # 打印信息
-    print("Word2Vector.main : successfully loaded !")
+    print("WordVectorization.main : successfully loaded !")
     # 获得求解器
-    solution = w2v.get_solution("cupy.l2")
+    solution = wv.get_solution("cupy.l2")
     # 检查结果
     if solution is None :
         # 打印信息
-        print("Word2Vector.main : fail to get solution !")
+        print("WordVectorization.main : fail to get solution !")
         return
     # 启动
     solution.start()
     # 打印信息
-    print("Word2Vector.main : successfully start solving !")
+    print("WordVectorization.main : successfully start solving !")
     # 等待输入
     input()
     # 结束线程
     solution.stop()
     # 打印信息
-    print("Word2Vector.main : successfully stopped solving !")
+    print("WordVectorization.main : successfully stopped solving !")
 
     # 检查参数
     if options == 0 :
         # 打印数据
-        for v in w2v.vectors() : v.dump()
+        for v in wv.vectors() : v.dump()
 
 if __name__ == '__main__':
     try:
@@ -503,5 +430,5 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         traceback.print_exc()
-        print("Word2Vector.main :__main__ : ", str(e))
-        print("Word2Vector.main :__main__ : unexpected exit !")
+        print("WordVectorization.main :__main__ : ", str(e))
+        print("WordVectorization.main :__main__ : unexpected exit !")

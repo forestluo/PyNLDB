@@ -3,6 +3,7 @@
 __all__ = \
     [
         "SQLServer",
-        "SQLServerRaw",
-        "SQLServerDictionary",
+        "SQLRaw.py",
+        "SQLCounter",
+        "SQLDictionary.py",
     ]
