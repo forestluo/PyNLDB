@@ -80,12 +80,12 @@ class GammaTool :
 
     @staticmethod
     def update_gammas(contents) :
+        # 检查参数
+        assert contents is not None
         # 获得总数
         total = len(contents)
-        # 检查参数
-        assert total > 0
-        # 检查参数
-        assert isinstance(contents, CoreContent)
+        # 检查结果
+        if total <= 0 : return
 
         # 指定长度
         length = 0

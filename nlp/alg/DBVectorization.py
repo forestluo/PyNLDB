@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import math
 
 from nlp.alg.WordVector import *
+from nlp.alg.SQVectorization import *
 from nlp.content.WordContent import *
 
 class DBVectorization(WordVector) :
@@ -36,6 +38,11 @@ class DBVectorization(WordVector) :
         # 返回结果
         return self.__table.table_name
 
+    @property
+    def wsize(self) :
+        # 兼容性写法
+        return math.inf
+
     # 获得计数
     def get_count(self, key) :
         # 返回结果
@@ -56,16 +63,20 @@ class DBVectorization(WordVector) :
         pb.begin(f"DBVectorization.get_gammas : building matrix !")
         # 初始化相关系数
         for v1 in self.vectors() :
+            # 检查项目
+            if v1.count <= 0 :
+                # 增加计数
+                pb.increase(self.vsize)
+                continue
             # 循环处理
             for v2 in self.vectors() :
                 # 进度条
                 pb.increase()
+                # 检查项目
+                if v2.count <= 0 : continue
 
-                # 获得内容
-                content = \
-                    v1.content + v2.content
                 # 获得计数
-                count = self.get_count(content)
+                count = self.get_count(v1.content + v2.content)
                 # 检查数值
                 if count <= 0 : continue
 
@@ -75,8 +86,7 @@ class DBVectorization(WordVector) :
                 # 设置数值
                 gammas[0][v1.index][v2.index] = gamma
                 # 检查结果
-                if gamma > error : \
-                        gammas[1][v1.index][v2.index] = 1.0
+                if gamma > error : gammas[1][v1.index][v2.index] = 1.0
         # 结束
         pb.end(f"DBVectorization.get_gammas : finished building matrix !")
         # 返回结果
@@ -136,3 +146,51 @@ class DBVectorization(WordVector) :
         words.save(file_name)
         # 结束
         print(f"DBVectorization.save_gammas : file({file_name}) was saved !")
+
+# 测试代码
+def main() :
+
+    # 生成对象
+    sqv = SQVectorization(32)
+
+    # 选项
+    # 加载数据
+    if sqv.load_vectors("..\\..\\json\\vectors.json", False) <= 0 :
+        # 打印信息
+        print("DBVectorization.main : fail to load vectors.json !")
+        return
+    """
+    # 加载数据
+    if sqv.load_vectors("..\\..\\json\\cores.json", False) <= 0 :
+        # 打印信息
+        print("DBVectorization.main : fail to load cores.json !")
+        return
+    """
+    # 打印信息
+    print("DBVectorization.main : successfully loaded !")
+    # 获得求解器
+    solution = sqv.get_solution("cupy.l2")
+    # 检查结果
+    if solution is None :
+        # 打印信息
+        print("DBVectorization.main : fail to get solution !")
+        return
+    # 启动
+    solution.start()
+    # 打印信息
+    print("DBVectorization.main : successfully start solving !")
+    # 等待输入
+    input()
+    # 结束线程
+    solution.stop()
+    # 打印信息
+    print("DBVectorization.main : successfully stopped solving !")
+
+if __name__ == '__main__':
+    try:
+        # 调用主函数
+        main()
+    except Exception as e:
+        traceback.print_exc()
+        print("DBVectorization.main :__main__ : ", str(e))
+        print("DBVectorization.main :__main__ : unexpected exit !")

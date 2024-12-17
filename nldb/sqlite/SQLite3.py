@@ -20,7 +20,9 @@ class SQLite3(SimpleDB) :
     def _new_conn(self) :
         # 建立数据库链接
         self._dbConn = \
-            sqlite3.connect("..\\..\\db\\nldb3.db")
+            sqlite3.connect(
+        "..\\..\\db\\nldb3.db",
+                check_same_thread = False)
         # 修改返回方式
         def dict_factory(cursor, row) :
             result = {}

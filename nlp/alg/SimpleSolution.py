@@ -22,7 +22,7 @@ class SimpleSolution(Solution) :
             for _ in range(self._dimension)]
             for _ in range(2)] for _ in range(self._size)]
 
-    def _solving(self) :
+    def _solving(self, gammas) :
         # 打印信息
         self.dump()
         # 重新建立索引
@@ -44,7 +44,7 @@ class SimpleSolution(Solution) :
             # 计数器加一
             i += 1; j += 1
             # 运算结果
-            max_delta = self.__solving(delta)
+            max_delta = self.__solving(delta, gammas)
             # 打印信息
             print(f"SimpleSolution._solving : ΔGamma[{i},{j}] = {max_delta} !")
             # 检查结果
@@ -74,60 +74,58 @@ class SimpleSolution(Solution) :
         return last_delta
 
     # 必须重载
-    def __solving(self, delta) :
-        # 进度条
-        pb = ProgressBar(self._vz.wsize)
-        # 开始
-        #pb.begin(f"SimpleSolution._solving : begin processing !")
+    def __solving(self, delta, gammas) :
         # 最大误差
         max_delta = 0.0
-        # 循环处理
-        for w in self._vz.words() :
+        # 进度条
+        pb = ProgressBar(self._size * self._size)
+        # 开始
+        pb.begin()
+        # 初始化相关系数
+        for v1 in self._vz.vectors() :
+            # 检查项目
+            if v1.count <= 0 :
+                # 增加计数
+                pb.increase(self._size)
+                continue
             # 检查标志位
             if self._break_loop : break
-
-            # 增加计数
-            pb.increase()
-            # 检查参数
-            assert w.length == 2
-
-            # 获得前置
-            c1 = w.content[:1]
-            # 查询矢量
-            v1 = self._vz.vector(c1) # Ai
-            # 检查结果
-            if v1 is None : continue
-
-            # 获得后置
-            c2 = w.content[-1]
-            # 查询矢量
-            v2 = self._vz.vector(c2) # Bj
-            # 检查结果
-            if v2 is None : continue
-
-            # 数值
-            _delta = w.gamma - \
-                VectorItem.get_gamma(v1, v2, self._dimension) # Ai·Bj
-            # 绝对值
-            abs_delta = math.fabs(_delta)
-            # 检查结果
-            if abs_delta > max_delta :
-                # 设置误差记录
-                max_delta = abs_delta
-            # 计算数据
-            # value = Δγ / (Ai² + Bj²)
-            value = _delta / (v1.sqa + v2.sqb)
             # 循环处理
-            for k in range(self._dimension) :
-                # 计算分量（快捷处置）加和误差分量
-                # ΔAi = value·Bj
-                delta[v1.index][0][k] += value * v2.matrix[1][k] # Bj
-                # 计算分量（快捷处置）加和误差分量
-                # ΔBj = value·Ai
-                delta[v2.index][1][k] += value * v1.matrix[0][k] # Ai
-        # 打印信息
+            for v2 in self._vz.vectors() :
+                # 进度条
+                pb.increase()
+                # 检查项目
+                if v2.count <= 0 : continue
+                # 检查标志位
+                if self._break_loop : break
+
+                # 获得词汇
+                word = self._vz.word(v1.content + v2.content)
+                # 检查结果
+                if word is None or word.count <= 0 : continue
+
+                # 数值
+                _delta = gammas[0][v1.index][v2.index] - \
+                    VectorItem.get_gamma(v1, v2, self._dimension) # Ai·Bj
+                # 绝对值
+                abs_delta = math.fabs(_delta)
+                # 检查结果
+                if abs_delta > max_delta :
+                    # 设置误差记录
+                    max_delta = abs_delta
+                # 计算数据
+                # value = Δγ / (Ai² + Bj²)
+                value = _delta / (v1.sqa + v2.sqb)
+                # 循环处理
+                for k in range(self._dimension) :
+                    # 计算分量（快捷处置）加和误差分量
+                    # ΔAi = value·Bj
+                    delta[v1.index][0][k] += value * v2.matrix[1][k] # Bj
+                    # 计算分量（快捷处置）加和误差分量
+                    # ΔBj = value·Ai
+                    delta[v2.index][1][k] += value * v1.matrix[0][k] # Ai
+        # 结束
         pb.end()
-        #pb.end(f"SimpleSolution._solving : {total} relations(s) processed !")
         # 返回结果
         return max_delta
 
@@ -160,8 +158,10 @@ class SimpleSolution(Solution) :
 
         # 清理标记
         self._break_loop = False
+        # 获得相关系数矩阵
+        gammas = self._vz.get_gammas(self._error)
         # 执行解方程过程
-        result = self._solving()
+        result = self._solving(gammas)
         # 检查结果
         if result > self._error :
             # 打印信息

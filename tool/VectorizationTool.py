@@ -10,7 +10,7 @@ w2v = WordVectorization(32)
 
 def auto_initialize() :
     # 加载数文件
-    if not w2v.initialize(json_path) :
+    if not w2v.load_default(json_path) :
         # 打印信息
         print("VectorizationTool.auto_initialize : fail to load files !")
     else :
