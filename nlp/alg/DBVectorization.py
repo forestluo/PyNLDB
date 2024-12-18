@@ -48,7 +48,8 @@ class DBVectorization(WordVector) :
         # 返回结果
         return self.__table.get_count(key)
 
-    # 获得标准数据
+    # 获得相关系数
+    # 速度慢，但能兼容多数内容
     def get_gammas(self, error) :
         # 重建索引
         self.index_vectors()
