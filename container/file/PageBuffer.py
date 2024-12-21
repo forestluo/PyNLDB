@@ -25,12 +25,6 @@ class PageBuffer :
         self.page_type = page_type
         self.size_type = size_type
 
-    def set_description(self, description) :
-        self.page_type = description.page_type
-        self.size_type = description.size_type
-        self.occupied_size = description.occupied_size
-        self.next_page = description.next_page
-
     def wrap(self, buffer) :
         # 重置位置
         buffer.pos = 0
@@ -38,15 +32,9 @@ class PageBuffer :
         buffer.put_int(SizeOf.byte, self.page_type.value)
         buffer.put_int(SizeOf.byte, self.size_type.value)
         # 检查参数
-        if self.occupied_size != OccupiedSize.full :
-            buffer.put_int(SizeOf.integer, self.occupied_size)
-        else :
-            buffer.put_int(SizeOf.integer, OccupiedSize.full.value)
+        buffer.put_int(SizeOf.integer, OccupiedSize.e2v(self.occupied_size))
         # 检查参数
-        if self.next_page != NextPage.none :
-            buffer.put_int(SizeOf.integer, self.next_page >> 6)
-        else :
-            buffer.put_int(SizeOf.integer, NextPage.none.value)
+        buffer.put_int(SizeOf.integer, NextPage.e2v(self.next_page))
 
     def unwrap(self, buffer) :
         # 重置位置
@@ -55,19 +43,9 @@ class PageBuffer :
         self.page_type = PageType(buffer.get_int(SizeOf.byte))
         self.size_type = SizeType(buffer.get_int(SizeOf.byte))
         # 获取参数
-        value = buffer.get_int(SizeOf.integer)
-        # 检查结果
-        if value != OccupiedSize.full.value :
-            self.occupied_size = value
-        else :
-            self.occupied_size = OccupiedSize.full
+        self.occupied_size = OccupiedSize.v2e(buffer.get_int(SizeOf.integer))
         # 获取数值
-        value = buffer.get_int(SizeOf.integer)
-        # 检查结果
-        if value != NextPage.none.value :
-            self.next_page = value << 6
-        else :
-            self.next_page = NextPage.none
+        self.next_page = NextPage.v2e(buffer.get_int(SizeOf.integer))
 
     def check_valid(self, file_size) :
         # 检查
@@ -85,11 +63,11 @@ class PageBuffer :
             if self.size_type != SizeType.hqkb :
                 raise Exception(f"invalid size type({self.size_type})")
         # 检查
-        if self.next_page != NextPage.none and \
+        if isinstance(self.next_page, int) and \
             (self.next_page > file_size or (self.next_page & 0x3F) != 0) :
             raise Exception(f"invalid next page({self.next_page})")
         # 检查
-        if self.occupied_size != OccupiedSize.full and \
+        if isinstance(self.occupied_size, int) and \
             self.occupied_size + PageDescription.size > SizeType.get_size(self.size_type) :
             raise Exception(f"invalid occupied size({self.occupied_size}")
 
@@ -102,7 +80,7 @@ class PageBuffer :
 
 def main() :
     # 新建
-    buffer = BytesBuffer()
+    buffer = BytesBuffer(128)
     pd = PageBuffer()
     pd.page_type = PageType.free_page
     pd.size_type = SizeType.hqkb

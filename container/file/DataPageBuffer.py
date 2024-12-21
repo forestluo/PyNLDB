@@ -22,12 +22,12 @@ class DataPageBuffer(PageBuffer) :
         # 参数
         self.buffer = bytearray()
 
-    def wrap(self, buffer, wrap_head = True) :
-        if wrap_head : super().wrap(buffer)
+    def wrap(self, buffer) :
+        super().wrap(buffer)
         buffer.put_buffer(self.buffer)
 
-    def unwrap(self, buffer, unwrap_head = True) :
-        if unwrap_head : super().unwrap(buffer)
+    def unwrap(self, buffer) :
+        super().unwrap(buffer)
         self.buffer = buffer.get_buffer()
 
     def check_valid(self, file_size) :
@@ -51,7 +51,7 @@ class DataPageBuffer(PageBuffer) :
 
 def main() :
     # 新建
-    buffer = BytesBuffer()
+    buffer = BytesBuffer(128)
     hpb = DataPageBuffer()
     hpb.buffer = bytearray("Hello World !".encode("utf-8"))
     hpb.dump()

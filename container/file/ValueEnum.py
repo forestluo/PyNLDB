@@ -2,34 +2,6 @@
 
 from enum import Enum
 
-class NextPage(Enum) :
-    none = 0xFFFFFFFF
-
-class Capacity(Enum) :
-    without_limit = -1
-
-class SafelyClosed(Enum) :
-    closed = 0
-    opened = 1
-
-    @staticmethod
-    def is_valid(value) :
-        if isinstance(value, SafelyClosed) :
-            return True
-        # 返回结果
-        return 0 <= value <= 1
-
-    @staticmethod
-    def get_type(value) :
-        if value == SafelyClosed.closed.value :
-            return SafelyClosed.closed
-        elif value == SafelyClosed.opened.value :
-            return SafelyClosed.opened
-        return None
-
-class OccupiedSize(Enum) :
-    full = 0xFFFFFFFF
-
 class SizeOf(Enum) :
     byte = 1
     short = 2
@@ -56,8 +28,8 @@ class PageType(Enum) :
 
 # Killo Bytes
 # 1 KB = 1024 Bytes
-__kb = 1024
-__mb = 1024 * __kb
+_kb = 1024
+_mb = 1024 * _kb
 
 # 页面类型
 class SizeType(Enum) :
@@ -99,27 +71,27 @@ class SizeType(Enum) :
     @staticmethod
     def get_type(size) :
         # Check result.
-        if size <= __kb / 4 / 4 : return SizeType.qqKB
-        elif size <= __kb / 4 / 2 : return SizeType.hqkb
-        elif size <= __kb / 4 : return SizeType.qkb
-        elif size <= __kb / 2 : return SizeType.hkb
-        elif size <= 1 * __kb : return SizeType.kb1
-        elif size <= 2 * __kb : return SizeType.kb2
-        elif size <= 4 * __kb : return SizeType.kb4
-        elif size <= 8 * __kb : return SizeType.kb8
-        elif size <= 16 * __kb : return SizeType.kb16
-        elif size <= 32 * __kb : return SizeType.kb32
-        elif size <= 64 * __kb : return SizeType.kb64
-        elif size <= 128 * __kb : return SizeType.kb128
-        elif size <= 256 * __kb : return SizeType.kb256
-        elif size <= 512 * __kb : return SizeType.kb512
-        elif size <= 1 * __mb : return SizeType.mb1
-        elif size <= 2 * __mb : return SizeType.mb2
-        elif size <= 4 * __mb : return SizeType.mb4
-        elif size <= 8 * __mb : return SizeType.mb8
-        elif size <= 16 * __mb : return SizeType.mb16
-        elif size <= 32 * __mb : return SizeType.mb32
-        elif size <= 64 * __mb : return SizeType.mb64
+        if size <= _kb / 4 / 4 : return SizeType.qqKB
+        elif size <= _kb / 4 / 2 : return SizeType.hqkb
+        elif size <= _kb / 4 : return SizeType.qkb
+        elif size <= _kb / 2 : return SizeType.hkb
+        elif size <= 1 * _kb : return SizeType.kb1
+        elif size <= 2 * _kb : return SizeType.kb2
+        elif size <= 4 * _kb : return SizeType.kb4
+        elif size <= 8 * _kb : return SizeType.kb8
+        elif size <= 16 * _kb : return SizeType.kb16
+        elif size <= 32 * _kb : return SizeType.kb32
+        elif size <= 64 * _kb : return SizeType.kb64
+        elif size <= 128 * _kb : return SizeType.kb128
+        elif size <= 256 * _kb : return SizeType.kb256
+        elif size <= 512 * _kb : return SizeType.kb512
+        elif size <= 1 * _mb : return SizeType.mb1
+        elif size <= 2 * _mb : return SizeType.mb2
+        elif size <= 4 * _mb : return SizeType.mb4
+        elif size <= 8 * _mb : return SizeType.mb8
+        elif size <= 16 * _mb : return SizeType.mb16
+        elif size <= 32 * _mb : return SizeType.mb32
+        elif size <= 64 * _mb : return SizeType.mb64
         else : return None
 
     @staticmethod
@@ -138,3 +110,105 @@ class SizeType(Enum) :
             return 1048576 << (value - 15)
         else :
             raise Exception(f"unknown type({size_type})")
+
+class NextPage(Enum) :
+    none = 0xFFFFFFFF
+
+    @staticmethod
+    def e2v(value) :
+        if value != NextPage.none :
+            return value >> 6
+        return NextPage.none.value
+
+    @staticmethod
+    def v2e(value) :
+        if value == NextPage.none.value :
+            return NextPage.none
+        return value << 6
+
+    @staticmethod
+    def is_valid(value) :
+        if isinstance(value, OccupiedSize) :
+            return True
+        # 返回结果
+        return value == OccupiedSize.free.value
+
+class Capacity(Enum) :
+    without_limit = 0xFFFFFFFF
+
+    @staticmethod
+    def e2v(value) :
+        if value == Capacity.without_limit :
+            return Capacity.without_limit.value
+        return value
+
+    @staticmethod
+    def v2e(value) :
+        if value == Capacity.without_limit.value :
+            return Capacity.without_limit
+        return value
+
+    @staticmethod
+    def is_valid(value) :
+        if isinstance(value, Capacity) :
+            return True
+        # 返回结果
+        return value == Capacity.without_limit.value
+
+class OccupiedSize(Enum) :
+    free = 0xFFFFFFFF
+    full = 0x7FFFFFFF
+
+    @staticmethod
+    def e2v(value) :
+        if value == OccupiedSize.free :
+            return OccupiedSize.free.value
+        elif value == OccupiedSize.full :
+            return OccupiedSize.full.value
+        return value
+
+    @staticmethod
+    def v2e(value) :
+        if value == OccupiedSize.free.value :
+            return OccupiedSize.free
+        elif value == OccupiedSize.full.value :
+            return OccupiedSize.full
+        return value
+
+    @staticmethod
+    def is_valid(value) :
+        if isinstance(value, OccupiedSize) :
+            return True
+        # 返回结果
+        return value in \
+            (OccupiedSize.free.value,
+             OccupiedSize.full.value)
+
+class SafelyClosed(Enum) :
+    closed = 0
+    opened = 1
+
+    @staticmethod
+    def e2v(value) :
+        if value == SafelyClosed.closed :
+            return SafelyClosed.closed.value
+        elif value == SafelyClosed.opened :
+            return SafelyClosed.opened.value
+        return None
+
+    @staticmethod
+    def v2e(value) :
+        if value == SafelyClosed.closed.value :
+            return SafelyClosed.closed
+        elif value == SafelyClosed.opened.value :
+            return SafelyClosed.opened
+        return None
+
+    @staticmethod
+    def is_valid(value) :
+        if isinstance(value, SafelyClosed) :
+            return True
+        # 返回结果
+        return value in \
+            (SafelyClosed.closed.value,
+             SafelyClosed.opened.value)

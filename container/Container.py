@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
 class Container :
-    # 设置数值
-    magic_numer = 0x19751204
-
     # 初始化
     def __init__(self, capacity = -1) :
         # 设置参数
@@ -15,30 +12,27 @@ class Container :
     def size(self) :
         return self.__size
 
-    @size.setter
-    def size(self, size) :
-        # 检查参数
-        assert size > 0
-        # 设置参数
-        self.__size = size
-
     @property
     def count(self) :
         return self.__count
-
-    @count.setter
-    def count(self, count) :
-        # 检查参数
-        assert count > 0
-        # 设置参数
-        self.__count = count
 
     @property
     def capacity(self) :
         return self.__capacity
 
-    @capacity.setter
-    def capacity(self, capacity) :
+    def _set_size(self, size) :
+        # 检查参数
+        assert size >= 0
+        # 设置参数
+        self.__size = size
+
+    def _set_count(self, count) :
+        # 检查参数
+        assert count >= 0
+        # 设置参数
+        self.__count = count
+
+    def _set_capacity(self, capacity) :
         # 检查参数
         assert capacity != 0
         # 设置参数

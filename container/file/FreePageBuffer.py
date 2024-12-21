@@ -27,25 +27,17 @@ class FreePageBuffer(PageBuffer) :
             [NextPage.none for _ in
             range(FreePageBuffer.default_data_page_types)]
 
-    def wrap(self, buffer, wrap_head = True) :
-        if wrap_head : super().wrap(buffer)
+    def wrap(self, buffer) :
+        super().wrap(buffer)
         # 循环处理
         for i in range(FreePageBuffer.default_data_page_types) :
-            if self.next_data_pages[i] == NextPage.none :
-                buffer.put_int(SizeOf.integer, NextPage.none.value)
-            else :
-                buffer.put_int(SizeOf.integer, self.next_data_pages[i] >> 6)
+            buffer.put_int(SizeOf.integer, NextPage.e2v(self.next_data_pages[i]))
 
-    def unwrap(self, buffer, unwrap_head = True) :
-        if unwrap_head : super().unwrap(buffer)
+    def unwrap(self, buffer) :
+        super().unwrap(buffer)
         # 循环处理
         for i in range(FreePageBuffer.default_data_page_types) :
-            value = buffer.get_int(SizeOf.integer)
-            # 检查
-            if value != NextPage.none.value :
-                self.next_data_pages[i] = value << 6
-            else :
-                self.next_data_pages[i] = NextPage.none
+            self.next_data_pages[i] = NextPage.v2e(buffer.get_int(SizeOf.integer))
 
     def check_valid(self, file_size) :
         super().check_valid(file_size)
@@ -58,8 +50,10 @@ class FreePageBuffer(PageBuffer) :
             # 检查
             if value == NextPage.none : continue
             # 检查
-            if value > self.file_size or (value & 0x3F) != 0 :
-                raise Exception(f"invalid next data page[{i}]({value})")
+            elif isinstance(value, int) :
+                if value > file_size or (value & 0x3F) != 0 :
+                    raise Exception(f"invalid next data page[{i}]({value})")
+            else : raise Exception(f"invalid next data page[{i}]({value}) instance")
 
     def dump(self) :
         super().dump()
@@ -71,7 +65,7 @@ class FreePageBuffer(PageBuffer) :
 
 def main() :
     # 新建
-    buffer = BytesBuffer()
+    buffer = BytesBuffer(128)
     hpb = FreePageBuffer()
     hpb.dump()
     hpb.wrap(buffer)

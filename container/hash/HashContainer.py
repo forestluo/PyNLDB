@@ -6,16 +6,21 @@ import traceback
 from container.Container import *
 from container.hash.HashElement import *
 
-class HashContainer(Container) :
-    # 质数表
-    _primes = \
-        [
-            107, 109, 113, 127, 131, 137, 139, 149, 151, 157,
-            163, 167, 173, 179, 181, 191, 193, 197, 199, 211,
-            217, 223, 227, 229, 233, 239, 241, 247, 251, 253,
-            255, 256
-        ]
+# 质数表
+_primes = \
+    [
+        107, 109, 113, 127, 131, 137, 139, 149, 151, 157,
+        163, 167, 173, 179, 181, 191, 193, 197, 199, 211,
+        217, 223, 227, 229, 233, 239, 241, 247, 251, 253,
+        255, 256
+    ]
 
+# 获得余数
+def _get_remainder(key, level) :
+    # 返回结果
+    return hash(key) % _primes[level]
+
+class HashContainer(Container) :
     # 初始化
     def __init__(self, capacity = -1) :
         # 调用父类初始化函数
@@ -26,7 +31,7 @@ class HashContainer(Container) :
         # 最大层数
         self.__max_level = 0
         # 根节点
-        self.__root = HashElement(HashContainer._primes[0])
+        self.__root = HashElement(_primes[0])
 
     @property
     def max_level(self) :
@@ -47,12 +52,6 @@ class HashContainer(Container) :
         return True \
             if self.get(key) is not None else False
 
-    # 获得余数
-    @staticmethod
-    def __get_remainder(key, level) :
-        # 返回结果
-        return hash(key) % HashContainer._primes[level]
-
     def get(self, key) :
         # 检查参数
         assert key is not None
@@ -66,11 +65,9 @@ class HashContainer(Container) :
             if not node.is_none \
                 and node.key == key : return node.value
             # 获得余数
-            index = HashContainer.\
-                __get_remainder(key, level)
+            index = _get_remainder(key, level)
             # 检查结果
-            if 0 <= index \
-                < HashContainer._primes[level] :
+            if 0 <= index < _primes[level] :
                 # 获得子节点
                 node = node[index]; level += 1
             else :
@@ -107,11 +104,9 @@ class HashContainer(Container) :
                 # 返回结果
                 return _value
             # 获得余数
-            index = HashContainer. \
-                __get_remainder(key, level)
+            index = _get_remainder(key, level)
             # 检查结果
-            if 0 <= index \
-                < HashContainer._primes[level] :
+            if 0 <= index < _primes[level] :
                 # 层数加一
                 level += 1
                 # 检查子节点
@@ -126,8 +121,8 @@ class HashContainer(Container) :
                     # 增加计数
                     self._inc_size_and_count()
                     # 设置节点
-                    node[index] = HashElement(
-                        HashContainer._primes[level], key, value)
+                    node[index] = \
+                    HashElement(_primes[level], key, value)
                     break
             else :
                 raise Exception(f"incorrect index({index})")
@@ -171,11 +166,9 @@ class HashContainer(Container) :
                 # 返回结果
                 return value
             # 获得余数
-            index = HashContainer. \
-                __get_remainder(key, level)
+            index = _get_remainder(key, level)
             # 检查结果
-            if 0 <= index \
-                < HashContainer._primes[level] :
+            if 0 <= index < _primes[level] :
                 # 检查子节点
                 if node[index] is None : break
                 # 记录数据
@@ -300,12 +293,12 @@ def main() :
                     print(f"\tkey = {key}")
                     print(f"\tvalue = {value}")
                     print(f"\tdata_value = None")
-    # 打印信息
-    container.dump()
     # 计时结束
     end = time.perf_counter()
+    # 打印信息
+    container.dump()
     print(f"HashContainer.main : show efficiency !")
-    print(f"\ttimespan = {end - start} ms")
+    print(f"\ttimespan = {end - start} sec")
     print(f"\tspeed = {count / float(end - start)} op/sec")
     """
     # 打印信息

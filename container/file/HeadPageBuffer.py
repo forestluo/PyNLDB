@@ -38,34 +38,30 @@ class HeadPageBuffer(PageBuffer) :
         super().__init__(PageType.head_page,
         HeadPageBuffer.default_size_type)
         # 设置参数
-        self._safely_closed = SafelyClosed.opened
+        self.safely_closed = SafelyClosed.opened
         self.count = 0
         self.capacity = Capacity.without_limit
         self.size = 0
         self.data_size = 0
         self.file_length = 0
 
-    def wrap(self, buffer, wrap_head = True) :
-        if wrap_head : super().wrap(buffer)
+    def wrap(self, buffer) :
+        super().wrap(buffer)
         buffer.put_int(SizeOf.integer, _MagicNumber.value)
         buffer.put_int(SizeOf.integer, _Version.value)
         # 检查
-        if SafelyClosed.is_valid(self._safely_closed) :
-            buffer.put_int(SizeOf.byte, self._safely_closed.value)
-        else :
-            raise Exception(f"invalid safely closed({self._safely_closed})")
+        if not SafelyClosed.is_valid(self.safely_closed) :
+            raise Exception(f"invalid safely closed({self.safely_closed})")
+        buffer.put_int(SizeOf.byte, SafelyClosed.e2v(self.safely_closed))
         buffer.put_int(SizeOf.integer, self.count)
-        if self.capacity != Capacity.without_limit :
-            buffer.put_int(SizeOf.integer, self.capacity)
-        else :
-            buffer.put_int(SizeOf.integer, Capacity.without_limit.value, True)
+        buffer.put_int(SizeOf.integer, Capacity.e2v(self.capacity))
         buffer.put_int(SizeOf.integer, self.size)
         buffer.put_int(SizeOf.long, self.data_size)
         buffer.put_int(SizeOf.long, self.file_length)
         buffer.put_str(_Copyright.value)
 
-    def unwrap(self, buffer, unwrap_head = True) :
-        if unwrap_head : super().unwrap(buffer)
+    def unwrap(self, buffer) :
+        super().unwrap(buffer)
         value = buffer.get_int(SizeOf.integer)
         # 检查
         if value != _MagicNumber.value :
@@ -74,20 +70,12 @@ class HeadPageBuffer(PageBuffer) :
         # 检查
         if value != _Version.value :
             raise Exception(f"invalid version({value})")
-        value = buffer.get_int(SizeOf.byte)
+        self.safely_closed = SafelyClosed.v2e(buffer.get_int(SizeOf.byte))
         # 检查
-        if SafelyClosed.is_valid(value) :
-            # 获得类型
-            self._safely_closed = SafelyClosed.get_type(value)
-        else :
-            raise Exception(f"invalid safely closed({value})")
+        if self.safely_closed is None :
+            raise Exception(f"invalid safely closed({self.safely_closed})")
         self.count = buffer.get_int(SizeOf.integer)
-        value = buffer.get_int(SizeOf.integer, True)
-        # 检查
-        if value != -1 :
-            self.capacity = value
-        else :
-            self.capacity = Capacity.without_limit
+        self.capacity = Capacity.v2e(buffer.get_int(SizeOf.integer))
         self.size = buffer.get_int(SizeOf.integer)
         self.data_size = buffer.get_int(SizeOf.long)
         self.file_length = buffer.get_int(SizeOf.long)
@@ -102,8 +90,8 @@ class HeadPageBuffer(PageBuffer) :
             raise Exception(f"invalid page type({self.page_type})")
         if self.next_page != NextPage.none :
             raise Exception(f"invalid next page({self.next_page})")
-        if not SafelyClosed.is_valid(self._safely_closed) :
-            raise Exception(f"invalid safely closed({self._safely_closed})")
+        if not SafelyClosed.is_valid(self.safely_closed) :
+            raise Exception(f"invalid safely closed({self.safely_closed})")
         if self.data_size < 0 or (self.data_size & 0x3F) != 0 :
             raise Exception(f"invalid data size({self.data_size})")
         if self.file_length < 0 or (self.file_length & 0x3F) != 0 :
@@ -122,7 +110,7 @@ class HeadPageBuffer(PageBuffer) :
         print(f"HeadPageBuffer.dump : show properties !")
         print(f"\tmagic_numer = 0x{_MagicNumber.value:08x}")
         print(f"\tversion = 0x{_Version.value:08x}")
-        print(f"\tsafely_closed = {self._safely_closed}")
+        print(f"\tsafely_closed = {self.safely_closed}")
         print(f"\tcount = {self.count}")
         print(f"\tcapacity = {self.capacity}")
         print(f"\tsize = {self.size}")
@@ -132,7 +120,7 @@ class HeadPageBuffer(PageBuffer) :
 
 def main() :
     # 新建
-    buffer = BytesBuffer()
+    buffer = BytesBuffer(128)
     hpb = HeadPageBuffer()
     hpb.dump()
     hpb.wrap(buffer)
