@@ -21,7 +21,7 @@ class PageDescription :
     # 初始化
     def __init__(self) :
         self.occupied_size = 0
-        self.next_page = NextPage.none
+        self.next_page = PageOffset.none
         self.page_type = PageType.invalid
         self.size_type = SizeType.qqkb
 
@@ -29,33 +29,25 @@ class PageDescription :
         buffer.put_int(SizeOf.byte, self.page_type.value)
         buffer.put_int(SizeOf.byte, self.size_type.value)
         # 转换参数
-        buffer.put_int(SizeOf.integer, OccupiedSize.e2v(self.occupied_size))
+        buffer.put_int(SizeOf.integer, PageOffset.e2v(self.next_page))
         # 转换参数
-        buffer.put_int(SizeOf.integer, NextPage.e2v(self.next_page))
+        buffer.put_int(SizeOf.integer, OccupiedSize.e2v(self.occupied_size))
 
     def unwrap(self, buffer) :
         self.page_type = PageType(buffer.get_int(SizeOf.byte))
         self.size_type = SizeType(buffer.get_int(SizeOf.byte))
         # 检查结果
-        self.occupied_size = OccupiedSize.v2e(buffer.get_int(SizeOf.integer))
+        self.next_page = PageOffset.v2e(buffer.get_int(SizeOf.integer))
         # 检查结果
-        self.next_page = NextPage.v2e(buffer.get_int(SizeOf.integer))
+        self.occupied_size = OccupiedSize.v2e(buffer.get_int(SizeOf.integer))
 
     def check_valid(self, file_size) :
         # 检查
-        if not PageType.is_valid(self.page_type) :
+        if not isinstance(self.page_type, PageType) :
             raise Exception(f"invalid page type({self.page_type})")
         # 检查
-        if not SizeType.is_valid(self.size_type) :
+        if not isinstance(self.size_type, SizeType) :
             raise Exception(f"invalid size type({self.size_type})")
-        # 检查
-        if self.page_type == PageType.head_page :
-            if self.size_type != SizeType.hqkb :
-                raise Exception(f"invalid size type({self.size_type})")
-        # 检查
-        elif self.page_type == PageType.free_page :
-            if self.size_type != SizeType.hqkb :
-                raise Exception(f"invalid size type({self.size_type})")
         # 检查
         if isinstance(self.next_page, int) and \
             (self.next_page > file_size or (self.next_page & 0x3F) != 0) :
@@ -76,7 +68,7 @@ def main() :
     # 新建
     buffer = BytesBuffer(128)
     pd = PageDescription()
-    pd.page_type = PageType.free_page
+    pd.page_type = PageType.invalid
     pd.size_type = SizeType.hqkb
     pd.dump()
     pd.wrap(buffer)

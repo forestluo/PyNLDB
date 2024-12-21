@@ -24,31 +24,35 @@ class FreePageBuffer(PageBuffer) :
             FreePageBuffer.default_size_type)
         # 设置参数
         self.next_data_pages = \
-            [NextPage.none for _ in
-            range(FreePageBuffer.default_data_page_types)]
+            [PageOffset.none for _ in
+             range(FreePageBuffer.default_data_page_types)]
 
     def wrap(self, buffer) :
         super().wrap(buffer)
         # 循环处理
         for i in range(FreePageBuffer.default_data_page_types) :
-            buffer.put_int(SizeOf.integer, NextPage.e2v(self.next_data_pages[i]))
+            buffer.put_int(SizeOf.integer, PageOffset.e2v(self.next_data_pages[i]))
 
     def unwrap(self, buffer) :
         super().unwrap(buffer)
         # 循环处理
         for i in range(FreePageBuffer.default_data_page_types) :
-            self.next_data_pages[i] = NextPage.v2e(buffer.get_int(SizeOf.integer))
+            self.next_data_pages[i] = PageOffset.v2e(buffer.get_int(SizeOf.integer))
 
     def check_valid(self, file_size) :
         super().check_valid(file_size)
-        if self.next_page != NextPage.none :
+        if self.page_type != PageType.free_page :
+            raise Exception(f"invalid page type({self.page_type})")
+        if self.size_type != FreePageBuffer.default_size_type :
+            raise Exception(f"invalid size type({self.size_type})")
+        if self.next_page != PageOffset.none :
             raise Exception(f"invalid next page({self.next_page})")
         # 循环处理
         for i in range(FreePageBuffer.default_data_page_types) :
             # 获得数值
             value = self.next_data_pages[i]
             # 检查
-            if value == NextPage.none : continue
+            if value == PageOffset.none : continue
             # 检查
             elif isinstance(value, int) :
                 if value > file_size or (value & 0x3F) != 0 :

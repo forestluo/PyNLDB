@@ -5,6 +5,7 @@ from container.file.FreePageBuffer import *
 from container.file.HeadPageBuffer import *
 from container.file.DataPageBuffer import *
 from container.file.PageDescription import *
+from container.file.QueueElementBuffer import *
 
 class PBOperator(FileContainer) :
     # 初始化
@@ -42,6 +43,9 @@ class PBOperator(FileContainer) :
         elif description.page_type == PageType.data_page :
             # 创建
             page = DataPageBuffer()
+        elif description.page_type == PageType.queue_element :
+            # 创建
+            page = QueueElementBuffer()
         else :
             raise Exception(f"invalid page type({description.page_type})")
         # 读取整个页面

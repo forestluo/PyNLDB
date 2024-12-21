@@ -20,7 +20,7 @@ class DataPageBuffer(PageBuffer) :
     def __init__(self, size_type = SizeType.qqkb) :
         super().__init__(PageType.data_page, size_type)
         # 参数
-        self.buffer = bytearray()
+        self.buffer = bytearray(SizeType.get_size(size_type))
 
     def wrap(self, buffer) :
         super().wrap(buffer)
@@ -32,17 +32,8 @@ class DataPageBuffer(PageBuffer) :
 
     def check_valid(self, file_size) :
         super().check_valid(file_size)
-        # 检查
-        if self.occupied_size == OccupiedSize.full \
-            or self.occupied_size > 0 :
-            if self.page_type != PageType.data_page :
-                raise Exception(f"invalid page type({self.page_type})")
-            if self.next_page != NextPage.none :
-                raise Exception(f"invalid next page({self.next_page})")
-        else :
-            if self.next_page != NextPage.none \
-                and self.next_page > file_size :
-                raise Exception(f"invalid next page({self.next_page})")
+        if self.page_type != PageType.data_page :
+            raise Exception(f"invalid page type({self.page_type})")
 
     def dump(self) :
         super().dump()
@@ -68,7 +59,7 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         traceback.print_exc()
-        print("DataPageBuffer.main :__main__ : ", str(e))
-        print("DataPageBuffer.main :__main__ : unexpected exit !")
+        print("DataPageBuffer.__main__ : ", str(e))
+        print("DataPageBuffer.__main__ : unexpected exit !")
 
 

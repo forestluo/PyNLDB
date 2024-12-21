@@ -3,14 +3,9 @@
 from container.file.ValueEnum import *
 from container.file.PageBuffer import *
 
-class _Version :
-    value = 0x4100
-
-class _MagicNumber :
-    value = 0x19751204
-
-class _Copyright :
-    value = "All rights reserved by www.simpleteam.com. Copyright (c) 2004 ~ 2075"
+_version = 0x4100
+_magic_number = 0x19751204
+_copyright = "All rights reserved by www.simpleteam.com. Copyright (c) 2004 ~ 2075"
 
 class HeadPageBuffer(PageBuffer) :
     ##################################################
@@ -47,50 +42,51 @@ class HeadPageBuffer(PageBuffer) :
 
     def wrap(self, buffer) :
         super().wrap(buffer)
-        buffer.put_int(SizeOf.integer, _MagicNumber.value)
-        buffer.put_int(SizeOf.integer, _Version.value)
-        # 检查
-        if not SafelyClosed.is_valid(self.safely_closed) :
-            raise Exception(f"invalid safely closed({self.safely_closed})")
+        buffer.put_int(SizeOf.integer, _magic_number)
+        buffer.put_int(SizeOf.integer, _version)
         buffer.put_int(SizeOf.byte, SafelyClosed.e2v(self.safely_closed))
         buffer.put_int(SizeOf.integer, self.count)
         buffer.put_int(SizeOf.integer, Capacity.e2v(self.capacity))
         buffer.put_int(SizeOf.integer, self.size)
         buffer.put_int(SizeOf.long, self.data_size)
         buffer.put_int(SizeOf.long, self.file_length)
-        buffer.put_str(_Copyright.value)
+        buffer.put_str(_copyright)
 
     def unwrap(self, buffer) :
         super().unwrap(buffer)
+        # 获取数值
         value = buffer.get_int(SizeOf.integer)
         # 检查
-        if value != _MagicNumber.value :
+        if value != _magic_number :
             raise Exception(f"invalid magic number({value})")
+        # 获取数值
         value = buffer.get_int(SizeOf.integer)
         # 检查
-        if value != _Version.value :
+        if value != _version :
             raise Exception(f"invalid version({value})")
-        self.safely_closed = SafelyClosed.v2e(buffer.get_int(SizeOf.byte))
-        # 检查
-        if self.safely_closed is None :
-            raise Exception(f"invalid safely closed({self.safely_closed})")
+        # 获取数值
+        # 如果不在枚举范围内，会抛出异常
+        self.safely_closed = SafelyClosed(buffer.get_int(SizeOf.byte))
         self.count = buffer.get_int(SizeOf.integer)
         self.capacity = Capacity.v2e(buffer.get_int(SizeOf.integer))
         self.size = buffer.get_int(SizeOf.integer)
         self.data_size = buffer.get_int(SizeOf.long)
         self.file_length = buffer.get_int(SizeOf.long)
+        # 获取数值
         value = buffer.get_str()
         # 检查
-        if value != _Copyright.value :
+        if value != _copyright :
             raise Exception(f"invalid copyright({value})")
 
     def check_valid(self, file_size) :
         super().check_valid(file_size)
         if self.page_type != PageType.head_page :
             raise Exception(f"invalid page type({self.page_type})")
-        if self.next_page != NextPage.none :
+        if self.size_type != HeadPageBuffer.default_size_type :
+            raise Exception(f"invalid size type({self.size_type})")
+        if self.next_page != PageOffset.none :
             raise Exception(f"invalid next page({self.next_page})")
-        if not SafelyClosed.is_valid(self.safely_closed) :
+        if not isinstance(self.safely_closed, SafelyClosed) :
             raise Exception(f"invalid safely closed({self.safely_closed})")
         if self.data_size < 0 or (self.data_size & 0x3F) != 0 :
             raise Exception(f"invalid data size({self.data_size})")
@@ -108,15 +104,15 @@ class HeadPageBuffer(PageBuffer) :
     def dump(self) :
         super().dump()
         print(f"HeadPageBuffer.dump : show properties !")
-        print(f"\tmagic_numer = 0x{_MagicNumber.value:08x}")
-        print(f"\tversion = 0x{_Version.value:08x}")
+        print(f"\tmagic_numer = 0x{_magic_number:08x}")
+        print(f"\tversion = 0x{_version:08x}")
         print(f"\tsafely_closed = {self.safely_closed}")
         print(f"\tcount = {self.count}")
         print(f"\tcapacity = {self.capacity}")
         print(f"\tsize = {self.size}")
         print(f"\tdata_size = {self.data_size}")
         print(f"\tfile_length = {self.file_length}")
-        print(f"\tcopyright = \"{_Copyright.value}\"")
+        print(f"\tcopyright = \"{_copyright}\"")
 
 def main() :
     # 新建

@@ -24,9 +24,6 @@ class DPBOperator(FPBOperator) :
         # 检查
         if description.page_type != PageType.data_page :
             raise Exception(f"invalid page type({description.page_type})")
-        # 检查
-        if description.occupied_size == OccupiedSize.free :
-            raise Exception(f"try to free a page(offset = {offset}) again")
         # 释放页面
         self._free_page(offset, description)
 
@@ -43,9 +40,6 @@ class DPBOperator(FPBOperator) :
         # 检查
         if description.page_type != PageType.data_page :
             raise Exception(f"invalid page type({description.page_type})")
-        # 检查
-        if description.occupied_size == OccupiedSize.free :
-            raise Exception(f"try to load a free page(offset = {offset})")
         # 检查
         if description.occupied_size != OccupiedSize.full :
             # 新建
@@ -72,9 +66,6 @@ class DPBOperator(FPBOperator) :
         # 检查
         if description.page_type != PageType.data_page :
             raise Exception(f"invalid page type({description.page_type})")
-        # 检查
-        if description.occupied_size == OccupiedSize.free :
-            raise Exception(f"try to remove a free page(offset = {offset})")
         # 检查
         if description.occupied_size != OccupiedSize.full :
             # 新建

@@ -24,12 +24,14 @@ class PageType(Enum) :
     @staticmethod
     def is_valid(page_type) :
         # 返回结果
-        return 1 <= page_type.value <= 7
+        return isinstance(page_type, PageType)
 
 # Killo Bytes
 # 1 KB = 1024 Bytes
 _kb = 1024
 _mb = 1024 * _kb
+# Total Types
+_total_types = 21
 
 # 页面类型
 class SizeType(Enum) :
@@ -56,17 +58,15 @@ class SizeType(Enum) :
     mb32 = 20
     mb64 = 21
 
-    __total_types = 21
-
     @staticmethod
     def total_types() :
         # 返回结果
-        return SizeType.__total_types
+        return _total_types
 
     @staticmethod
     def is_valid(size_type) :
         # 返回结果
-        return 1 <= size_type.value <= 21
+        return isinstance(size_type, SizeType)
 
     @staticmethod
     def get_type(size) :
@@ -96,12 +96,13 @@ class SizeType(Enum) :
 
     @staticmethod
     def get_size(size_type) :
+        # 检查
         assert isinstance(size_type, SizeType)
         # 获得数值
         value = size_type.value
         # 获得数值
         if value <= 0 :
-            raise Exception(f"unknown type({size_type})")
+            raise Exception(f"unknown size type({size_type})")
         elif value <= 4 :
             return 64 << (value - 1)
         elif value <= 14 :
@@ -109,32 +110,35 @@ class SizeType(Enum) :
         elif value <= 21 :
             return 1048576 << (value - 15)
         else :
-            raise Exception(f"unknown type({size_type})")
+            raise Exception(f"unknown size type({size_type})")
 
-class NextPage(Enum) :
+class PageOffset(Enum) :
     none = 0xFFFFFFFF
 
     @staticmethod
+    def is_valid(value) :
+        # 返回结果
+        return isinstance(value, PageOffset)
+
+    @staticmethod
     def e2v(value) :
-        if value != NextPage.none :
+        if value != PageOffset.none :
             return value >> 6
-        return NextPage.none.value
+        return PageOffset.none.value
 
     @staticmethod
     def v2e(value) :
-        if value == NextPage.none.value :
-            return NextPage.none
+        if value == PageOffset.none.value :
+            return PageOffset.none
         return value << 6
-
-    @staticmethod
-    def is_valid(value) :
-        if isinstance(value, OccupiedSize) :
-            return True
-        # 返回结果
-        return value == OccupiedSize.free.value
 
 class Capacity(Enum) :
     without_limit = 0xFFFFFFFF
+
+    @staticmethod
+    def is_valid(value) :
+        # 返回结果
+        return isinstance(value, Capacity)
 
     @staticmethod
     def e2v(value) :
@@ -148,45 +152,34 @@ class Capacity(Enum) :
             return Capacity.without_limit
         return value
 
+class OccupiedSize(Enum) :
+    full = 0xFFFFFFFF
+
     @staticmethod
     def is_valid(value) :
-        if isinstance(value, Capacity) :
-            return True
         # 返回结果
-        return value == Capacity.without_limit.value
-
-class OccupiedSize(Enum) :
-    free = 0xFFFFFFFF
-    full = 0x7FFFFFFF
+        return isinstance(value, OccupiedSize)
 
     @staticmethod
     def e2v(value) :
-        if value == OccupiedSize.free :
-            return OccupiedSize.free.value
-        elif value == OccupiedSize.full :
+        if value == OccupiedSize.full :
             return OccupiedSize.full.value
         return value
 
     @staticmethod
     def v2e(value) :
-        if value == OccupiedSize.free.value :
-            return OccupiedSize.free
-        elif value == OccupiedSize.full.value :
+        if value == OccupiedSize.full.value :
             return OccupiedSize.full
         return value
-
-    @staticmethod
-    def is_valid(value) :
-        if isinstance(value, OccupiedSize) :
-            return True
-        # 返回结果
-        return value in \
-            (OccupiedSize.free.value,
-             OccupiedSize.full.value)
 
 class SafelyClosed(Enum) :
     closed = 0
     opened = 1
+
+    @staticmethod
+    def is_valid(value) :
+        # 返回结果
+        return isinstance(value, SafelyClosed)
 
     @staticmethod
     def e2v(value) :
@@ -194,7 +187,7 @@ class SafelyClosed(Enum) :
             return SafelyClosed.closed.value
         elif value == SafelyClosed.opened :
             return SafelyClosed.opened.value
-        return None
+        raise Exception(f"invalid safely closed({value})")
 
     @staticmethod
     def v2e(value) :
@@ -202,13 +195,4 @@ class SafelyClosed(Enum) :
             return SafelyClosed.closed
         elif value == SafelyClosed.opened.value :
             return SafelyClosed.opened
-        return None
-
-    @staticmethod
-    def is_valid(value) :
-        if isinstance(value, SafelyClosed) :
-            return True
-        # 返回结果
-        return value in \
-            (SafelyClosed.closed.value,
-             SafelyClosed.opened.value)
+        raise Exception(f"invalid safely closed({value})")

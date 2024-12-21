@@ -41,7 +41,7 @@ class FPBOperator(PBOperator) :
         for i in range(FreePageBuffer.default_data_page_types) :
             # 设置数值
             if self._next_pages[i] < 0 :
-                fpb.next_data_pages[i] = NextPage.none
+                fpb.next_data_pages[i] = PageOffset.none
             else :
                 fpb.next_data_pages[i] = self._next_pages[i]
         # 写入数据
@@ -58,7 +58,7 @@ class FPBOperator(PBOperator) :
         # 循环处理
         for i in range(FreePageBuffer.default_data_page_types) :
             # 设置参数
-            if page.next_data_pages[i] == NextPage.none :
+            if page.next_data_pages[i] == PageOffset.none :
                 self._next_pages[i] = -1
             else :
                 self._next_pages[i] = page.next_data_pages[i]
@@ -72,7 +72,7 @@ class FPBOperator(PBOperator) :
         for i in range(FreePageBuffer.default_data_page_types) :
             # 设置数值
             if self._next_pages[i] < 0 :
-                fpb.next_data_pages[i] = NextPage.none
+                fpb.next_data_pages[i] = PageOffset.none
             else :
                 fpb.next_data_pages[i] = self._next_pages[i]
         # 写入数据
@@ -84,13 +84,13 @@ class FPBOperator(PBOperator) :
         # 页面类型
         page_type = description.page_type
         # 设置参数
-        description.page_type = PageType.data_page
+        description.page_type = PageType.invalid
         # 设置占用为被释放状态
-        description.occupied_size = OccupiedSize.free
+        description.occupied_size = 0
         # 检查数据
         if self._next_pages[size_type.value - 1] < 0 :
             # 设置类型
-            description.next_page = NextPage.none
+            description.next_page = PageOffset.none
         else :
             # 设置数值
             description.next_page = self._next_pages[size_type.value - 1]
@@ -117,25 +117,20 @@ class FPBOperator(PBOperator) :
         # 检查
         if description.size_type != size_type :
             raise Exception(f"invalid size type({description.size_type})")
-        if description.occupied_size != OccupiedSize.free :
-            raise Exception(f"invalid occupied size({description.occupied_size})")
         # 索引
         index = size_type.value - 1
-        # 检查数据
-        if description.next_page == NextPage.none :
-            # 设置数据
+        # 检查
+        if description.next_page == PageOffset.none :
             self._next_pages[index] = -1
-        else :
-            # 检查
-            if isinstance(description.next_page, int) :
-                # 设置数据
-                self._next_pages[index] = description.next_page
-            # 无效的类型
-            else : raise Exception(f"invalid next page({description.next_page})")
+        elif isinstance(description.next_page, int) :
+            self._next_pages[index] = description.next_page
+        else : raise Exception(f"invalid next page({description.next_page})")
         # 页面类型
         description.page_type = page_type
         # 设置参数
-        description.next_page = NextPage.none
+        description.next_page = PageOffset.none
+        # 占用空间
+        description.occupied_size = 0
         # 增加计数
         self._inc_count()
         # 返回结果
@@ -144,6 +139,9 @@ class FPBOperator(PBOperator) :
     def dump(self) :
         print(f"FPBOperator.dump : show properties !")
         for i in range(len(self._next_pages)) :
-            print(f"\tnext_page[{i}] = {self._next_pages[i]}")
+            if self._next_pages[i] < 0 :
+                print(f"\tnext_page[{i}] = -1")
+            else :
+                print(f"\tnext_page[{i}] = 0x{self._next_pages[i]:08x}")
 
 
