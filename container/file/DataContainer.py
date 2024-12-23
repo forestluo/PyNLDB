@@ -2,9 +2,11 @@
 from container.file.DPBOperator import *
 from container.file.FPBOperator import *
 from container.file.HPBOperator import *
+from container.file.IPBOperator import *
+from container.file.QPBOperator import *
 
 class DataContainer(HPBOperator,
-    DPBOperator) :
+    DPBOperator, QPBOperator, IPBOperator) :
     # 初始化
     def __init__(self) :
         # 调用父类初始化
@@ -13,32 +15,15 @@ class DataContainer(HPBOperator,
         self._read_count = 0
         self._write_count = 0
 
-    def _free(self, offset, size_type) :
-        # 新建
-        description = PageDescription()
-        # 设置类型
-        description.page_type = \
-            PageType.data_page
-        # 设置尺寸
-        description.size_type = size_type
-        # 分配页面
-        self._free_page(offset, description)
-
-    def _malloc(self, page_type, size_type) :
-        # 新建
-        description = PageDescription()
-        # 设置类型
-        description.page_type = page_type
-        # 设置尺寸
-        description.size_type = size_type
-        # 分配页面
-        return self._malloc_page(description)
-
     def close(self) :
         # 调用父类函数
-        HPBOperator.close(self)
+        IPBOperator.close(self)
+        # 调用父类函数
+        QPBOperator.close(self)
         # 调用父类函数
         FPBOperator.close(self)
+        # 调用父类函数
+        HPBOperator.close(self)
         # 调用父类函数
         FileContainer.close(self)
 
@@ -48,20 +33,30 @@ class DataContainer(HPBOperator,
         # 调用父类函数
         HPBOperator.open(self, file_name)
         # 调用父类函数
-        FPBOperator.open(self, file_name)
-        # 调用父类函数
         FileContainer.open(self, file_name)
         # 检查文件
         if exist_flag :
+            # 按照顺序创建缺省项目
             # 调用父类函数
             HPBOperator._load(self)
             # 调用父类函数
             FPBOperator._load(self)
+            # 调用父类函数
+            # 加载队列根节点
+            QPBOperator._load(self)
+            # 加载索引根节点
+            IPBOperator._load(self)
         else :
+            # 按照顺序创建缺省项目
             # 调用父类函数
-            HPBOperator._save(self)
+            HPBOperator._create(self)
             # 调用父类函数
-            FPBOperator._save(self)
+            FPBOperator._create(self)
+            # 调用父类函数
+            # 创建队列根节点
+            QPBOperator._create(self)
+            # 创建索引根节点
+            IPBOperator._create(self)
             # 设置标记
             self._safely_closed = SafelyClosed.closed
 
@@ -69,6 +64,8 @@ class DataContainer(HPBOperator,
         FileContainer.dump(self)
         HPBOperator.dump(self)
         FPBOperator.dump(self)
+        QPBOperator.dump(self)
+        IPBOperator.dump(self)
         print(f"DataContainer.dump : show properties !")
         print(f"\tread_count = {self._read_count}")
         print(f"\twrite_count = {self._write_count}")

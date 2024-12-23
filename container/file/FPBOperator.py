@@ -14,15 +14,6 @@ class FPBOperator(PBOperator) :
         self._next_pages = [-1
             for _ in range(FreePageBuffer.default_data_page_types)]
 
-    def open(self, file_name) :
-        try :
-            # 屏蔽对父类的重复调用
-            pass
-        except Exception as e :
-            traceback.print_exc()
-            print("FPBOperator.open : ", str(e))
-            print("FPBOperator.open : unexpected exit !")
-
     def close(self) :
         try :
             # 检查
@@ -34,7 +25,7 @@ class FPBOperator(PBOperator) :
             print("FPBOperator.close : ", str(e))
             print("FPBOperator.close : unexpected exit !")
 
-    def _save(self) :
+    def _create(self) :
         # 新建
         fpb = FreePageBuffer()
         # 循环处理
@@ -78,7 +69,28 @@ class FPBOperator(PBOperator) :
         # 写入数据
         self._write_fully(HeadPageBuffer.default_size, fpb)
 
-    def _free_page(self, offset, description) :
+    def _free_page(self, offset, size_type) :
+        # 新建
+        description = PageDescription()
+        # 设置类型
+        description.page_type = \
+            PageType.data_page
+        # 设置尺寸
+        description.size_type = size_type
+        # 分配页面
+        self.__free_page(offset, description)
+
+    def _malloc_page(self, page_type, size_type) :
+        # 新建
+        description = PageDescription()
+        # 设置类型
+        description.page_type = page_type
+        # 设置尺寸
+        description.size_type = size_type
+        # 分配页面
+        return self.__malloc_page(description)
+
+    def __free_page(self, offset, description) :
         # 尺寸类型
         size_type = description.size_type
         # 页面类型
@@ -103,13 +115,13 @@ class FPBOperator(PBOperator) :
         # 计数
         self._dec_count()
 
-    def _malloc_page(self, description) :
+    def __malloc_page(self, description) :
         # 尺寸类型
         size_type = description.size_type
         # 查询
         offset = self._next_pages[size_type.value - 1]
         # 检查
-        if offset == -1 : return -1
+        if offset < 0 : return -1
         # 页面类型
         page_type = description.page_type
         # 读取页面描述

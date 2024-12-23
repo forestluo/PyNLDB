@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+from container.file.QueuePageBuffer import QueuePageBuffer
 from container.file.ValueEnum import *
 from container.file.FileContainer import *
 from container.file.FreePageBuffer import *
 from container.file.HeadPageBuffer import *
 from container.file.DataPageBuffer import *
 from container.file.PageDescription import *
+from container.file.IndexPageBuffer import *
 from container.file.QueueElementBuffer import *
 
 class PBOperator(FileContainer) :
@@ -43,6 +45,12 @@ class PBOperator(FileContainer) :
         elif description.page_type == PageType.data_page :
             # 创建
             page = DataPageBuffer()
+        elif description.page_type == PageType.index_page :
+            # 创建
+            page = IndexPageBuffer()
+        elif description.page_type == PageType.queue_page :
+            # 创建
+            page = QueuePageBuffer()
         elif description.page_type == PageType.queue_element :
             # 创建
             page = QueueElementBuffer()
@@ -50,12 +58,17 @@ class PBOperator(FileContainer) :
             raise Exception(f"invalid page type({description.page_type})")
         # 读取整个页面
         self._read_fully(position, page)
+        # 后置处理
+        if isinstance(page, QueuePageBuffer) \
+            or isinstance(page, IndexPageBuffer) : page.offset = position
         # 返回结果
         return page
 
     def _read_buffer(self, position, buffer) :
         # 检查
         assert isinstance(buffer, BytesBuffer)
+        # 检查
+        self._check_read_action(position, buffer.size)
         # 设置位置
         self._mapped.seek(position)
         # 读取
@@ -64,6 +77,8 @@ class PBOperator(FileContainer) :
     def _write_buffer(self, position, buffer) :
         # 检查
         assert isinstance(buffer, BytesBuffer)
+        # 检查
+        self._check_write_action(position, buffer.size)
         # 设置位置
         self._mapped.seek(position)
         # 写入

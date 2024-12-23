@@ -25,7 +25,7 @@ class DPBOperator(FPBOperator) :
         if description.page_type != PageType.data_page :
             raise Exception(f"invalid page type({description.page_type})")
         # 释放页面
-        self._free_page(offset, description)
+        self._free_page(offset, description.size_type)
 
     # 加载数据
     def load_data(self, offset) :
@@ -77,7 +77,7 @@ class DPBOperator(FPBOperator) :
         # 跳过页面头部描述
         self._read_buffer(offset + description.size, buffer)
         # 释放页面
-        self._free_page(offset, description)
+        self._free_page(offset, description.size_type)
         # 返回结果
         return buffer
 
@@ -99,7 +99,8 @@ class DPBOperator(FPBOperator) :
         # 设置页面类型
         description.page_type = PageType.data_page
         # 分配页面
-        offset = self._malloc_page(description)
+        offset = self._malloc_page(description.page_type,
+                                   description.size_type)
         # 检查
         if offset < 0 :
             # 创建

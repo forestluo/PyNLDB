@@ -39,7 +39,7 @@ class HPBOperator(PBOperator) :
         if self._file_length < 0 :
             self._file_length = SizeType.get_size(self.default_size_type)
 
-    def _save(self) :
+    def _create(self) :
         # 新建
         hpb = HeadPageBuffer()
         # 设置参数

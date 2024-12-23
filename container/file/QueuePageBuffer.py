@@ -8,6 +8,7 @@ class QueuePageBuffer(PageBuffer) :
     #
     # Offsets.
     #
+    # Identity        [int]
     # Capacity        [int]
     # Size            [int]
     # Count           [int]
@@ -34,6 +35,8 @@ class QueuePageBuffer(PageBuffer) :
         self.offset = PageOffset.none
         ##
         ##################################################
+        # Identity
+        self.identity = 0
         # Capacity
         self.capacity = Capacity.without_limit
         # Size
@@ -50,6 +53,7 @@ class QueuePageBuffer(PageBuffer) :
 
     def wrap(self, buffer) :
         super().wrap(buffer)
+        buffer.put_int(SizeOf.integer, self.identity)
         buffer.put_int(SizeOf.integer,
             Capacity.e2v(self.capacity))
         buffer.put_int(SizeOf.integer, self.size)
@@ -63,6 +67,7 @@ class QueuePageBuffer(PageBuffer) :
 
     def unwrap(self, buffer) :
         super().unwrap(buffer)
+        self.identity = buffer.get_int(SizeOf.integer)
         self.capacity = \
             Capacity.v2e(buffer.get_int(SizeOf.integer))
         self.size = buffer.get_int(SizeOf.integer)
@@ -101,6 +106,7 @@ class QueuePageBuffer(PageBuffer) :
     def dump(self) :
         super().dump()
         print(f"QueuePageBuffer.dump : show properties !")
+        print(f"\tidentity = {self.identity}")
         print(f"\tcapacity = {self.capacity}")
         print(f"\tsize = {self.size}")
         print(f"\tcount = {self.count}")
@@ -112,6 +118,7 @@ def main() :
     # 新建
     buffer = BytesBuffer(128)
     qpb = QueuePageBuffer()
+    qpb.identity = 12345
     qpb.dump()
     qpb.wrap(buffer)
     qpb.check_valid(1024)

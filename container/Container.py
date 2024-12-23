@@ -46,6 +46,8 @@ class Container :
     def _dec_size(self, size = 1) :
         # 设置参数
         self.__size -= size
+        # 检查
+        assert self.__size >= 0
 
     def _inc_count(self, count = 1) :
         # 设置参数
@@ -54,6 +56,8 @@ class Container :
     def _dec_count(self, count = 1) :
         # 设置参数
         self.__count -= count
+        # 检查
+        assert self.__count >= 0
 
     def _inc_size_and_count(self) :
         # 设置参数
@@ -64,6 +68,9 @@ class Container :
         # 设置参数
         self.__size -= 1
         self.__count -= 1
+        # 检查
+        assert self.__size >= 0 \
+                and self.__count >= 0
 
     def clear(self) :
         # 设置参数
