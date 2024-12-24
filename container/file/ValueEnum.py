@@ -60,11 +60,6 @@ class SizeType(Enum) :
         return _total_types
 
     @staticmethod
-    def is_valid(size_type) :
-        # 返回结果
-        return isinstance(size_type, SizeType)
-
-    @staticmethod
     def get_type(size) :
         # Check result.
         if size <= _kb / 4 / 4 : return SizeType.qqKB

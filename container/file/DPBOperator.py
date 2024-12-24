@@ -53,34 +53,6 @@ class DPBOperator(FPBOperator) :
         # 返回结果
         return buffer
 
-    # 删除数据
-    def remove_data(self, offset) :
-        # 检查
-        if offset < 0 \
-            or (offset > 0 and offset > self._file_length) :
-            raise Exception(f"invalid offset({offset})")
-        # 新建
-        description = PageDescription()
-        # 读取
-        self._read_fully(offset, description)
-        # 检查
-        if description.page_type != PageType.data_page :
-            raise Exception(f"invalid page type({description.page_type})")
-        # 检查
-        if description.occupied_size != OccupiedSize.full :
-            # 新建
-            buffer = BytesBuffer(description.occupied_size)
-        else :
-            # 新建
-            buffer = BytesBuffer(SizeType.get_size(description.size_type))
-        # 读取数据
-        # 跳过页面头部描述
-        self._read_buffer(offset + description.size, buffer)
-        # 释放页面
-        self._free_page(offset, description.size_type)
-        # 返回结果
-        return buffer
-
     # 保存数据
     def save_data(self, buffer) :
         # 检查

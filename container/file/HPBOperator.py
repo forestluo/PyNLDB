@@ -67,10 +67,8 @@ class HPBOperator(PBOperator) :
 
     def _load(self) :
         # 读取
-        page = self._load_page(HPBOperator.default_offset)
-        # 检查类型
-        if not isinstance(page, HeadPageBuffer) :
-            raise Exception("invalid head page buffer")
+        page = self._load_page(
+            HPBOperator.default_offset, PageType.head_page)
         # 获得数据尺寸
         self._data_size = page.data_size
         # 获得参数

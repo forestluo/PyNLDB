@@ -45,10 +45,8 @@ class FPBOperator(PBOperator) :
 
     def _load(self) :
         # 读取
-        page = self._load_page(HeadPageBuffer.default_size)
-        # 检查类型
-        if not isinstance(page, FreePageBuffer) :
-            raise Exception("invalid free page buffer")
+        page = self._load_page(
+            FPBOperator.default_offset, PageType.free_page)
         # 循环处理
         for i in range(FreePageBuffer.default_data_page_types) :
             # 设置参数

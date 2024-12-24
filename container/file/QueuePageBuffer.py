@@ -92,13 +92,9 @@ class QueuePageBuffer(PageBuffer) :
         # 循环处理
         for key, position in positions.items() :
             # 检查
-            if position == PageOffset.none : continue
-            # 检查
-            elif isinstance(position, int) :
-                if position > file_size or (position & 0x3F) != 0 :
-                    raise Exception(f"invalid {key} ({position})")
-            else :
-                raise Exception(f"invalid {key} ({position}) instance")
+            if isinstance(position, int) and \
+                (position > file_size or (position & 0x3F) != 0) :
+                raise Exception(f"invalid {key} ({position})")
 
     def dump(self) :
         super().dump()

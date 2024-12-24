@@ -53,7 +53,8 @@ class RPBOperator(PBOperator) :
         # 循环处理
         while position != page.offset :
             # 加载页面
-            _page = self._load_page(position)
+            _page = self._load_page(
+                position, PageType.queue_page)
             # 设置父指针
             parent = _page; position = _page.next_page
         # 检查
@@ -111,10 +112,8 @@ class RPBOperator(PBOperator) :
 
     def _load(self) :
         # 读取
-        page = self._load_page(RPBOperator.default_offset)
-        # 检查类型
-        if not isinstance(page, RootPageBuffer) :
-            raise Exception("invalid free page buffer")
+        page = self._load_page(
+            RPBOperator.default_offset, PageType.root_page)
         # 循环处理
         for i in range(RootPageBuffer.default_root_page_types) :
             # 设置参数

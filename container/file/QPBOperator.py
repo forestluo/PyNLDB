@@ -49,7 +49,7 @@ class QPBOperator(FPBOperator, RPBOperator) :
         # 循环处理
         while position > 0 :
             # 读取页面
-            page = self._load_page(position)
+            page = self._load_page(position, PageType.queue_page)
             # 检查
             if page.identity in self.__queues.keys() :
                 raise Exception(f"duplicate identity({page.identity})")
@@ -57,11 +57,6 @@ class QPBOperator(FPBOperator, RPBOperator) :
             self.__queues[page.identity] = page
             # 设置偏移量
             position = page.next_page if page.next_page != PageOffset.none else -1
-
-    def get_queue(self, identity) :
-        # 返回结果
-        return self.__queues[identity] \
-            if identity in self.__queues.keys() else None
 
     def create_queue(self, identity) :
         # 创建
@@ -84,7 +79,8 @@ class QPBOperator(FPBOperator, RPBOperator) :
         # 获得页面
         page = self.__queues[identity]
         # 加载元素
-        element = self._load_page(page.root_position)
+        element = self._load_page(
+            page.root_position, PageType.queue_element)
         # 循环处理
         while True :
             # 数量减一
@@ -94,7 +90,8 @@ class QPBOperator(FPBOperator, RPBOperator) :
             # 检查
             if element.next_element == PageOffset.none : break
             # 加载元素
-            element = self.__load_element(element.next_element)
+            element = self._load_page(
+                element.next_element, PageType.queue_element)
         # 注销队列
         self._unregister_queue(page)
         # 释放队列

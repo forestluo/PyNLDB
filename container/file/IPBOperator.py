@@ -37,7 +37,7 @@ class IPBOperator(FPBOperator, RPBOperator) :
         # 循环处理
         while offset > 0 :
             # 读取页面
-            page = self._load_page(offset)
+            page = self._load_page(offset, PageType.queue_page)
             # 检查
             if page.identity in self.__queues.keys() :
                 raise Exception(f"duplicate identity({page.identity})")

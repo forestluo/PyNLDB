@@ -55,12 +55,9 @@ class RootPageBuffer(PageBuffer) :
             # 获得数值
             value = self.next_root_pages[i]
             # 检查
-            if value == PageOffset.none : continue
-            # 检查
-            elif isinstance(value, int) :
-                if value > file_size or (value & 0x3F) != 0 :
-                    raise Exception(f"invalid next root page[{i}]({value})")
-            else : raise Exception(f"invalid next root page[{i}]({value}) instance")
+            if isinstance(value, int) and \
+                (value > file_size or (value & 0x3F) != 0) :
+                raise Exception(f"invalid next root page[{i}]({value})")
 
     def dump(self) :
         super().dump()

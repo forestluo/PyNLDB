@@ -40,9 +40,6 @@ class BytesBuffer :
 
     @staticmethod
     def create(size_type) :
-        # 检查
-        if not SizeType.is_valid(size_type) :
-            raise Exception(f"invalid size type({size_type})")
         # 返回结果
         return BytesBuffer(SizeType.get_size(size_type))
 

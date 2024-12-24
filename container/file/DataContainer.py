@@ -87,7 +87,7 @@ def data_operator_case() :
     buffer = BytesBuffer(1234)
     position = container.save_data(buffer)
     container.load_data(position)
-    container.remove_data(position)
+    container.free_data(position)
 
     identity = 1
     container.create_queue(identity)

@@ -64,13 +64,9 @@ class QueueElementBuffer(PageBuffer) :
         # 循环处理
         for key, offset in offsets.items() :
             # 检查
-            if offset == PageOffset.none : continue
-            # 检查
-            elif isinstance(offset, int) :
-                if offset > file_size or (offset & 0x3F) != 0 :
-                    raise Exception(f"invalid {key} ({offset})")
-            else :
-                raise Exception(f"invalid {key} ({offset}) instance")
+            if isinstance(offset, int) and \
+                (offset > file_size or (offset & 0x3F) != 0) :
+                raise Exception(f"invalid {key} ({offset})")
 
     def dump(self) :
         super().dump()

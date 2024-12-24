@@ -27,6 +27,10 @@ class IndexElementBuffer(PageBuffer) :
         self.level = -1
         self.index = -1
         # 设置参数
+        self.occupied_size = \
+            SizeOf.integer.value + \
+            self.get_subnode_count() * IndexData.size
+        # 设置参数
         self.page_offset = PageOffset.none
         # 循环处理
         self.datas = [IndexData() for _ in range(self.get_subnode_count())]
