@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from cupyx.scipy.sparse import identity
-
 from container.file.DPBOperator import *
 from container.file.FPBOperator import *
 from container.file.HPBOperator import *
