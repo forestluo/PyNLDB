@@ -19,13 +19,13 @@ class IPBOperator(FPBOperator, RPBOperator) :
             # 检查
             if hasattr(self, "_mapped") :
                 # 关闭队列
-                self.__close()
+                self.__write_fully()
         except Exception as e :
             traceback.print_exc()
             print("IPBOperator.close : ", str(e))
             print("IPBOperator.close : unexpected exit !")
 
-    def __close(self) :
+    def __write_fully(self) :
         # 循环处理
         for page in self.__indexes.values() :
             # 写入

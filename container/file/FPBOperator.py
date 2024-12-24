@@ -22,7 +22,7 @@ class FPBOperator(PBOperator) :
             # 检查
             if hasattr(self, "_mapped") :
                 # 关闭文件头
-                self.__close()
+                self.__write_fully()
         except Exception as e :
             traceback.print_exc()
             print("FPBOperator.close : ", str(e))
@@ -55,7 +55,7 @@ class FPBOperator(PBOperator) :
             else :
                 self.__next_frees[i] = page.next_data_pages[i]
 
-    def __close(self) :
+    def __write_fully(self) :
         # 新建
         page = FreePageBuffer()
         # 循环处理

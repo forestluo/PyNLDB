@@ -23,7 +23,7 @@ class HPBOperator(PBOperator) :
             # 检查
             if hasattr(self, "_mapped") :
                 # 关闭文件头
-                self.__close()
+                self.__write_fully()
         except Exception as e :
             traceback.print_exc()
             print("HPBOperator.close : ", str(e))
@@ -87,7 +87,7 @@ class HPBOperator(PBOperator) :
         # 设置参数
         self._set_count(page.count)
 
-    def __close(self) :
+    def __write_fully(self) :
         # 新建
         page = HeadPageBuffer()
         # 设置参数
