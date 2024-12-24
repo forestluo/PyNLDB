@@ -6,6 +6,9 @@ from container.file.FileContainer import *
 from container.file.HeadPageBuffer import *
 
 class HPBOperator(PBOperator) :
+    # 偏移量
+    default_offset = 0
+
     # 初始化
     def __init__(self) :
         # 调用父类初始化函数
@@ -41,30 +44,30 @@ class HPBOperator(PBOperator) :
 
     def _create(self) :
         # 新建
-        hpb = HeadPageBuffer()
+        page = HeadPageBuffer()
         # 设置参数
-        hpb.safely_closed = SafelyClosed.opened
+        page.safely_closed = SafelyClosed.opened
         # 设置数据尺寸
-        hpb.data_size = self._data_size
+        page.data_size = self._data_size
         # 设置文件长度
-        hpb.file_length = self._file_length
+        page.file_length = self._file_length
         # 设置容量
         if self.capacity > 0 :
-            hpb.capacity = self.capacity
+            page.capacity = self.capacity
         else :
-            hpb.capacity = Capacity.without_limit
+            page.capacity = Capacity.without_limit
         # 设置尺寸
-        hpb.size = self.size
+        page.size = self.size
         # 设置计数
-        hpb.count = self.count
+        page.count = self.count
         # 写入数据
-        self._write_fully(0, hpb)
+        self._write_fully(HPBOperator.default_offset, page)
         # 设置数据尺寸
         self._data_size += HeadPageBuffer.default_size
 
     def _load(self) :
         # 读取
-        page = self._load_page(0)
+        page = self._load_page(HPBOperator.default_offset)
         # 检查类型
         if not isinstance(page, HeadPageBuffer) :
             raise Exception("invalid head page buffer")
@@ -76,7 +79,8 @@ class HPBOperator(PBOperator) :
         if page.file_length != self._file_length :
             raise Exception(f"invalid file length({page.file_length})")
         # 设置容量
-        if page.capacity == Capacity.without_limit :
+        if page.capacity == \
+            Capacity.without_limit :
             self._set_capacity(-1)
         else :
             self._set_capacity(page.capacity)
@@ -87,24 +91,24 @@ class HPBOperator(PBOperator) :
 
     def __close(self) :
         # 新建
-        hpb = HeadPageBuffer()
+        page = HeadPageBuffer()
         # 设置参数
-        hpb.safely_closed = SafelyClosed.closed
+        page.safely_closed = SafelyClosed.closed
         # 设置数据尺寸
-        hpb.data_size = self._data_size
+        page.data_size = self._data_size
         # 设置文件长度
-        hpb.file_length = self._file_length
+        page.file_length = self._file_length
         # 设置容量
         if self.capacity >= 0 :
-            hpb.capacity = self.capacity
+            page.capacity = self.capacity
         else :
-            hpb.capacity = Capacity.without_limit
+            page.capacity = Capacity.without_limit
         # 设置尺寸
-        hpb.size = self.size
+        page.size = self.size
         # 设置计数
-        hpb.count = self.count
+        page.count = self.count
         # 写入数据
-        self._write_fully(0, hpb)
+        self._write_fully(HPBOperator.default_offset, page)
 
     def dump(self) :
         print(f"HPBOperator.dump : show properties !")

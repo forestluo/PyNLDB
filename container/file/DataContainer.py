@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+from cupyx.scipy.sparse import identity
+
 from container.file.DPBOperator import *
 from container.file.FPBOperator import *
 from container.file.HPBOperator import *
 from container.file.IPBOperator import *
 from container.file.QPBOperator import *
+from container.file.RPBOperator import *
 
 class DataContainer(HPBOperator,
     DPBOperator, QPBOperator, IPBOperator) :
@@ -20,6 +23,8 @@ class DataContainer(HPBOperator,
         IPBOperator.close(self)
         # 调用父类函数
         QPBOperator.close(self)
+        # 调用父类函数
+        RPBOperator.close(self)
         # 调用父类函数
         FPBOperator.close(self)
         # 调用父类函数
@@ -42,9 +47,10 @@ class DataContainer(HPBOperator,
             # 调用父类函数
             FPBOperator._load(self)
             # 调用父类函数
-            # 加载队列根节点
+            RPBOperator._load(self)
+            # 调用父类函数
             QPBOperator._load(self)
-            # 加载索引根节点
+            # 调用父类函数
             IPBOperator._load(self)
         else :
             # 按照顺序创建缺省项目
@@ -53,10 +59,9 @@ class DataContainer(HPBOperator,
             # 调用父类函数
             FPBOperator._create(self)
             # 调用父类函数
-            # 创建队列根节点
+            RPBOperator._create(self)
+            # 调用父类函数
             QPBOperator._create(self)
-            # 创建索引根节点
-            IPBOperator._create(self)
             # 设置标记
             self._safely_closed = SafelyClosed.closed
 
@@ -64,6 +69,7 @@ class DataContainer(HPBOperator,
         FileContainer.dump(self)
         HPBOperator.dump(self)
         FPBOperator.dump(self)
+        RPBOperator.dump(self)
         QPBOperator.dump(self)
         IPBOperator.dump(self)
         print(f"DataContainer.dump : show properties !")
@@ -79,12 +85,17 @@ def data_operator_case() :
     container.dump()
 
     buffer = BytesBuffer(1234)
-    offset = container.save_data(buffer)
-    container.load_data(offset)
-    #container.free_data(offset)
-    container.remove_data(offset)
+    position = container.save_data(buffer)
+    container.load_data(position)
+    container.remove_data(position)
 
+    identity = 1
+    container.create_queue(identity)
     container.dump()
+    print("----------")
+    container.remove_queue(identity)
+    container.dump()
+
     # 关闭
     container.close()
 

@@ -20,6 +20,9 @@ class PageBuffer :
     def __init__(self,
         page_type = PageType.invalid,
         size_type = SizeType.invalid) :
+        # 临时变量
+        self.offset = -1
+        # 设置参数
         self.next_page = PageOffset.none
         self.occupied_size = 0
         self.page_type = page_type
@@ -63,10 +66,11 @@ class PageBuffer :
         # 检查
         if isinstance(self.occupied_size, int) and \
             self.occupied_size + PageDescription.size > SizeType.get_size(self.size_type) :
-            raise Exception(f"invalid occupied size({self.occupied_size}")
+            raise Exception(f"invalid occupied size({self.occupied_size})")
 
     def dump(self) :
         print(f"PageBuffer.dump : show properties !")
+        print(f"\toffset = {self.offset}")
         print(f"\tsize_type = {self.size_type}")
         print(f"\tpage_type = {self.page_type}")
         print(f"\tnext_page = {self.next_page}")

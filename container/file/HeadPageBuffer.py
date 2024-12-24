@@ -31,7 +31,13 @@ class HeadPageBuffer(PageBuffer) :
     # 初始化
     def __init__(self) :
         super().__init__(PageType.head_page,
-        HeadPageBuffer.default_size_type)
+            HeadPageBuffer.default_size_type)
+        # 设置参数
+        self.occupied_size = \
+            SizeOf.byte.value + \
+            2 * SizeOf.long.value + \
+            5 * SizeOf.integer.value + \
+            SizeOf.integer.value + len(_copyright)
         # 设置参数
         self.safely_closed = SafelyClosed.opened
         self.count = 0

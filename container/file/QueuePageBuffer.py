@@ -27,14 +27,11 @@ class QueuePageBuffer(PageBuffer) :
         # 调用父类函数
         super().__init__(PageType.queue_page,
             QueuePageBuffer.default_size_type)
-        ##################################################
-        #
-        # Temporary variables.
-        #
-        # Offset.
-        self.offset = PageOffset.none
-        ##
-        ##################################################
+
+        # Occupied Size
+        self.occupied_size = \
+            7 * SizeOf.integer.value
+
         # Identity
         self.identity = 0
         # Capacity

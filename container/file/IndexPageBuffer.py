@@ -26,9 +26,6 @@ class IndexPageBuffer(PageBuffer) :
         # 调用父类初始化函数
         super().__init__(PageType.index_page,
             IndexPageBuffer.default_size_type)
-        # 临时变量
-        self.offset = -1
-
         # 设置参数
         self.identity = 0
         self.size = 0
@@ -36,6 +33,10 @@ class IndexPageBuffer(PageBuffer) :
         self.capacity = Capacity.without_limit
         # 循环处理
         self.datas = [IndexData() for _ in range(self.get_subnode_count())]
+
+    def get_data_by_key(self, key) :
+        # 返回结果
+        return self.datas[self.get_index_by_key(key)]
 
     def get_subnode_count(self) :
         # 返回结果
@@ -46,18 +47,18 @@ class IndexPageBuffer(PageBuffer) :
         return IndexPageBuffer.__get_subnode_index(self.size_type, key)
 
     def get_offset_by_index(self, index) :
+        # 检查
+        assert self.offset >= 0
         # 返回结果
         return self.offset + PageDescription.size \
             + 4 * SizeOf.integer.value + index * IndexData.size
 
     def get_offset_by_key(self, key) :
+        # 检查
+        assert self.offset >= 0
         # 返回结果
         return self.offset + PageDescription.size \
             + 4 * SizeOf.integer.value + get_index_by_key(key) * IndexData.size
-
-    def get_data_by_key(self, key) :
-        # 返回结果
-        return self.datas[IndexPageBuffer.__get_subnode_index(self.size_type, key)]
 
     @staticmethod
     def __get_subnode_count(size_type) :
@@ -151,5 +152,5 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         traceback.print_exc()
-        print("IndexPageBuffer.main :__main__ : ", str(e))
-        print("IndexPageBuffer.main :__main__ : unexpected exit !")
+        print("IndexPageBuffer.__main__ : ", str(e))
+        print("IndexPageBuffer.__main__ : unexpected exit !")

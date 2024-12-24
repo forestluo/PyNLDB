@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from container.file.QueuePageBuffer import QueuePageBuffer
+from container.file.RootPageBuffer import RootPageBuffer
 from container.file.ValueEnum import *
 from container.file.FileContainer import *
 from container.file.FreePageBuffer import *
@@ -7,6 +7,8 @@ from container.file.HeadPageBuffer import *
 from container.file.DataPageBuffer import *
 from container.file.PageDescription import *
 from container.file.IndexPageBuffer import *
+from container.file.QueuePageBuffer import *
+from container.file.IndexElementBuffer import *
 from container.file.QueueElementBuffer import *
 
 class PBOperator(FileContainer) :
@@ -42,12 +44,18 @@ class PBOperator(FileContainer) :
         elif description.page_type == PageType.free_page :
             # 创建
             page = FreePageBuffer()
+        elif description.page_type == PageType.root_page :
+            # 创建
+            page = RootPageBuffer()
         elif description.page_type == PageType.data_page :
             # 创建
             page = DataPageBuffer()
         elif description.page_type == PageType.index_page :
             # 创建
             page = IndexPageBuffer()
+        elif description.page_type == PageType.index_element :
+            # 创建
+            page = IndexElementBuffer()
         elif description.page_type == PageType.queue_page :
             # 创建
             page = QueuePageBuffer()
@@ -59,8 +67,7 @@ class PBOperator(FileContainer) :
         # 读取整个页面
         self._read_fully(position, page)
         # 后置处理
-        if isinstance(page, QueuePageBuffer) \
-            or isinstance(page, IndexPageBuffer) : page.offset = position
+        page.offset = position
         # 返回结果
         return page
 

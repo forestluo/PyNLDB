@@ -24,6 +24,9 @@ class QueueElementBuffer(PageBuffer) :
         super().__init__(PageType.queue_element,
             QueueElementBuffer.default_size_type)
         # 设置参数
+        self.occupied_size = \
+            3 * SizeOf.integer.value
+        # 设置参数
         self.page_offset = PageOffset.none
         # 设置参数
         self.data_offset = PageOffset.none

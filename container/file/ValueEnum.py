@@ -15,16 +15,12 @@ class PageType(Enum) :
     invalid = 0
     head_page = 1
     free_page = 2
-    data_page = 3
-    queue_page = 4
-    queue_element = 5
-    index_page = 6
-    index_element = 7
-
-    @staticmethod
-    def is_valid(page_type) :
-        # 返回结果
-        return isinstance(page_type, PageType)
+    root_page = 3
+    data_page = 4
+    queue_page = 5
+    queue_element = 6
+    index_page = 7
+    index_element = 8
 
 # Killo Bytes
 # 1 KB = 1024 Bytes
@@ -116,29 +112,19 @@ class PageOffset(Enum) :
     none = 0xFFFFFFFF
 
     @staticmethod
-    def is_valid(value) :
-        # 返回结果
-        return isinstance(value, PageOffset)
-
-    @staticmethod
     def e2v(value) :
         if value != PageOffset.none :
-            return value >> 6
+            return (value >> 6) & 0xFFFFFFFF
         return PageOffset.none.value
 
     @staticmethod
     def v2e(value) :
         if value == PageOffset.none.value :
             return PageOffset.none
-        return value << 6
+        return (value & 0xFFFFFFFFFFFFFFFF) << 6
 
 class Capacity(Enum) :
     without_limit = 0xFFFFFFFF
-
-    @staticmethod
-    def is_valid(value) :
-        # 返回结果
-        return isinstance(value, Capacity)
 
     @staticmethod
     def e2v(value) :
@@ -156,11 +142,6 @@ class OccupiedSize(Enum) :
     full = 0xFFFFFFFF
 
     @staticmethod
-    def is_valid(value) :
-        # 返回结果
-        return isinstance(value, OccupiedSize)
-
-    @staticmethod
     def e2v(value) :
         if value == OccupiedSize.full :
             return OccupiedSize.full.value
@@ -175,11 +156,6 @@ class OccupiedSize(Enum) :
 class SafelyClosed(Enum) :
     closed = 0
     opened = 1
-
-    @staticmethod
-    def is_valid(value) :
-        # 返回结果
-        return isinstance(value, SafelyClosed)
 
     @staticmethod
     def e2v(value) :
