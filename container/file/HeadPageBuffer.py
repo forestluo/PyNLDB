@@ -119,24 +119,3 @@ class HeadPageBuffer(PageBuffer) :
         print(f"\tdata_size = {self.data_size}")
         print(f"\tfile_length = {self.file_length}")
         print(f"\tcopyright = \"{_copyright}\"")
-
-def main() :
-    # 新建
-    buffer = BytesBuffer(128)
-    hpb = HeadPageBuffer()
-    hpb.dump()
-    hpb.wrap(buffer)
-    hpb.check_valid(1024)
-    buffer.pos = 0
-    hpb.unwrap(buffer)
-    hpb.check_valid(1024)
-    hpb.dump()
-
-if __name__ == '__main__':
-    try:
-        # 调用主函数
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        print("HeadPageBuffer.main :__main__ : ", str(e))
-        print("HeadPageBuffer.main :__main__ : unexpected exit !")

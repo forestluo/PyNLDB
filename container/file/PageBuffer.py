@@ -75,26 +75,3 @@ class PageBuffer :
         print(f"\tpage_type = {self.page_type}")
         print(f"\tnext_page = {self.next_page}")
         print(f"\toccupied_size = {self.occupied_size}")
-
-def main() :
-    # 新建
-    buffer = BytesBuffer(128)
-    pd = PageBuffer()
-    pd.page_type = PageType.invalid
-    pd.size_type = SizeType.hqkb
-    pd.dump()
-    pd.wrap(buffer)
-    pd.check_valid(1024)
-    buffer.pos = 0
-    pd.unwrap(buffer)
-    pd.check_valid(1024)
-    pd.dump()
-
-if __name__ == '__main__':
-    try:
-        # 调用主函数
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        print("PageBuffer.main :__main__ : ", str(e))
-        print("PageBuffer.main :__main__ : unexpected exit !")

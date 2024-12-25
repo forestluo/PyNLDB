@@ -20,9 +20,9 @@ class HPBOperator(PBOperator) :
         try :
             # 关闭文件头
             self.__flush()
-        except Exception as e :
+        except Exception as ex :
             traceback.print_exc()
-            print("HPBOperator.close : ", str(e))
+            print("HPBOperator.close : ", str(ex))
             print("HPBOperator.close : unexpected exit !")
 
     def _create(self) :

@@ -18,9 +18,9 @@ class IPBOperator(FPBOperator, RPBOperator) :
         try :
             # 关闭队列
             self.__flush()
-        except Exception as e :
+        except Exception as ex :
             traceback.print_exc()
-            print("IPBOperator.close : ", str(e))
+            print("IPBOperator.close : ", str(ex))
             print("IPBOperator.close : unexpected exit !")
 
     def __flush(self) :

@@ -129,9 +129,9 @@ class IndexElementBuffer(PageBuffer) :
             if data.key == 0 : continue
             # 打印数据
             print(f"\tdata[{index}] = "
-                  f"[{data.key : 016x},"
-                  f"{data.data_offset : 016x},"
-                  f"{data.subnode_offset : 016x}]")
+                  f"[0x{data.key :016x},"
+                  f"0x{data.data_offset :016x},"
+                  f"0x{data.subnode_offset :016x}]")
 
 def main() :
     # 新建

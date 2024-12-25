@@ -132,25 +132,3 @@ class IndexPageBuffer(PageBuffer) :
                   f"[{data.key : 016x},"
                   f"{data.data_offset : 016x},"
                   f"{data.subnode_offset : 016x}]")
-
-def main() :
-    # 新建
-    size = 128 * 1024 * 1024
-    buffer = BytesBuffer(size)
-    ipb = IndexPageBuffer()
-    ipb.dump()
-    ipb.wrap(buffer)
-    ipb.check_valid(size)
-    buffer.pos = 0
-    ipb.unwrap(buffer)
-    ipb.check_valid(size)
-    ipb.dump()
-
-if __name__ == '__main__':
-    try:
-        # 调用主函数
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        print("IndexPageBuffer.__main__ : ", str(e))
-        print("IndexPageBuffer.__main__ : unexpected exit !")

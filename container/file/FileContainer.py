@@ -77,9 +77,9 @@ class FileContainer(Container) :
             if hasattr(self, "__mapped") :
                 # 关闭映射
                 self.__mapped.close()
-        except Exception as e :
+        except Exception as ex :
             traceback.print_exc()
-            print("FileContainer.close : ", str(e))
+            print("FileContainer.close : ", str(ex))
             print("FileContainer.close : unexpected exit !")
 
         try :
@@ -87,9 +87,9 @@ class FileContainer(Container) :
             if hasattr(self, "__file_no") :
                 # 关闭文件
                 os.close(self.__file_no)
-        except Exception as e :
+        except Exception as ex :
             traceback.print_exc()
-            print("FileContainer.close : ", str(e))
+            print("FileContainer.close : ", str(ex))
             print("FileContainer.close : unexpected exit !")
 
     def __check_read_action(self, position, size) :

@@ -106,25 +106,3 @@ class QueuePageBuffer(PageBuffer) :
         print(f"\troot_position = {self.root_position}")
         print(f"\tread_position = {self.read_position}")
         print(f"\twrite_position = {self.write_position}")
-
-def main() :
-    # 新建
-    buffer = BytesBuffer(128)
-    qpb = QueuePageBuffer()
-    qpb.identity = 12345
-    qpb.dump()
-    qpb.wrap(buffer)
-    qpb.check_valid(1024)
-    buffer.pos = 0
-    qpb.unwrap(buffer)
-    qpb.check_valid(1024)
-    qpb.dump()
-
-if __name__ == '__main__':
-    try:
-        # 调用主函数
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        print("QueuePageBuffer.__main__ : ", str(e))
-        print("QueuePageBuffer.__main__ : unexpected exit !")

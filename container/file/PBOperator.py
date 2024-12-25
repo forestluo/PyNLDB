@@ -37,7 +37,7 @@ class PBOperator(FileContainer) :
         # 检查
         if page_type is not None :
             # 检查
-            PBOperator.check_valid(description, page_type)
+            PBOperator._check_valid(description, page_type)
         # 检查
         if description.page_type == PageType.head_page :
             # 创建
@@ -123,7 +123,7 @@ class PBOperator(FileContainer) :
         self._write_buffer(position, buffer)
 
     @staticmethod
-    def check_valid(description, page_type) :
+    def _check_valid(description, page_type) :
         # 检查
         if page_type != description.page_type :
             raise Exception(f"invalid page type({description.page_type})")

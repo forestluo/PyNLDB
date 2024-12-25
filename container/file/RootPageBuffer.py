@@ -66,24 +66,3 @@ class RootPageBuffer(PageBuffer) :
         for i in range(RootPageBuffer.default_root_page_types) :
             # 获得数值
             print(f"\tnext_root_pages[{i}] = {self.next_root_pages[i]}")
-
-def main() :
-    # 新建
-    buffer = BytesBuffer(128)
-    rpb = RootPageBuffer()
-    rpb.dump()
-    rpb.wrap(buffer)
-    rpb.check_valid(1024)
-    buffer.pos = 0
-    rpb.unwrap(buffer)
-    rpb.check_valid(1024)
-    rpb.dump()
-
-if __name__ == '__main__':
-    try:
-        # 调用主函数
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        print("RootPageBuffer.__main__ : ", str(e))
-        print("RootPageBuffer.__main__ : unexpected exit !")

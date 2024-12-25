@@ -21,9 +21,9 @@ class QPBOperator(FPBOperator, RPBOperator) :
         try :
             # 关闭队列
             self.__flush()
-        except Exception as e :
+        except Exception as ex :
             traceback.print_exc()
-            print("QPBOperator.close : ", str(e))
+            print("QPBOperator.close : ", str(ex))
             print("QPBOperator.close : unexpected exit !")
 
     def __flush(self) :

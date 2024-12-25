@@ -40,26 +40,5 @@ class DataPageBuffer(PageBuffer) :
         print(f"DataPageBuffer.dump : show properties !")
         print(f"\tbytes({len(self.buffer)}) = 0x{self.buffer.hex()}")
 
-def main() :
-    # 新建
-    buffer = BytesBuffer(128)
-    hpb = DataPageBuffer()
-    hpb.buffer = bytearray("Hello World !".encode("utf-8"))
-    hpb.dump()
-    hpb.wrap(buffer)
-    hpb.check_valid(1024)
-    buffer.pos = 0
-    hpb.unwrap(buffer)
-    hpb.check_valid(1024)
-    hpb.dump()
-
-if __name__ == '__main__':
-    try:
-        # 调用主函数
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        print("DataPageBuffer.__main__ : ", str(e))
-        print("DataPageBuffer.__main__ : unexpected exit !")
 
 

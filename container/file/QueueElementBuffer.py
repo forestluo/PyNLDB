@@ -74,24 +74,3 @@ class QueueElementBuffer(PageBuffer) :
         print(f"\tpage_offset = {self.page_offset}")
         print(f"\tnext_element = {self.next_element}")
         print(f"\tdata_offset = {self.data_offset}")
-
-def main() :
-    # 新建
-    buffer = BytesBuffer(128)
-    qeb = QueueElementBuffer()
-    qeb.dump()
-    qeb.wrap(buffer)
-    qeb.check_valid(1024)
-    buffer.pos = 0
-    qeb.unwrap(buffer)
-    qeb.check_valid(1024)
-    qeb.dump()
-
-if __name__ == '__main__':
-    try:
-        # 调用主函数
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        print("QueueElementBuffer.__main__ : ", str(e))
-        print("QueueElementBuffer.__main__ : unexpected exit !")

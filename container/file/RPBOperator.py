@@ -22,9 +22,9 @@ class RPBOperator(PBOperator) :
         try :
             # 关闭文件头
             self.__flush()
-        except Exception as e :
+        except Exception as ex :
             traceback.print_exc()
-            print("RPBOperator.close : ", str(e))
+            print("RPBOperator.close : ", str(ex))
             print("RPBOperator.close : unexpected exit !")
 
     def _create(self) :

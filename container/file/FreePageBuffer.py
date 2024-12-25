@@ -66,24 +66,3 @@ class FreePageBuffer(PageBuffer) :
         for i in range(FreePageBuffer.default_data_page_types) :
             # 获得数值
             print(f"\tnext_data_pages[{i}] = {self.next_data_pages[i]}")
-
-def main() :
-    # 新建
-    buffer = BytesBuffer(128)
-    hpb = FreePageBuffer()
-    hpb.dump()
-    hpb.wrap(buffer)
-    hpb.check_valid(1024)
-    buffer.pos = 0
-    hpb.unwrap(buffer)
-    hpb.check_valid(1024)
-    hpb.dump()
-
-if __name__ == '__main__':
-    try:
-        # 调用主函数
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        print("FreePageBuffer.__main__ : ", str(e))
-        print("FreePageBuffer.__main__ : unexpected exit !")

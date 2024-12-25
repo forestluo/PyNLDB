@@ -21,9 +21,9 @@ class FPBOperator(PBOperator) :
         try :
             # 关闭文件头
             self.__flush()
-        except Exception as e :
+        except Exception as ex :
             traceback.print_exc()
-            print("FPBOperator.close : ", str(e))
+            print("FPBOperator.close : ", str(ex))
             print("FPBOperator.close : unexpected exit !")
 
     def _create(self) :
