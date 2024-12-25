@@ -51,6 +51,6 @@ class IndexData :
 
     def dump(self) :
         print(f"IndexData.dump : show properties !")
-        print(f"\tkey = 0x{self.key : 016x}")
-        print(f"\tdata_offset = 0x{self.data_offset : 016x}")
-        print(f"\tsubnode_offset = 0x{self.subnode_offset : 016x}")
+        print(f"\tkey = 0x{self.key :016x}")
+        print(f"\tdata_offset = 0x{self.data_offset :016x}")
+        print(f"\tsubnode_offset = 0x{self.subnode_offset :016x}")

@@ -19,10 +19,8 @@ class FPBOperator(PBOperator) :
 
     def close(self) :
         try :
-            # 检查
-            if hasattr(self, "_mapped") :
-                # 关闭文件头
-                self.__write_fully()
+            # 关闭文件头
+            self.__flush()
         except Exception as e :
             traceback.print_exc()
             print("FPBOperator.close : ", str(e))
@@ -41,12 +39,12 @@ class FPBOperator(PBOperator) :
         # 写入数据
         self._write_fully(FPBOperator.default_offset, page)
         # 设置数据尺寸
-        self._data_size += FreePageBuffer.default_size
+        self._inc_data(FreePageBuffer.default_size)
 
     def _load(self) :
         # 读取
-        page = self._load_page(
-            FPBOperator.default_offset, PageType.free_page)
+        page = self._load_page \
+            (FPBOperator.default_offset, PageType.free_page)
         # 循环处理
         for i in range(FreePageBuffer.default_data_page_types) :
             # 设置参数
@@ -55,7 +53,7 @@ class FPBOperator(PBOperator) :
             else :
                 self.__next_frees[i] = page.next_data_pages[i]
 
-    def __write_fully(self) :
+    def __flush(self) :
         # 新建
         page = FreePageBuffer()
         # 循环处理

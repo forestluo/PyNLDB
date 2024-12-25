@@ -19,16 +19,14 @@ class QPBOperator(FPBOperator, RPBOperator) :
 
     def close(self) :
         try :
-            # 检查
-            if hasattr(self, "_mapped") :
-                # 关闭队列
-                self.__write_fully()
+            # 关闭队列
+            self.__flush()
         except Exception as e :
             traceback.print_exc()
             print("QPBOperator.close : ", str(e))
             print("QPBOperator.close : unexpected exit !")
 
-    def __write_fully(self) :
+    def __flush(self) :
         # 循环处理
         for page in self.__queues.values() :
             # 写入
@@ -58,47 +56,6 @@ class QPBOperator(FPBOperator, RPBOperator) :
             # 设置偏移量
             position = page.next_page if page.next_page != PageOffset.none else -1
 
-    def create_queue(self, identity) :
-        # 创建
-        page = self.__create_page(identity)
-        # 创建
-        element = self.__create_element(page.offset, -1, -1)
-        # 设置
-        page.root_position = element.offset
-        page.read_position = element.offset
-        page.write_position = element.offset
-        # 写入
-        self._write_fully(page.offset, page)
-
-    def remove_queue(self, identity) :
-        # 检查
-        if identity == 0 :
-            raise Exception(f"cannot remove default queue")
-        if identity not in self.__queues.keys() :
-            raise Exception(f"queue({identity}) not exist")
-        # 获得页面
-        page = self.__queues[identity]
-        # 加载元素
-        element = self._load_page(
-            page.root_position, PageType.queue_element)
-        # 循环处理
-        while True :
-            # 数量减一
-            page.size -= 1
-            # 释放页面
-            self._free_page(element.offset, element.size_type)
-            # 检查
-            if element.next_element == PageOffset.none : break
-            # 加载元素
-            element = self._load_page(
-                element.next_element, PageType.queue_element)
-        # 注销队列
-        self._unregister_queue(page)
-        # 释放队列
-        self._free_page(page.offset, page.size_type)
-        # 移除队列
-        self.__queues.pop(identity)
-
     def __create_page(self, identity) :
         # 检查
         if identity in self.__queues.keys() :
@@ -109,8 +66,8 @@ class QPBOperator(FPBOperator, RPBOperator) :
         page.identity = identity
         page.size = 1
         # 分配页面
-        page.offset = self._malloc_page(PageType.queue_page,
-                            QueuePageBuffer.default_size_type)
+        page.offset = self._malloc_page \
+            (PageType.queue_page, QueuePageBuffer.default_size_type)
         # 检查
         if page.offset < 0 :
             # 追加页面
@@ -136,8 +93,8 @@ class QPBOperator(FPBOperator, RPBOperator) :
         page.next_element = PageOffset.none \
             if next_element < 0 else next_element
         # 分配页面
-        page.offset = self._malloc_page(PageType.queue_element,
-                            QueueElementBuffer.default_size_type)
+        page.offset = self._malloc_page \
+            (PageType.queue_element, QueueElementBuffer.default_size_type)
         # 检查
         if page.offset < 0 :
             # 追加页面
@@ -147,6 +104,43 @@ class QPBOperator(FPBOperator, RPBOperator) :
             self._write_fully(page.offset, page)
         # 返回结果
         return page
+
+    def create_queue(self, identity) :
+        # 创建
+        page = self.__create_page(identity)
+        # 创建
+        element = self.__create_element(page.offset, -1, -1)
+        # 设置
+        page.root_position = element.offset
+        page.read_position = element.offset
+        page.write_position = element.offset
+        # 写入
+        self._write_fully(page.offset, page)
+
+    def remove_queue(self, identity) :
+        # 检查
+        if identity == 0 :
+            raise Exception(f"cannot remove default queue")
+        # 获得页面
+        page = self.__queues[identity]
+        # 加载元素
+        element = self._load_page(page.root_position, PageType.queue_element)
+        # 循环处理
+        while True :
+            # 数量减一
+            page.size -= 1
+            # 释放页面
+            self._free_page(element.offset, element.size_type)
+            # 检查
+            if element.next_element == PageOffset.none : break
+            # 加载元素
+            element = self._load_page(element.next_element, PageType.queue_element)
+        # 注销队列
+        self._unregister_queue(page)
+        # 释放队列
+        self._free_page(page.offset, page.size_type)
+        # 移除队列
+        self.__queues.pop(identity)
 
     def dump(self) :
         print(f"QPBOperator.dump : show properties !")

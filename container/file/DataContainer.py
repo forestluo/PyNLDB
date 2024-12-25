@@ -34,8 +34,6 @@ class DataContainer(HPBOperator,
         # 检查文件
         exist_flag = os.path.isfile(file_name)
         # 调用父类函数
-        HPBOperator.open(self, file_name)
-        # 调用父类函数
         FileContainer.open(self, file_name)
         # 检查文件
         if exist_flag :

@@ -14,8 +14,7 @@ class DPBOperator(FPBOperator) :
     # 释放数据
     def free_data(self, offset) :
         # 检查
-        if offset < 0 \
-            or (offset > 0 and offset > self._file_length) :
+        if offset < 0 or offset > self.data_size :
             raise Exception(f"invalid offset({offset})")
         # 新建
         description = PageDescription()
@@ -30,8 +29,7 @@ class DPBOperator(FPBOperator) :
     # 加载数据
     def load_data(self, offset) :
         # 检查
-        if offset < 0 \
-            or (offset > 0 and offset > self._file_length) :
+        if offset < 0 or offset > self.data_size :
             raise Exception(f"invalid offset({offset})")
         # 新建
         description = PageDescription()
@@ -71,8 +69,8 @@ class DPBOperator(FPBOperator) :
         # 设置页面类型
         description.page_type = PageType.data_page
         # 分配页面
-        offset = self._malloc_page(description.page_type,
-                                   description.size_type)
+        offset = self._malloc_page \
+            (description.page_type, description.size_type)
         # 检查
         if offset < 0 :
             # 创建

@@ -16,16 +16,14 @@ class IPBOperator(FPBOperator, RPBOperator) :
 
     def close(self) :
         try :
-            # 检查
-            if hasattr(self, "_mapped") :
-                # 关闭队列
-                self.__write_fully()
+            # 关闭队列
+            self.__flush()
         except Exception as e :
             traceback.print_exc()
             print("IPBOperator.close : ", str(e))
             print("IPBOperator.close : unexpected exit !")
 
-    def __write_fully(self) :
+    def __flush(self) :
         # 循环处理
         for page in self.__indexes.values() :
             # 写入

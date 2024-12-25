@@ -16,19 +16,16 @@ class PBOperator(FileContainer) :
     def __init__(self) :
         # 调用父类初始化函数
         super().__init__()
-        # 数据尺寸
-        # 相当于数据末尾指针
-        self._data_size = 0
 
     def _add_page(self, page) :
         # 保留数据
-        offset = self._data_size
+        offset = self.data_size
         # 写入数据
-        self._write_fully(self._data_size, page)
+        self._write_fully(self.data_size, page)
         # 计数
         self._inc_size_and_count()
         # 增加长度
-        self._data_size += SizeType.get_size(page.size_type)
+        self._inc_data(SizeType.get_size(page.size_type))
         # 返回结果
         return offset
 
@@ -75,26 +72,6 @@ class PBOperator(FileContainer) :
         # 返回结果
         return page
 
-    def _read_buffer(self, position, buffer) :
-        # 检查
-        assert isinstance(buffer, BytesBuffer)
-        # 检查
-        self._check_read_action(position, buffer.size)
-        # 设置位置
-        self._mapped.seek(position)
-        # 读取
-        buffer.bytes = self._mapped.read(buffer.size)
-
-    def _write_buffer(self, position, buffer) :
-        # 检查
-        assert isinstance(buffer, BytesBuffer)
-        # 检查
-        self._check_write_action(position, buffer.size)
-        # 设置位置
-        self._mapped.seek(position)
-        # 写入
-        self._mapped.write(buffer.bytes)
-
     def _read_fully(self, position, page) :
         # 检查
         assert isinstance(page, PageBuffer) \
@@ -106,14 +83,14 @@ class PBOperator(FileContainer) :
         # 解包
         page.unwrap(buffer)
         # 检查
-        page.check_valid(self._data_size)
+        page.check_valid(self.data_size)
 
     def _write_fully(self, position, page) :
         # 检查
         assert isinstance(page, PageBuffer) \
             or isinstance(page, PageDescription)
         # 检查
-        page.check_valid(self._data_size)
+        page.check_valid(self.data_size)
         # 创建
         buffer = BytesBuffer.create(page.size_type)
         # 打包
@@ -131,13 +108,13 @@ class PBOperator(FileContainer) :
         # 解包
         description.unwrap(buffer)
         # 检查
-        description.check_valid(self._data_size)
+        description.check_valid(self.data_size)
 
     def _write_description(self, position, description) :
         # 检查
         assert isinstance(description, PageDescription)
         # 检查
-        description.check_valid(self._data_size)
+        description.check_valid(self.data_size)
         # 创建
         buffer = BytesBuffer.create(description.size_type)
         # 打包
