@@ -90,7 +90,7 @@ class HeadPageBuffer(PageBuffer) :
             raise Exception(f"invalid page type({self.page_type})")
         if self.size_type != HeadPageBuffer.default_size_type :
             raise Exception(f"invalid size type({self.size_type})")
-        if self.next_page != PageOffset.none :
+        if self.next_page != -1 :
             raise Exception(f"invalid next page({self.next_page})")
         if not isinstance(self.safely_closed, SafelyClosed) :
             raise Exception(f"invalid safely closed({self.safely_closed})")
@@ -110,8 +110,8 @@ class HeadPageBuffer(PageBuffer) :
     def dump(self) :
         super().dump()
         print(f"HeadPageBuffer.dump : show properties !")
-        print(f"\tmagic_numer = 0x{_magic_number:08x}")
-        print(f"\tversion = 0x{_version:08x}")
+        print(f"\tmagic_numer = 0x{_magic_number :08x}")
+        print(f"\tversion = 0x{_version :08x}")
         print(f"\tsafely_closed = {self.safely_closed}")
         print(f"\tcount = {self.count}")
         print(f"\tcapacity = {self.capacity}")

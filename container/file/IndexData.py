@@ -23,31 +23,29 @@ class IndexData :
         # 设置关键字
         self.key = 0
         # 设置数据偏移量
-        self.data_offset = PageOffset.none
+        self.data_offset = -1
         # 设置子节点偏移量
-        self.subnode_offset = PageOffset.none
+        self.subnode_offset = -1
 
     def wrap(self, buffer) :
         buffer.put_int(SizeOf.long, self.key)
         buffer.put_int(SizeOf.integer,
-            PageOffset.e2v(self.data_offset))
+            PageOffset.l2i(self.data_offset) , True)
         buffer.put_int(SizeOf.integer,
-            PageOffset.e2v(self.subnode_offset))
+            PageOffset.l2i(self.subnode_offset) , True)
 
     def unwrap(self, buffer) :
         self.key = buffer.get_int(SizeOf.long)
         self.data_offset = \
-            PageOffset.v2e(buffer.get_int(SizeOf.integer))
+            PageOffset.i2l(buffer.get_int(SizeOf.integer, True))
         self.subnode_offset = \
-            PageOffset.v2e(buffer.get_int(SizeOf.integer))
+            PageOffset.i2l(buffer.get_int(SizeOf.integer, True))
 
     def check_valid(self, file_size) :
-        if isinstance(self.data_offset, int) and \
-            (self.data_offset > file_size or (self.data_offset & 0x3F) != 0) :
-            raise Exception(f"invalid data offset({self.data_offset})")
-        if isinstance(self.subnode_offset, int) and \
-            (self.subnode_offset > file_size or (self.subnode_offset & 0x3F) != 0) :
-            raise Exception(f"invalid data offset({self.subnode_offset})")
+        # 检查
+        PageOffset.check_offset(self.data_offset, file_size)
+        # 检查
+        PageOffset.check_offset(self.subnode_offset, file_size)
 
     def dump(self) :
         print(f"IndexData.dump : show properties !")

@@ -18,33 +18,16 @@ class HPBOperator(PBOperator) :
 
     def close(self) :
         try :
-            # 关闭文件头
-            self.__flush()
+            # 写入
+            HPBOperator._save(self)
         except Exception as ex :
             traceback.print_exc()
             print("HPBOperator.close : ", str(ex))
             print("HPBOperator.close : unexpected exit !")
 
     def _create(self) :
-        # 新建
-        page = HeadPageBuffer()
-        # 设置参数
-        page.safely_closed = SafelyClosed.opened
-        # 设置数据尺寸
-        page.data_size = self.data_size
-        # 设置文件长度
-        page.file_length = self.file_length
-        # 设置容量
-        if self.capacity > 0 :
-            page.capacity = self.capacity
-        else :
-            page.capacity = Capacity.without_limit
-        # 设置尺寸
-        page.size = self.size
-        # 设置计数
-        page.count = self.count
-        # 写入数据
-        self._write_fully(HPBOperator.default_offset, page)
+        # 写入
+        HPBOperator._save(self)
         # 设置数据尺寸
         self._inc_data(HeadPageBuffer.default_size)
 
@@ -70,7 +53,7 @@ class HPBOperator(PBOperator) :
         # 设置参数
         self._set_count(page.count)
 
-    def __flush(self) :
+    def _save(self) :
         # 新建
         page = HeadPageBuffer()
         # 设置参数

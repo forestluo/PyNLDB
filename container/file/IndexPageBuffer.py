@@ -48,16 +48,16 @@ class IndexPageBuffer(PageBuffer) :
 
     def get_offset_by_index(self, index) :
         # 检查
-        assert self.offset >= 0
+        assert self.offset > 0
         # 返回结果
-        return self.offset + PageDescription.size \
+        return self.offset + PageBuffer.default_size \
             + 4 * SizeOf.integer.value + index * IndexData.size
 
     def get_offset_by_key(self, key) :
         # 检查
-        assert self.offset >= 0
+        assert self.offset > 0
         # 返回结果
-        return self.offset + PageDescription.size \
+        return self.offset + PageBuffer.default_size \
             + 4 * SizeOf.integer.value + get_index_by_key(key) * IndexData.size
 
     @staticmethod
@@ -104,8 +104,8 @@ class IndexPageBuffer(PageBuffer) :
         # 循环处理
         for data in self.datas : data.unwrap(buffer)
 
-    def check_valid(self, file_size) :
-        super().check_valid(file_size)
+    def check_valid(self, data_size) :
+        super().check_valid(data_size)
         if self.page_type != PageType.index_page :
             raise Exception(f"invalid page type({self.page_type})")
         if not (15 <= self.size_type.value <= 21) :
@@ -114,7 +114,7 @@ class IndexPageBuffer(PageBuffer) :
         if self.count > self.size :
             raise Exception(f"invalid count({self.count}) or size({self.size})")
         # 循环处理
-        for data in self.datas : data.check_valid(file_size)
+        for data in self.datas : data.check_valid(data_size)
 
     def dump(self) :
         super().dump()

@@ -6,8 +6,10 @@ from mmap import *
 
 from container.Container import *
 from container.file.ValueEnum import *
+from container.file.BytesBuffer import *
 from container.file.FreePageBuffer import *
 from container.file.HeadPageBuffer import *
+from container.file.RootPageBuffer import *
 
 class FileContainer(Container) :
     # Max Size
@@ -56,7 +58,8 @@ class FileContainer(Container) :
             self.__file_length = states.st_size
         # 检查结果
         if self.__file_length < 0 :
-            self.__file_length = SizeType.get_size(self.default_size_type)
+            self.__file_length = \
+                SizeType.get_size(self.default_size_type)
 
         # 打开文件
         self.__file_no = \
@@ -66,8 +69,9 @@ class FileContainer(Container) :
             mmap(self.__file_no, self.__file_length)
         # 补足数据
         # 前置处理
-        size = HeadPageBuffer.default_size \
-                + FreePageBuffer.default_size
+        size = HeadPageBuffer.default_size
+        size += FreePageBuffer.default_size
+        size += RootPageBuffer.default_size
         # 检查
         while size > self.__file_length : self.__append(size)
 
@@ -99,7 +103,7 @@ class FileContainer(Container) :
 
     def __check_write_action(self, position, size) :
         # 检查
-        if position + size <= self.__file_length : return False
+        if position + size <= self.__file_length : return
         # 缺省数值
         default_size = SizeType.get_size(FileContainer.default_size_type)
         # 补丁
@@ -108,8 +112,6 @@ class FileContainer(Container) :
         padding = (padding // default_size + 1) * default_size
         # 扩充文件
         self.__append(padding)
-        # 返回结果
-        return True
 
     def __append(self, length) :
         # 检查文件长度

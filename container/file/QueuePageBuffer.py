@@ -12,7 +12,6 @@ class QueuePageBuffer(PageBuffer) :
     # Capacity        [int]
     # Size            [int]
     # Count           [int]
-    # Root Position   [int]
     # Read Position   [int]
     # Write Position  [int]
     #
@@ -30,7 +29,7 @@ class QueuePageBuffer(PageBuffer) :
 
         # Occupied Size
         self.occupied_size = \
-            7 * SizeOf.integer.value
+            6 * SizeOf.integer.value
 
         # Identity
         self.identity = 0
@@ -41,12 +40,10 @@ class QueuePageBuffer(PageBuffer) :
         # Count
         self.count = 0
 
-        # Root Position
-        self.root_position = PageOffset.none
         # Read Position
-        self.read_position = PageOffset.none
+        self.read_position = -1
         # Write Position
-        self.write_position = PageOffset.none
+        self.write_position = -1
 
     def wrap(self, buffer) :
         super().wrap(buffer)
@@ -56,11 +53,9 @@ class QueuePageBuffer(PageBuffer) :
         buffer.put_int(SizeOf.integer, self.size)
         buffer.put_int(SizeOf.integer, self.count)
         buffer.put_int(SizeOf.integer,
-            PageOffset.e2v(self.root_position))
+            PageOffset.l2i(self.read_position), True)
         buffer.put_int(SizeOf.integer,
-            PageOffset.e2v(self.read_position))
-        buffer.put_int(SizeOf.integer,
-            PageOffset.e2v(self.write_position))
+            PageOffset.l2i(self.write_position), True)
 
     def unwrap(self, buffer) :
         super().unwrap(buffer)
@@ -69,32 +64,21 @@ class QueuePageBuffer(PageBuffer) :
             Capacity.v2e(buffer.get_int(SizeOf.integer))
         self.size = buffer.get_int(SizeOf.integer)
         self.count = buffer.get_int(SizeOf.integer)
-        self.root_position = \
-            PageOffset.v2e(buffer.get_int(SizeOf.integer))
         self.read_position = \
-            PageOffset.v2e(buffer.get_int(SizeOf.integer))
+            PageOffset.i2l(buffer.get_int(SizeOf.integer, True))
         self.write_position = \
-            PageOffset.v2e(buffer.get_int(SizeOf.integer))
+            PageOffset.i2l(buffer.get_int(SizeOf.integer, True))
 
-    def check_valid(self, file_size) :
-        super().check_valid(file_size)
+    def check_valid(self, data_size) :
+        super().check_valid(data_size)
         if self.page_type != PageType.queue_page :
             raise Exception(f"invalid page type({self.page_type})")
         if self.size_type != QueuePageBuffer.default_size_type :
             raise Exception(f"invalid size type({self.size_type})")
-        # 检查
         if self.count > self.size :
             raise Exception(f"invalid count({self.count}) or size({self.size})")
-        # 获得数值
-        positions = {"root position" : self.root_position,
-                     "read position" : self.read_position,
-                     "write position" : self.write_position}
-        # 循环处理
-        for key, position in positions.items() :
-            # 检查
-            if isinstance(position, int) and \
-                (position > file_size or (position & 0x3F) != 0) :
-                raise Exception(f"invalid {key} ({position})")
+        PageOffset.check_offset(self.read_position, data_size)
+        PageOffset.check_offset(self.write_position, data_size)
 
     def dump(self) :
         super().dump()
@@ -103,6 +87,5 @@ class QueuePageBuffer(PageBuffer) :
         print(f"\tcapacity = {self.capacity}")
         print(f"\tsize = {self.size}")
         print(f"\tcount = {self.count}")
-        print(f"\troot_position = {self.root_position}")
         print(f"\tread_position = {self.read_position}")
         print(f"\twrite_position = {self.write_position}")

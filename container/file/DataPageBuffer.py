@@ -30,8 +30,8 @@ class DataPageBuffer(PageBuffer) :
         super().unwrap(buffer)
         self.buffer = buffer.get_buffer()
 
-    def check_valid(self, file_size) :
-        super().check_valid(file_size)
+    def check_valid(self, data_size) :
+        super().check_valid(data_size)
         if self.page_type != PageType.data_page :
             raise Exception(f"invalid page type({self.page_type})")
 

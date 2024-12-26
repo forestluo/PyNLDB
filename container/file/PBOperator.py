@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from container.file.ValueEnum import *
+from container.file.BytesBuffer import *
 from container.file.FileContainer import *
 from container.file.FreePageBuffer import *
 from container.file.RootPageBuffer import *
 from container.file.HeadPageBuffer import *
 from container.file.DataPageBuffer import *
-from container.file.PageDescription import *
 from container.file.IndexPageBuffer import *
 from container.file.QueuePageBuffer import *
 from container.file.IndexElementBuffer import *
@@ -31,13 +31,13 @@ class PBOperator(FileContainer) :
 
     def _load_page(self, position, page_type = None) :
         # 新建
-        description = PageDescription()
+        description = PageBuffer()
         # 读取数据
         self._read_description(position, description)
         # 检查
         if page_type is not None :
             # 检查
-            PBOperator._check_valid(description, page_type)
+            PBOperator.__check_description(description, page_type)
         # 检查
         if description.page_type == PageType.head_page :
             # 创建
@@ -74,8 +74,7 @@ class PBOperator(FileContainer) :
 
     def _read_fully(self, position, page) :
         # 检查
-        assert isinstance(page, PageBuffer) \
-            or isinstance(page, PageDescription)
+        assert isinstance(page, PageBuffer)
         # 创建
         buffer = BytesBuffer.create(page.size_type)
         # 读取
@@ -87,8 +86,7 @@ class PBOperator(FileContainer) :
 
     def _write_fully(self, position, page) :
         # 检查
-        assert isinstance(page, PageBuffer) \
-            or isinstance(page, PageDescription)
+        assert isinstance(page, PageBuffer)
         # 检查
         page.check_valid(self.data_size)
         # 创建
@@ -100,30 +98,30 @@ class PBOperator(FileContainer) :
 
     def _read_description(self, position, description) :
         # 检查
-        assert isinstance(description, PageDescription)
+        assert isinstance(description, PageBuffer)
         # 创建
-        buffer = BytesBuffer.create(description.size_type)
+        buffer = BytesBuffer(PageBuffer.description_size)
         # 读取
         self._read_buffer(position, buffer)
         # 解包
         description.unwrap(buffer)
         # 检查
-        description.check_valid(self.data_size)
+        description.check_valid(self.file_length)
 
     def _write_description(self, position, description) :
         # 检查
-        assert isinstance(description, PageDescription)
+        assert isinstance(description, PageBuffer)
         # 检查
-        description.check_valid(self.data_size)
+        description.check_valid(self.file_length)
         # 创建
-        buffer = BytesBuffer.create(description.size_type)
+        buffer = BytesBuffer(PageBuffer.description_size)
         # 打包
-        page.wrap(buffer)
+        description.wrap(buffer)
         # 写入
         self._write_buffer(position, buffer)
 
     @staticmethod
-    def _check_valid(description, page_type) :
+    def __check_description(description, page_type) :
         # 检查
         if page_type != description.page_type :
             raise Exception(f"invalid page type({description.page_type})")

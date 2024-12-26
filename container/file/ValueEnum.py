@@ -104,19 +104,23 @@ class SizeType(Enum) :
             raise Exception(f"unknown size type({size_type})")
 
 class PageOffset(Enum) :
-    none = 0xFFFFFFFF
+    invalid = -1
 
     @staticmethod
-    def e2v(value) :
-        if value != PageOffset.none :
-            return (value >> 6) & 0xFFFFFFFF
-        return PageOffset.none.value
+    def l2i(value) :
+        if value < 0 : return -1
+        return (value >> 6) & 0xFFFFFFFF
 
     @staticmethod
-    def v2e(value) :
-        if value == PageOffset.none.value :
-            return PageOffset.none
+    def i2l(value) :
+        if value < 0 : return -1
         return (value & 0xFFFFFFFFFFFFFFFF) << 6
+
+    @staticmethod
+    def check_offset(offset, data_size) :
+        if offset > 0 :
+            if offset > data_size or (offset & 0x3F) != 0 :
+                raise Exception(f"invalid offset({offset})")
 
 class Capacity(Enum) :
     without_limit = 0xFFFFFFFF

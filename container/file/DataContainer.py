@@ -16,6 +16,18 @@ class DataContainer(HPBOperator,
         self._read_count = 0
         self._write_count = 0
 
+    def save(self) :
+        # 调用父类函数
+        IPBOperator._flush(self)
+        # 调用父类函数
+        QPBOperator._flush(self)
+        # 保存
+        RPBOperator._save(self)
+        # 保存
+        FPBOperator._save(self)
+        # 保存
+        HPBOperator._save(self)
+
     def close(self) :
         # 调用父类函数
         IPBOperator.close(self)
@@ -57,8 +69,6 @@ class DataContainer(HPBOperator,
             FPBOperator._create(self)
             # 调用父类函数
             RPBOperator._create(self)
-            # 调用父类函数
-            QPBOperator._create(self)
             # 设置标记
             self._safely_closed = SafelyClosed.closed
 
@@ -80,18 +90,25 @@ def data_operator_case() :
     container.open("..\\..\\db\\data.bin")
     # 打印信息
     container.dump()
-
-    buffer = BytesBuffer(1234)
-    position = container.save_data(buffer)
-    container.load_data(position)
-    container.free_data(position)
+    print("1----------")
 
     identity = 1
+    data_offset = -1
     container.create_queue(identity)
     container.dump()
-    print("----------")
+    print("2----------")
+    container.write_queue(identity, data_offset)
+    container.dump()
+    print("3----------")
+    data_offset = container.read_queue(identity)
+    container.dump()
+    print("3----------")
+    container.clear_queue(identity)
+    container.dump()
+    print("5----------")
     container.remove_queue(identity)
     container.dump()
+    print("6----------")
 
     # 关闭
     container.close()
@@ -107,7 +124,7 @@ def simple_case() :
     container.dump()
 
 def main() :
-    simple_case()
+    #simple_case()
     data_operator_case()
 
 if __name__ == '__main__':

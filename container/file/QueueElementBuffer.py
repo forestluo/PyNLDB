@@ -8,9 +8,8 @@ class QueueElementBuffer(PageBuffer) :
     #
     # Offsets.
     #
+    # Identity        [int]
     # Data Offset     [int]
-    # Next Element    [int]
-    # Page Offset     [int]
     #
     ##################################################
     # Default Size Type
@@ -25,52 +24,32 @@ class QueueElementBuffer(PageBuffer) :
             QueueElementBuffer.default_size_type)
         # 设置参数
         self.occupied_size = \
-            3 * SizeOf.integer.value
+            2 * SizeOf.integer.value
         # 设置参数
-        self.page_offset = PageOffset.none
+        self.identity = -1
         # 设置参数
-        self.data_offset = PageOffset.none
-        # 设置参数
-        self.next_element = PageOffset.none
+        self.data_offset = -1
 
     def wrap(self, buffer) :
         super().wrap(buffer)
-        buffer.put_int(SizeOf.integer,
-            PageOffset.e2v(self.page_offset))
-        buffer.put_int(SizeOf.integer,
-            PageOffset.e2v(self.next_element))
-        buffer.put_int(SizeOf.integer,
-            PageOffset.e2v(self.data_offset))
+        buffer.put_int(SizeOf.integer, self.identity)
+        buffer.put_int(SizeOf.integer, PageOffset.l2i(self.data_offset), True)
 
     def unwrap(self, buffer) :
         super().unwrap(buffer)
-        self.page_offset = \
-            PageOffset.v2e(buffer.get_int(SizeOf.integer))
-        self.next_element = \
-            PageOffset.v2e(buffer.get_int(SizeOf.integer))
-        self.data_offset = \
-            PageOffset.v2e(buffer.get_int(SizeOf.integer))
+        self.identity = buffer.get_int(SizeOf.integer)
+        self.data_offset = PageOffset.i2l(buffer.get_int(SizeOf.integer, True))
 
-    def check_valid(self, file_size) :
-        super().check_valid(file_size)
+    def check_valid(self, data_size) :
+        super().check_valid(data_size)
         if self.page_type != PageType.queue_element :
             raise Exception(f"invalid page type({self.page_type})")
         if self.size_type != QueueElementBuffer.default_size_type :
             raise Exception(f"invalid size type({self.size_type})")
-        # 获得数值
-        offsets = {"page offset" : self.page_offset,
-                   "data offset" : self.data_offset,
-                   "next element" : self.next_element}
-        # 循环处理
-        for key, offset in offsets.items() :
-            # 检查
-            if isinstance(offset, int) and \
-                (offset > file_size or (offset & 0x3F) != 0) :
-                raise Exception(f"invalid {key} ({offset})")
+        PageOffset.check_offset(self.data_offset, data_size)
 
     def dump(self) :
         super().dump()
         print(f"QueueElementBuffer.dump : show properties !")
-        print(f"\tpage_offset = {self.page_offset}")
-        print(f"\tnext_element = {self.next_element}")
+        print(f"\tidentity = {self.identity}")
         print(f"\tdata_offset = {self.data_offset}")

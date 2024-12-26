@@ -14,10 +14,9 @@ class DPBOperator(FPBOperator) :
     # 释放数据
     def free_data(self, offset) :
         # 检查
-        if offset < 0 or offset > self.data_size :
-            raise Exception(f"invalid offset({offset})")
+        PageOffset.check_offset(offset, self.data_size)
         # 新建
-        description = PageDescription()
+        description = PageBuffer()
         # 读取
         self._read_fully(offset, description)
         # 检查
@@ -29,10 +28,9 @@ class DPBOperator(FPBOperator) :
     # 加载数据
     def load_data(self, offset) :
         # 检查
-        if offset < 0 or offset > self.data_size :
-            raise Exception(f"invalid offset({offset})")
+        PageOffset.check_offset(offset, self.data_size)
         # 新建
-        description = PageDescription()
+        description = PageBuffer()
         # 读取
         self._read_fully(offset, description)
         # 检查
@@ -56,14 +54,14 @@ class DPBOperator(FPBOperator) :
         # 检查
         assert isinstance(buffer, BytesBuffer)
         # 计算页面尺寸
-        page_size = buffer.size + PageDescription.size
+        page_size = buffer.size + PageBuffer.default_size
         # 取得合适页面类型
         size_type = SizeType.get_type(page_size)
         # 检查结果
         if size_type is None :
             raise Exception(f"unsupported size({page_size}) of page")
         # 创建
-        description = PageDescription()
+        description = PageBuffer()
         # 设置尺寸类型
         description.size_type = size_type
         # 设置页面类型
@@ -89,6 +87,6 @@ class DPBOperator(FPBOperator) :
             # 写入描述
             self._write_fully(offset, description)
             # 写入数据
-            self._write_buffer(offset + PageDescription.size , buffer)
+            self._write_buffer(offset + PageBuffer.default_size , buffer)
         # 返回结果
         return offset

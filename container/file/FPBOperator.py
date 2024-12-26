@@ -14,30 +14,22 @@ class FPBOperator(PBOperator) :
         # 调用父类初始化函数
         super().__init__()
         # 创建
+        # 长整数指针
         self.__next_frees = [-1
             for _ in range(FreePageBuffer.default_data_page_types)]
 
     def close(self) :
         try :
-            # 关闭文件头
-            self.__flush()
+            # 写入
+            FPBOperator._save(self)
         except Exception as ex :
             traceback.print_exc()
             print("FPBOperator.close : ", str(ex))
             print("FPBOperator.close : unexpected exit !")
 
     def _create(self) :
-        # 新建
-        page = FreePageBuffer()
-        # 循环处理
-        for i in range(FreePageBuffer.default_data_page_types) :
-            # 设置数值
-            if self.__next_frees[i] < 0 :
-                page.next_data_pages[i] = PageOffset.none
-            else :
-                page.next_data_pages[i] = self.__next_frees[i]
-        # 写入数据
-        self._write_fully(FPBOperator.default_offset, page)
+        # 写入
+        FPBOperator._save(self)
         # 设置数据尺寸
         self._inc_data(FreePageBuffer.default_size)
 
@@ -47,28 +39,24 @@ class FPBOperator(PBOperator) :
             (FPBOperator.default_offset, PageType.free_page)
         # 循环处理
         for i in range(FreePageBuffer.default_data_page_types) :
-            # 设置参数
-            if page.next_data_pages[i] == PageOffset.none :
-                self.__next_frees[i] = -1
-            else :
-                self.__next_frees[i] = page.next_data_pages[i]
+            # 设置数值
+            self.__next_frees[i] = page.next_free_pages[i]
 
-    def __flush(self) :
+    def _save(self) :
         # 新建
         page = FreePageBuffer()
         # 循环处理
         for i in range(FreePageBuffer.default_data_page_types) :
             # 设置数值
-            if self.__next_frees[i] < 0 :
-                page.next_data_pages[i] = PageOffset.none
-            else :
-                page.next_data_pages[i] = self.__next_frees[i]
+            page.next_free_pages[i] = self.__next_frees[i]
         # 写入数据
         self._write_fully(FPBOperator.default_offset, page)
 
     def _free_page(self, offset, size_type) :
+        # 检查
+        PageOffset.check_offset(offset, self.data_size)
         # 新建
-        description = PageDescription()
+        description = PageBuffer()
         # 设置尺寸
         description.size_type = size_type
         # 分配页面
@@ -76,7 +64,7 @@ class FPBOperator(PBOperator) :
 
     def _malloc_page(self, page_type, size_type) :
         # 新建
-        description = PageDescription()
+        description = PageBuffer()
         # 设置类型
         description.page_type = page_type
         # 设置尺寸
@@ -91,13 +79,10 @@ class FPBOperator(PBOperator) :
         description.page_type = PageType.invalid
         # 设置占用为被释放状态
         description.occupied_size = 0
-        # 检查数据
-        if self.__next_frees[size_type.value - 1] < 0 :
-            # 设置类型
-            description.next_page = PageOffset.none
-        else :
-            # 设置数值
-            description.next_page = self.__next_frees[size_type.value - 1]
+        # 索引
+        index = size_type.value - 1
+        # 设置数值
+        description.next_page = self.__next_frees[index]
         # 设置指针
         self.__next_frees[size_type.value - 1] = offset
         # 写入
@@ -121,16 +106,12 @@ class FPBOperator(PBOperator) :
             raise Exception(f"invalid size type({description.size_type})")
         # 索引
         index = size_type.value - 1
-        # 检查
-        if description.next_page == PageOffset.none :
-            self.__next_frees[index] = -1
-        elif isinstance(description.next_page, int) :
-            self.__next_frees[index] = description.next_page
-        else : raise Exception(f"invalid next page({description.next_page})")
+        # 设置数值
+        self.__next_frees[index] = description.next_page
         # 页面类型
         description.page_type = page_type
         # 设置参数
-        description.next_page = PageOffset.none
+        description.next_page = -1
         # 占用空间
         description.occupied_size = 0
         # 增加计数

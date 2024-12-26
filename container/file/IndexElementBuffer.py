@@ -31,7 +31,7 @@ class IndexElementBuffer(PageBuffer) :
             SizeOf.integer.value + \
             self.get_subnode_count() * IndexData.size
         # 设置参数
-        self.page_offset = PageOffset.none
+        self.identity = -1
         # 循环处理
         self.datas = [IndexData() for _ in range(self.get_subnode_count())]
 
@@ -51,14 +51,14 @@ class IndexElementBuffer(PageBuffer) :
         # 检查
         assert self.offset >= 0
         # 返回结果
-        return self.offset + PageDescription.Size \
+        return self.offset + PageBuffer.default_size \
             + SizeOf.integer.value + index * IndexData.size
 
     def get_offset_by_key(self, key) :
         # 检查
         assert self.offset >= 0
         # 返回结果
-        return self.offset + PageDescription.Size \
+        return self.offset + PageBuffer.default_size \
             + SizeOf.integer.value + self.get_index_by_key(key) * IndexData.size
 
     @staticmethod
@@ -95,34 +95,29 @@ class IndexElementBuffer(PageBuffer) :
 
     def wrap(self, buffer) :
         super().wrap(buffer)
-        buffer.put_int(SizeOf.integer,
-            PageOffset.e2v(self.page_offset))
+        buffer.put_int(SizeOf.integer, self.identity)
         # 循环处理
         for data in self.datas : data.wrap(buffer)
 
     def unwrap(self, buffer) :
         super().unwrap(buffer)
-        self.page_offset = \
-            PageOffset.v2e(buffer.get_int(SizeOf.integer))
+        self.identity = buffer.get_int(SizeOf.integer)
         # 循环处理
         for data in self.datas : data.unwrap(buffer)
 
-    def check_valid(self, file_size) :
-        super().check_valid(file_size)
+    def check_valid(self, data_size) :
+        super().check_valid(data_size)
         if self.page_type != PageType.index_element :
             raise Exception(f"invalid page type({self.page_type})")
         if not (2 <= self.size_type.value <= 11) :
             raise Exception(f"invalid size type({self.size_type})")
-        if isinstance(self.page_offset, int) and \
-            (self.page_offset > file_size or (self.page_offset & 0x3F) != 0) :
-            raise Exception(f"invalid page offset({self.page_offset})")
         # 循环处理
-        for data in self.datas : data.check_valid(file_size)
+        for data in self.datas : data.check_valid(data_size)
 
     def dump(self) :
         super().dump()
         print(f"IndexElementBuffer.dump : show properties !")
-        print(f"\tpage_offset = {self.page_offset}")
+        print(f"\tidentity = {self.identity}")
         # 循环处理
         for index, data in enumerate(self.datas) :
             # 获得数值
@@ -132,25 +127,3 @@ class IndexElementBuffer(PageBuffer) :
                   f"[0x{data.key :016x},"
                   f"0x{data.data_offset :016x},"
                   f"0x{data.subnode_offset :016x}]")
-
-def main() :
-    # 新建
-    size = 128 * 1024 * 1024
-    buffer = BytesBuffer(size)
-    ieb = IndexElementBuffer()
-    ieb.dump()
-    ieb.wrap(buffer)
-    ieb.check_valid(size)
-    buffer.pos = 0
-    ieb.unwrap(buffer)
-    ieb.check_valid(size)
-    ieb.dump()
-
-if __name__ == '__main__':
-    try:
-        # 调用主函数
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        print("IndexElementBuffer.__main__ : ", str(e))
-        print("IndexElementBuffer.__main__ : unexpected exit !")

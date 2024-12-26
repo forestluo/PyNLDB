@@ -20,25 +20,16 @@ class RPBOperator(PBOperator) :
 
     def close(self) :
         try :
-            # 关闭文件头
-            self.__flush()
+            # 写入
+            RPBOperator._save(self)
         except Exception as ex :
             traceback.print_exc()
             print("RPBOperator.close : ", str(ex))
             print("RPBOperator.close : unexpected exit !")
 
     def _create(self) :
-        # 新建
-        page = RootPageBuffer()
-        # 循环处理
-        for i in range(RootPageBuffer.default_root_page_types) :
-            # 设置数值
-            if self.__next_roots[i] < 0 :
-                page.next_root_pages[i] = PageOffset.none
-            else :
-                page.next_root_pages[i] = self.__next_roots[i]
-        # 写入数据
-        self._write_fully(RPBOperator.default_offset, page)
+        # 写入
+        RPBOperator._save(self)
         # 设置数据尺寸
         self._inc_data(RootPageBuffer.default_size)
 
@@ -48,22 +39,16 @@ class RPBOperator(PBOperator) :
             (RPBOperator.default_offset, PageType.root_page)
         # 循环处理
         for i in range(RootPageBuffer.default_root_page_types) :
-            # 设置参数
-            if page.next_root_pages[i] == PageOffset.none :
-                self.__next_roots[i] = -1
-            else :
-                self.__next_roots[i] = page.next_root_pages[i]
+            # 设置数值
+            self.__next_roots[i] = page.next_root_pages[i]
 
-    def __flush(self) :
+    def _save(self) :
         # 新建
         page = RootPageBuffer()
         # 循环处理
         for i in range(RootPageBuffer.default_root_page_types) :
             # 设置数值
-            if self.__next_roots[i] < 0 :
-                page.next_root_pages[i] = PageOffset.none
-            else :
-                page.next_root_pages[i] = self.__next_roots[i]
+            page.next_root_pages[i] = self.__next_roots[i]
         # 写入数据
         self._write_fully(RPBOperator.default_offset, page)
 
@@ -82,10 +67,14 @@ class RPBOperator(PBOperator) :
         page.next_page  = self.__next_roots[0]
         # 设置当前指针
         self.__next_roots[0] = page.offset
-        # 写入
-        self.__flush()
+
+    def _register_index(self, page) :
         # 检查
-        if page.next_page < 0 : page.next_page = PageOffset.none
+        assert isinstance(page, IndexPageBuffer)
+        # 设置页面指针
+        page.next_page  = self.__next_roots[1]
+        # 设置当前指针
+        self.__next_roots[1] = page.offset
 
     def _unregister_queue(self, page) :
         # 检查
@@ -112,24 +101,11 @@ class RPBOperator(PBOperator) :
         if parent is None :
             # 设置指针
             self.__next_roots[0] = page.next_page
-            # 写入
-            self.__flush()
         else :
             # 设置指针
             parent.next_page = page.next_page
             # 写入
             self._write_fully(parent.offset, parent)
-
-    def _register_index(self, page) :
-        # 检查
-        assert isinstance(page, IndexPageBuffer)
-        # 设置页面指针
-        page.next_page  = \
-            self.__next_roots[1]
-        # 设置当前指针
-        self.__next_roots[1] = page.offset
-        # 检查
-        if page.next_page < 0 : page.next_page = PageOffset.none
 
     def dump(self) :
         print(f"RPBOperator.dump : show properties !")

@@ -16,14 +16,14 @@ class IPBOperator(FPBOperator, RPBOperator) :
 
     def close(self) :
         try :
-            # 关闭队列
-            self.__flush()
+            # 写入
+            IPBOperator._flush(self)
         except Exception as ex :
             traceback.print_exc()
             print("IPBOperator.close : ", str(ex))
             print("IPBOperator.close : unexpected exit !")
 
-    def __flush(self) :
+    def _flush(self) :
         # 循环处理
         for page in self.__indexes.values() :
             # 写入
@@ -39,10 +39,10 @@ class IPBOperator(FPBOperator, RPBOperator) :
             # 检查
             if page.identity in self.__queues.keys() :
                 raise Exception(f"duplicate identity({page.identity})")
+            # 设置偏移量
+            offset = page.next_page
             # 加入集合
             self.__queues[page.identity] = page
-            # 设置偏移量
-            offset = page.next_page if page.next_page != PageOffset.none else -1
 
     def dump(self) :
         print(f"IPBOperator.dump : show properties !")
