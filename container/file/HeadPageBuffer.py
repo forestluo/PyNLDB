@@ -23,25 +23,18 @@ class HeadPageBuffer(PageBuffer) :
     # Copyright       [string]
     #
     ##################################################
-    # Default Size Type
-    default_size_type = SizeType.hqkb
     # Default Size
-    default_size = SizeType.get_size(default_size_type)
+    default_size = SizeType.get_size(SizeType.hqkb)
 
     # 初始化
     def __init__(self) :
-        super().__init__(PageType.head_page,
-            HeadPageBuffer.default_size_type)
+        super().__init__(PageType.head_page, SizeType.hqkb)
         # 设置参数
-        self.occupied_size = \
-            SizeOf.byte.value + \
-            2 * SizeOf.long.value + \
-            5 * SizeOf.integer.value + \
-            SizeOf.integer.value + len(_copyright)
+        self.occupied_size = -1
         # 设置参数
-        self.safely_closed = SafelyClosed.opened
+        self.safely_closed = 1
         self.count = 0
-        self.capacity = Capacity.without_limit
+        self.capacity = -1
         self.size = 0
         self.data_size = 0
         self.file_length = 0
@@ -50,9 +43,9 @@ class HeadPageBuffer(PageBuffer) :
         super().wrap(buffer)
         buffer.put_int(SizeOf.integer, _magic_number)
         buffer.put_int(SizeOf.integer, _version)
-        buffer.put_int(SizeOf.byte, SafelyClosed.e2v(self.safely_closed))
+        buffer.put_int(SizeOf.byte, self.safely_closed)
         buffer.put_int(SizeOf.integer, self.count)
-        buffer.put_int(SizeOf.integer, Capacity.e2v(self.capacity))
+        buffer.put_int(SizeOf.integer, self.capacity, True)
         buffer.put_int(SizeOf.integer, self.size)
         buffer.put_int(SizeOf.long, self.data_size)
         buffer.put_int(SizeOf.long, self.file_length)
@@ -72,9 +65,9 @@ class HeadPageBuffer(PageBuffer) :
             raise Exception(f"invalid version({value})")
         # 获取数值
         # 如果不在枚举范围内，会抛出异常
-        self.safely_closed = SafelyClosed(buffer.get_int(SizeOf.byte))
+        self.safely_closed = buffer.get_int(SizeOf.byte)
         self.count = buffer.get_int(SizeOf.integer)
-        self.capacity = Capacity.v2e(buffer.get_int(SizeOf.integer))
+        self.capacity = buffer.get_int(SizeOf.integer, True)
         self.size = buffer.get_int(SizeOf.integer)
         self.data_size = buffer.get_int(SizeOf.long)
         self.file_length = buffer.get_int(SizeOf.long)
@@ -88,11 +81,11 @@ class HeadPageBuffer(PageBuffer) :
         super().check_valid(file_size)
         if self.page_type != PageType.head_page :
             raise Exception(f"invalid page type({self.page_type})")
-        if self.size_type != HeadPageBuffer.default_size_type :
+        if self.size_type != SizeType.hqkb :
             raise Exception(f"invalid size type({self.size_type})")
         if self.next_page != -1 :
             raise Exception(f"invalid next page({self.next_page})")
-        if not isinstance(self.safely_closed, SafelyClosed) :
+        if not (0 <= self.safely_closed <= 1) :
             raise Exception(f"invalid safely closed({self.safely_closed})")
         if self.data_size < 0 or (self.data_size & 0x3F) != 0 :
             raise Exception(f"invalid data size({self.data_size})")
@@ -110,12 +103,9 @@ class HeadPageBuffer(PageBuffer) :
     def dump(self) :
         super().dump()
         print(f"HeadPageBuffer.dump : show properties !")
-        print(f"\tmagic_numer = 0x{_magic_number :08x}")
-        print(f"\tversion = 0x{_version :08x}")
-        print(f"\tsafely_closed = {self.safely_closed}")
-        print(f"\tcount = {self.count}")
-        print(f"\tcapacity = {self.capacity}")
-        print(f"\tsize = {self.size}")
         print(f"\tdata_size = {self.data_size}")
         print(f"\tfile_length = {self.file_length}")
-        print(f"\tcopyright = \"{_copyright}\"")
+        print(f"\tsafely_closed = {self.safely_closed}")
+        print(f"\tcapacity = {self.capacity}")
+        print(f"\tsize = {self.size}")
+        print(f"\tcount = {self.count}")

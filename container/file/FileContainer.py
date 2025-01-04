@@ -13,9 +13,9 @@ from container.file.RootPageBuffer import *
 
 class FileContainer(Container) :
     # Max Size
-    max_size = 1 << (31 + 6)
+    _max_size = 1 << (31 + 6)
     # Default Size Type
-    default_size_type = SizeType.mb64
+    _default_size_type = SizeType.mb64
 
     # 初始化
     def __init__(self) :
@@ -59,7 +59,7 @@ class FileContainer(Container) :
         # 检查结果
         if self.__file_length < 0 :
             self.__file_length = \
-                SizeType.get_size(self.default_size_type)
+                SizeType.get_size(FileContainer._default_size_type)
 
         # 打开文件
         self.__file_no = \
@@ -105,7 +105,7 @@ class FileContainer(Container) :
         # 检查
         if position + size <= self.__file_length : return
         # 缺省数值
-        default_size = SizeType.get_size(FileContainer.default_size_type)
+        default_size = SizeType.get_size(FileContainer._default_size_type)
         # 补丁
         padding = position + size - self.__file_length
         # 检查补丁
@@ -115,7 +115,7 @@ class FileContainer(Container) :
 
     def __append(self, length) :
         # 检查文件长度
-        if self.__file_length + length > FileContainer.max_size :
+        if self.__file_length + length > FileContainer._max_size :
             raise Exception(f"too large({length}) for file({self.__file_length})")
         # 关闭映射
         self.__mapped.close()

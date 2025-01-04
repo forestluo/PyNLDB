@@ -35,9 +35,9 @@ class PBOperator(FileContainer) :
         # 读取数据
         self._read_description(position, description)
         # 检查
-        if page_type is not None :
-            # 检查
-            PBOperator.__check_description(description, page_type)
+        if page_type is not None \
+            and description.page_type != page_type :
+            raise Exception(f"invalid page type({description.page_type})")
         # 检查
         if description.page_type == PageType.head_page :
             # 创建
@@ -51,18 +51,18 @@ class PBOperator(FileContainer) :
         elif description.page_type == PageType.data_page :
             # 创建
             page = DataPageBuffer()
-        elif description.page_type == PageType.index_page :
-            # 创建
-            page = IndexPageBuffer()
-        elif description.page_type == PageType.index_element :
-            # 创建
-            page = IndexElementBuffer()
-        elif description.page_type == PageType.queue_page :
+        elif description.page_type == PageType.queue_page:
             # 创建
             page = QueuePageBuffer()
         elif description.page_type == PageType.queue_element :
             # 创建
             page = QueueElementBuffer()
+        elif description.page_type == PageType.index_page:
+            # 创建
+            page = IndexPageBuffer()
+        elif description.page_type == PageType.index_element:
+            # 创建
+            page = IndexElementBuffer()
         else :
             raise Exception(f"invalid page type({description.page_type})")
         # 读取整个页面
@@ -119,34 +119,3 @@ class PBOperator(FileContainer) :
         description.wrap(buffer)
         # 写入
         self._write_buffer(position, buffer)
-
-    @staticmethod
-    def __check_description(description, page_type) :
-        # 检查
-        if page_type != description.page_type :
-            raise Exception(f"invalid page type({description.page_type})")
-        elif page_type == PageType.head_page :
-            if description.size_type != HeadPageBuffer.default_size_type :
-                raise Exception(f"invalid size type({description.size_type})")
-        elif page_type == PageType.free_page :
-            if description.size_type != FreePageBuffer.default_size_type :
-                raise Exception(f"invalid size type({description.size_type})")
-        elif page_type == PageType.root_page :
-            if description.size_type != RootPageBuffer.default_size_type :
-                raise Exception(f"invalid size type({description.size_type})")
-        elif page_type == PageType.data_page :
-            pass
-        elif page_type == PageType.index_page :
-            if not (15 <= description.size_type.value <= 21) :
-                raise Exception(f"invalid size type({description.size_type})")
-        elif page_type == PageType.index_element :
-            if not (2 <= description.size_type.value <= 11) :
-                raise Exception(f"invalid size type({description.size_type})")
-        elif page_type == PageType.queue_page :
-            if description.size_type != QueuePageBuffer.default_size_type :
-                raise Exception(f"invalid size type({description.size_type})")
-        elif page_type == PageType.queue_element :
-            if description.size_type != QueueElementBuffer.default_size_type :
-                raise Exception(f"invalid size type({description.size_type})")
-        else :
-            raise Exception(f"invalid page type({description.page_type})")

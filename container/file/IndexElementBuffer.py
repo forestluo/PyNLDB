@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from container.file.ValueEnum import *
 from container.file.IndexData import *
 from container.file.PageBuffer import *
 
@@ -9,98 +8,59 @@ class IndexElementBuffer(PageBuffer) :
     #
     # Offsets.
     #
+    # Identity      [int]
     # Hash Datas    [N * IndexData]
     #
     ##################################################
-    # Default Size Type
-    default_size_type = SizeType.hqkb
-    # Default Size
-    default_size = SizeType.get_size(default_size_type)
 
     # 初始化
-    def __init__(self) :
+    def __init__(self, size_type = SizeType.kb1) :
         # 调用父类初始化函数
-        super().__init__(PageType.index_element,
-            IndexElementBuffer.default_size_type)
-        # 设置临时变量
-        self.flag = 0
-        self.level = -1
-        self.index = -1
+        super().__init__(PageType.index_element, size_type)
         # 设置参数
-        self.occupied_size = \
-            SizeOf.integer.value + \
-            self.get_subnode_count() * IndexData.size
+        self.occupied_size = -1
         # 设置参数
         self.identity = -1
         # 循环处理
-        self.datas = [IndexData() for _ in range(self.get_subnode_count())]
+        self.datas = [IndexData()
+            for _ in range(self.__get_subnode_count())]
+        # 循环处理
+        for index, data in enumerate(self.datas) :
+            data.offset = PageBuffer.description_size \
+                + SizeOf.integer + index * IndexData.size
 
-    def get_data_by_key(self, index) :
+    def valid(self) :
+        # 循环处理
+        for data in self.datas :
+            # 返回结果
+            if data.valid : return True
+            if data.subnode_offset != -1 : return True
         # 返回结果
-        return self.datas[self.get_index_by_key(key)]
+        return False
 
-    def get_subnode_count(self) :
+    # 获得数据
+    def __getitem__(self, key) :
         # 返回结果
-        return IndexElementBuffer.__get_subnode_count(self.size_type)
+        return self.datas[self.__get_index_by_key(key)]
 
-    def get_index_by_key(self, key) :
+    def __get_index_by_key(self, key) :
         # 返回结果
-        return IndexElementBuffer.__get_subnode_index(self.size_type, key)
+        return IndexTool.get_index(key, self.size_type)
 
-    def get_offset_by_index(self, index) :
-        # 检查
-        assert self.offset >= 0
+    def __get_subnode_count(self) :
         # 返回结果
-        return self.offset + PageBuffer.default_size \
-            + SizeOf.integer.value + index * IndexData.size
-
-    def get_offset_by_key(self, key) :
-        # 检查
-        assert self.offset >= 0
-        # 返回结果
-        return self.offset + PageBuffer.default_size \
-            + SizeOf.integer.value + self.get_index_by_key(key) * IndexData.size
-
-    @staticmethod
-    def __get_subnode_count(size_type) :
-        # 检查
-        if size_type == SizeType.qqkb :
-            pass
-        elif size_type == SizeType.hqkb :
-            return 7
-        elif size_type == SizeType.qkb :
-            return 15 # 3 * 5
-        elif size_type == SizeType.hkb :
-            return 31
-        elif size_type == SizeType.kb1 :
-            return 61
-        elif size_type == SizeType.kb2 :
-            return 127
-        elif size_type == SizeType.kb4 :
-            return 251
-        elif size_type == SizeType.kb8 :
-            return 509
-        elif size_type == SizeType.kb16 :
-            return 1021
-        elif size_type == SizeType.kb32 :
-            return 2039
-        elif size_type == SizeType.kb64 :
-            return 4093
-        raise Exception(f"unsupported size type({size_type})")
-
-    @staticmethod
-    def __get_subnode_index(size_type, key) :
-        # 返回结果
-        return key % IndexElementBuffer.__get_subnode_count(size_type)
+        return IndexTool.get_subnode_count(self.size_type)
 
     def wrap(self, buffer) :
         super().wrap(buffer)
+        # 其他数据
         buffer.put_int(SizeOf.integer, self.identity)
         # 循环处理
         for data in self.datas : data.wrap(buffer)
 
     def unwrap(self, buffer) :
         super().unwrap(buffer)
+        # 其他数据
         self.identity = buffer.get_int(SizeOf.integer)
         # 循环处理
         for data in self.datas : data.unwrap(buffer)
@@ -109,7 +69,7 @@ class IndexElementBuffer(PageBuffer) :
         super().check_valid(data_size)
         if self.page_type != PageType.index_element :
             raise Exception(f"invalid page type({self.page_type})")
-        if not (2 <= self.size_type.value <= 11) :
+        if not (2 <= self.size_type <= 11) :
             raise Exception(f"invalid size type({self.size_type})")
         # 循环处理
         for data in self.datas : data.check_valid(data_size)
@@ -123,7 +83,5 @@ class IndexElementBuffer(PageBuffer) :
             # 获得数值
             if data.key == 0 : continue
             # 打印数据
-            print(f"\tdata[{index}] = "
-                  f"[0x{data.key :016x},"
-                  f"0x{data.data_offset :016x},"
-                  f"0x{data.subnode_offset :016x}]")
+            print(f"\tdata[{index}] = [0x{data.key :016x}, "
+                  f"0x{data.data_offset :016x}, 0x{data.subnode_offset :016x}]")

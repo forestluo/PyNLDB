@@ -2,6 +2,7 @@
 
 from container.file.ValueEnum import *
 from container.file.PageBuffer import *
+from container.file.BytesBuffer import *
 
 class DataPageBuffer(PageBuffer) :
     ##################################################
@@ -11,10 +12,6 @@ class DataPageBuffer(PageBuffer) :
     # Data Bytes      [bytes]
     #
     ##################################################
-    # Default Size Type
-    default_size_type = SizeType.qqkb
-    # Minimum Data Page Size
-    #min_data_page_size = min_page_size + SizeOf.byte + SizeOf.integer
 
     # 初始化
     def __init__(self, size_type = SizeType.qqkb) :
@@ -23,12 +20,26 @@ class DataPageBuffer(PageBuffer) :
         self.buffer = bytearray(SizeType.get_size(size_type))
 
     def wrap(self, buffer) :
+        # 检查
+        assert isinstance(buffer, BytesBuffer)
         super().wrap(buffer)
-        buffer.put_buffer(self.buffer)
+        # 检查
+        # 参数occupied_size需要事先设定
+        if self.occupied_size < 0 :
+            buffer.put_raw(self.buffer, len(self.buffer))
+        else :
+            buffer.put_raw(self.buffer, self.occupied_size)
 
     def unwrap(self, buffer) :
+        # 检查
+        assert isinstance(buffer, BytesBuffer)
         super().unwrap(buffer)
-        self.buffer = buffer.get_buffer()
+        # 检查
+        # 参数occupied_size需要事先设定
+        if self.occupied_size < 0 :
+            self.buffer = buffer.get_raw(len(self.buffer))
+        else :
+            self.buffer = buffer.get_raw(self.occupied_size)
 
     def check_valid(self, data_size) :
         super().check_valid(data_size)
@@ -39,6 +50,3 @@ class DataPageBuffer(PageBuffer) :
         super().dump()
         print(f"DataPageBuffer.dump : show properties !")
         print(f"\tbytes({len(self.buffer)}) = 0x{self.buffer.hex()}")
-
-
-
