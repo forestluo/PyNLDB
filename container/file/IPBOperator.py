@@ -63,6 +63,12 @@ class IPBOperator(FPBOperator, RPBOperator) :
         # 重新加载
         IPBOperator._load(self)
 
+    def index_count(self, identity) :
+        # 检查
+        if identity not in self.__indexes.keys() : return None
+        # 返回结果
+        return self.__indexes[identity].count
+
     def create_index(self, identity) :
         # 检查
         if identity in self.__indexes.keys() : return
