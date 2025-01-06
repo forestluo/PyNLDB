@@ -211,7 +211,7 @@ def main() :
     # 创建
     words = WordContent()
     # 循环处理
-    for i in range(1, 4) :
+    for i in range(1, 9) :
         # 加载文件
         if words.load(f"..\\..\\json\\words{i}.json") <= 0 :
             print(f"FileVectorization.main : fail to load file !")
