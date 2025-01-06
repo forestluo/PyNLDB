@@ -38,9 +38,11 @@ class FileVectorization(WordVector) :
         super().__del__()
         # 关闭数据库连接
         self.__container.close()
+        """
         # 打印信息
         print(f"FileVectorization.__del__ : "
             f"file container has been closed !")
+        """
 
     @property
     def wsize(self) :
@@ -209,7 +211,7 @@ def main() :
     # 创建
     words = WordContent()
     # 循环处理
-    for i in range(1, 3) :
+    for i in range(1, 4) :
         # 加载文件
         if words.load(f"..\\..\\json\\words{i}.json") <= 0 :
             print(f"FileVectorization.main : fail to load file !")
