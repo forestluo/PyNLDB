@@ -31,7 +31,7 @@ class QPBOperator(FPBOperator, RPBOperator) :
         # 清理
         self.__queues.clear()
         # 获得数值
-        position = self._get_queue_root()
+        position = self._get_root(0)
         # 循环处理
         while position != -1 :
             # 读取页面
@@ -43,22 +43,6 @@ class QPBOperator(FPBOperator, RPBOperator) :
             position = page.next_page
             # 加入集合
             self.__queues[page.identity] = page
-
-    def _register_queue(self, page) :
-        # 保存所有数据
-        QPBOperator._flush(self)
-        # 调用父类函数
-        super()._register_queue(page)
-        # 重新加载
-        QPBOperator._load(self)
-
-    def _unregister_queue(self, page) :
-        # 保存所有数据
-        QPBOperator._flush(self)
-        # 调用父类函数
-        super()._unregister_queue(page)
-        # 重新加载
-        QPBOperator._load(self)
 
     def create_queue(self, identity) :
         # 检查
@@ -94,7 +78,7 @@ class QPBOperator(FPBOperator, RPBOperator) :
         # 移除队列
         self.__queues.pop(identity)
         # 注销队列
-        self._unregister_queue(page)
+        self._unregister_root(0, page)
         # 释放队列
         self._free_page(page.offset, page.size_type)
 
@@ -182,9 +166,9 @@ class QPBOperator(FPBOperator, RPBOperator) :
             # 写入
             self._write_fully(page.offset, page)
         # 设置
-        self.__queues[page.identity] = page
+        self.__queues[identity] = page
         # 登记页面
-        self._register_queue(page)
+        self._register_root(0, page)
         # 返回结果
         return page
 

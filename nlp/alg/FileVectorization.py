@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import traceback
 
 from widget.ProgressBar import *
@@ -8,6 +9,9 @@ from nlp.content.WordContent import *
 from container.file.DataContainer import *
 
 class FileVectorization(WordVector) :
+    # 文件名
+    file_name = "..\\..\\db\\data.bin"
+
     # 初始化
     def __init__(self, dimension) :
         # 调用父类初始化
@@ -18,12 +22,14 @@ class FileVectorization(WordVector) :
             self.__container = DataContainer()
             # 打开文件
             # 按照缺省文件名
-            self.__container.open("..\\..\\db\\data.bin")
-            # 创建索引
-            self.__container.create_index(1)
+            self.__container.open(FileVectorization.file_name)
+            # 循环处理
+            for i in range(1, 9) :
+                # 创建索引
+                self.__container.create_index(i)
         except Exception as ex :
             traceback.print_exc()
-            print("FileVectorization.__init__ : ", str(e))
+            print("FileVectorization.__init__ : ", str(ex))
             print("FileVectorization.__init__ : unexpected exit !")
 
     # 析构
@@ -39,38 +45,55 @@ class FileVectorization(WordVector) :
     @property
     def wsize(self) :
         try :
-            # 获得结果
-            count = self.__container.index_count(1)
+            # 计数器
+            total = 0
+            # 循环处理
+            for i in range(1, 9) :
+                # 创建索引
+                count = self.__container.index_count(i)
+                # 检查结果
+                if not isinstance(count, int) :
+                    raise Exception(f"invalid count({count}) of index({i})")
+                # 求和
+                total += count
             # 返回结果
-            return count if count is not None else -1
+            return total
         except Exception as ex :
             traceback.print_exc()
-            print("FileVectorization.wsize : ", str(e))
+            print("FileVectorization.wsize : ", str(ex))
             print("FileVectorization.wsize : unexpected exit !")
         return -1
 
     # 获得计数
     def get_count(self, key) :
         try :
-            # 获得结果
-            count = self.__container.\
-                load_index(1, key)
-            # 返回结果
-            return count if count is not None else -1
+            # 获得长度
+            length = len(key)
+            # 检查
+            if 1 <= length <= 8 :
+                # 获得结果
+                count = self.__container.\
+                    load_index(length, key)
+                # 返回结果
+                return count if count is not None else -1
         except Exception as ex :
             traceback.print_exc()
-            print("FileVectorization.get_count : ", str(e))
+            print("FileVectorization.get_count : ", str(ex))
             print("FileVectorization.get_count : unexpected exit !")
         return -1
 
     def set_count(self, key, count) :
         try :
-            # 获得结果
-            count = self.__container.\
-                save_index(1, key, count)
+            # 获得长度
+            length = len(key)
+            # 检查
+            if 1 <= length <= 8 :
+                # 获得结果
+                self.__container.\
+                    save_index(length, key, count)
         except Exception as ex :
             traceback.print_exc()
-            print("FileVectorization.set_count : ", str(e))
+            print("FileVectorization.set_count : ", str(ex))
             print("FileVectorization.set_count : unexpected exit !")
 
     # 获得相关系数
@@ -175,82 +198,53 @@ class FileVectorization(WordVector) :
 
 # 测试代码
 def main() :
-
+    # 检查
+    if os.path.isfile(FileVectorization.file_name) :
+        # 删除原有文件
+        os.remove(FileVectorization.file_name)
+        # 打印
+        print(f"FileVectorization.main : file({FileVectorization.file_name}) removed !")
     # 生成对象
     fv = FileVectorization(32)
-    # 检查数量
-    if fv.wsize <= 0 :
-        # 创建
-        words = WordContent()
+    # 创建
+    words = WordContent()
+    # 循环处理
+    for i in range(1, 3) :
+        # 加载文件
+        if words.load(f"..\\..\\json\\words{i}.json") <= 0 :
+            print(f"FileVectorization.main : fail to load file !")
+            return
+        # 进度条
+        pb = ProgressBar(len(words))
+        # 开始
+        pb.begin(f"FileVectorization.main : try to save data !")
         # 循环处理
-        for i in range(8) :
-            # 加载文件
-            if words.load(f"..\\..\\json\\words{i + 1}.json") <= 0 :
-                print(f"FileVectorization.main : fail to load file !")
-                return
+        for item in words.values() :
             # 进度条
-            pb = ProgressBar(len(words))
-            # 开始
-            pb.begin(f"FileVectorization.main : try to save data !")
-            # 循环处理
-            for item in words.values() :
-                # 进度条
-                pb.increase()
-                # 保存数据
-                fv.set_count(item.content, item.count)
-            # 结束
-            pb.end()
+            pb.increase()
+            # 保存数据
+            fv.set_count(item.content, item.count)
+        # 结束
+        pb.end()
 
+        # 进度条
+        pb = ProgressBar(len(words))
+        # 开始
+        pb.begin(f"FileVectorization.main : try to verify data !")
+        # 循环处理
+        for item in words.values() :
             # 进度条
-            pb = ProgressBar(len(words))
-            # 开始
-            pb.begin(f"FileVectorization.main : try to verify data !")
-            # 循环处理
-            for item in words.values() :
-                # 进度条
-                pb.increase()
-                # 保存数据
-                count = fv.get_count(item.content)
-                # 检查结果
-                if count != item.count :
-                    print(f"\tincorrect item(\"{item.content}\", {item.count}) = {count}")
-            # 结束
-            pb.end()
+            pb.increase()
+            # 保存数据
+            count = fv.get_count(item.content)
+            # 检查结果
+            if count != item.count :
+                print(f"\tincorrect item(\"{item.content}\", {item.count}) = {count}")
+        # 结束
+        pb.end()
 
-            # 清理
-            words.clear()
-    # 选项
-    # 加载数据
-    if fv.load_vectors("..\\..\\json\\vectors.json", False) <= 0 :
-        # 打印信息
-        print("FileVectorization.main : fail to load vectors.json !")
-        return
-    """
-    # 加载数据
-    if fv.load_vectors("..\\..\\json\\cores.json", False) <= 0 :
-        # 打印信息
-        print("FileVectorization.main : fail to load cores.json !")
-        return
-    """
-    # 打印信息
-    print("FileVectorization.main : successfully loaded !")
-    # 获得求解器
-    solution = fv.get_solution("cupy.l2")
-    # 检查结果
-    if solution is None :
-        # 打印信息
-        print("FileVectorization.main : fail to get solution !")
-        return
-    # 启动
-    solution.start()
-    # 打印信息
-    print("FileVectorization.main : successfully start solving !")
-    # 等待输入
-    input()
-    # 结束线程
-    solution.stop()
-    # 打印信息
-    print("FileVectorization.main : successfully stopped solving !")
+        # 清理
+        words.clear()
 
 if __name__ == '__main__':
     try:

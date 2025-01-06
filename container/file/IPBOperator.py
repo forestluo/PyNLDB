@@ -34,7 +34,7 @@ class IPBOperator(FPBOperator, RPBOperator) :
         # 清理项目
         self.__indexes.clear()
         # 获得数值
-        offset = self._get_index_root()
+        offset = self._get_root(1)
         # 循环处理
         while offset != -1 :
             # 读取页面
@@ -46,22 +46,6 @@ class IPBOperator(FPBOperator, RPBOperator) :
             offset = page.next_page
             # 加入集合
             self.__indexes[page.identity] = page
-
-    def _register_index(self, page) :
-        # 保存所有数据
-        IPBOperator._flush(self)
-        # 调用父类函数
-        super()._register_index(page)
-        # 重新加载
-        IPBOperator._load(self)
-
-    def _unregister_index(self, page) :
-        # 保存所有数据
-        IPBOperator._flush(self)
-        # 调用父类函数
-        super()._unregister_index(page)
-        # 重新加载
-        IPBOperator._load(self)
 
     def index_count(self, identity) :
         # 检查
@@ -86,9 +70,9 @@ class IPBOperator(FPBOperator, RPBOperator) :
             # 写入
             self._write_fully(page.offset, page)
         # 设置
-        self.__indexes[page.identity] = page
+        self.__indexes[identity] = page
         # 登记页面
-        self._register_index(page)
+        self._register_root(1, page)
 
     def __load_index_data(self, offset, data) :
         # 创建
@@ -208,7 +192,7 @@ class IPBOperator(FPBOperator, RPBOperator) :
         # 移除队列
         self.__indexes.pop(identity)
         # 注销队列
-        self._unregister_index(page)
+        self._unregister_root(1, page)
         # 释放队列
         self._free_page(page.offset, page.size_type)
 
