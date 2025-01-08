@@ -15,7 +15,7 @@ class FileContainer(Container) :
     # Max Size
     _max_size = 1 << (31 + 6)
     # Default Size Type
-    _default_size_type = SizeType.mb64
+    _default_size = SizeType.gb
 
     # 初始化
     def __init__(self) :
@@ -58,8 +58,7 @@ class FileContainer(Container) :
             self.__file_length = states.st_size
         # 检查结果
         if self.__file_length < 0 :
-            self.__file_length = \
-                SizeType.get_size(FileContainer._default_size_type)
+            self.__file_length = FileContainer._default_size
 
         # 打开文件
         self.__file_no = \
@@ -105,7 +104,7 @@ class FileContainer(Container) :
         # 检查
         if position + size <= self.__file_length : return
         # 缺省数值
-        default_size = SizeType.get_size(FileContainer._default_size_type)
+        default_size = FileContainer._default_size
         # 补丁
         padding = position + size - self.__file_length
         # 检查补丁

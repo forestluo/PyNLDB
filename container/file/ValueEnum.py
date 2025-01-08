@@ -12,8 +12,9 @@ class SizeOf :
 class SizeType :
     # Killo Bytes
     # 1 KB = 1024 Bytes
-    _kb = 1024
-    _mb = 1024 * _kb
+    kb = 1024
+    mb = 1024 * kb
+    gb = 1024 * mb
     # Total Types
     _total_types = 21
 
@@ -53,27 +54,27 @@ class SizeType :
     @staticmethod
     def get_type(size) :
         # Check result.
-        if size <= SizeType._kb / 4 / 4 : return SizeType.qqkb
-        elif size <= SizeType._kb / 4 / 2 : return SizeType.hqkb
-        elif size <= SizeType._kb / 4 : return SizeType.qkb
-        elif size <= SizeType._kb / 2 : return SizeType.hkb
-        elif size <= 1 * SizeType._kb : return SizeType.kb1
-        elif size <= 2 * SizeType._kb : return SizeType.kb2
-        elif size <= 4 * SizeType._kb : return SizeType.kb4
-        elif size <= 8 * SizeType._kb : return SizeType.kb8
-        elif size <= 16 * SizeType._kb : return SizeType.kb16
-        elif size <= 32 * SizeType._kb : return SizeType.kb32
-        elif size <= 64 * SizeType._kb : return SizeType.kb64
-        elif size <= 128 * SizeType._kb : return SizeType.kb128
-        elif size <= 256 * SizeType._kb : return SizeType.kb256
-        elif size <= 512 * SizeType._kb : return SizeType.kb512
-        elif size <= 1 * SizeType._mb : return SizeType.mb1
-        elif size <= 2 * SizeType._mb : return SizeType.mb2
-        elif size <= 4 * SizeType._mb : return SizeType.mb4
-        elif size <= 8 * SizeType._mb : return SizeType.mb8
-        elif size <= 16 * SizeType._mb : return SizeType.mb16
-        elif size <= 32 * SizeType._mb : return SizeType.mb32
-        elif size <= 64 * SizeType._mb : return SizeType.mb64
+        if size <= SizeType.kb / 4 / 4 : return SizeType.qqkb
+        elif size <= SizeType.kb / 4 / 2 : return SizeType.hqkb
+        elif size <= SizeType.kb / 4 : return SizeType.qkb
+        elif size <= SizeType.kb / 2 : return SizeType.hkb
+        elif size <= 1 * SizeType.kb : return SizeType.kb1
+        elif size <= 2 * SizeType.kb : return SizeType.kb2
+        elif size <= 4 * SizeType.kb : return SizeType.kb4
+        elif size <= 8 * SizeType.kb : return SizeType.kb8
+        elif size <= 16 * SizeType.kb : return SizeType.kb16
+        elif size <= 32 * SizeType.kb : return SizeType.kb32
+        elif size <= 64 * SizeType.kb : return SizeType.kb64
+        elif size <= 128 * SizeType.kb : return SizeType.kb128
+        elif size <= 256 * SizeType.kb : return SizeType.kb256
+        elif size <= 512 * SizeType.kb : return SizeType.kb512
+        elif size <= 1 * SizeType.mb : return SizeType.mb1
+        elif size <= 2 * SizeType.mb : return SizeType.mb2
+        elif size <= 4 * SizeType.mb : return SizeType.mb4
+        elif size <= 8 * SizeType.mb : return SizeType.mb8
+        elif size <= 16 * SizeType.mb : return SizeType.mb16
+        elif size <= 32 * SizeType.mb : return SizeType.mb32
+        elif size <= 64 * SizeType.mb : return SizeType.mb64
         else : raise Exception(f"unsupported size({size})")
 
     @staticmethod

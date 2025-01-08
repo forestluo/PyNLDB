@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import json
-import traceback
 
 from widget.ProgressBar import *
 from nlp.item.ContentItem import *
