@@ -6,7 +6,7 @@ def main() :
     print(f"SQLoader.main : open db file !")
     dbConn = \
         sqlite3.connect(
-            "..\\..\\db\\nldb3.db",
+            "../../db/nldb3.db",
             check_same_thread = False)
     # 内存数据库
     print(f"SQLoader.main : open memory file !")

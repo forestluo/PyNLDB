@@ -52,7 +52,7 @@ class WordVectorization(WordVector) :
         return None
 
     # 获得相关系数
-    # 速度慢，但能兼容多数内容
+    # 兼容效率及格式
     def get_gammas(self, error) :
         # 重建索引
         self.index_vectors()
@@ -62,37 +62,33 @@ class WordVectorization(WordVector) :
         # 创建矩阵
         gammas = self._new_gamma()
         # 进度条
-        pb = ProgressBar(self.vsize * self.vsize)
+        pb = ProgressBar(slef.wsize)
         # 开始
         pb.begin(f"WordVectorization.get_gammas : building matrix !")
         # 初始化相关系数
-        for v1 in self.vectors() :
-            # 检查项目
-            if v1.count <= 0 :
-                # 增加计数
-                pb.increase(self.vsize)
-                continue
-            # 循环处理
-            for v2 in self.vectors() :
-                # 进度条
-                pb.increase()
-                # 检查项目
-                if v2.count <= 0 : continue
-
-                # 获得词汇
-                word = self.word(v1.content + v2.content)
+        for w in self.words() :
+            # 增加计数
+            pb.increase()
+            # 检查结果
+            if w.length <= 1 or w.count <= 0 : continue
+            # 将词汇进行分解
+            for i in range(1, w.length) :
+                # 分解
+                w1 = w[0:i]; w2 = w[i:]
+                # 获得矢量
+                v1 = self.vector(w1)
                 # 检查结果
-                if word is None : continue
-                # 检查数值
-                elif word.count <= 0 : word.gamma = 0.0; continue
-
-                # 计算数值
-                word.gamma = 0.5 * float(word.count) * \
-                    (1.0 / float(v1.count) + 1.0 / float(v2.count))
+                if v1 is None or v1.count <= 0 : continue
+                # 获得矢量
+                v2 = self.vector(w2)
+                # 检查结果
+                if v2 is None or v2.count <= 0 : continue
+                # 计算Gamma数值
+                gamma = 0.5 * w.count / (v1.count + v2.count)
                 # 设置数值
-                gammas[0][v1.index][v2.index] = word.gamma
+                gammas[0][v1.index][v2.index] = gamma
                 # 检查结果
-                if word.gamma > error : gammas[1][v1.index][v2.index] = 1.0
+                if gamma > error : gammas[1][v1.index][v2.index] = 1.0
         # 结束
         pb.end(f"WordVectorization.get_gammas : finished building matrix !")
         # 返回结果
