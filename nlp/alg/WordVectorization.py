@@ -74,7 +74,7 @@ class WordVectorization(WordVector) :
             # 将词汇进行分解
             for i in range(1, w.length) :
                 # 分解
-                w1 = w[0:i]; w2 = w[i:]
+                w1 = w.content[0:i]; w2 = w.content[i:]
                 # 获得矢量
                 v1 = self.vector(w1)
                 # 检查结果
@@ -203,7 +203,7 @@ def main() :
     wv = WordVectorization(32)
 
     # 选项
-    options = 3
+    options = 2
     # 检查选项
     if options == 0 :
         # 加载例程
@@ -234,7 +234,7 @@ def main() :
             print("WordVectorization.main : fail to load cores.json !")
             return
         # 循环处理
-        for i in range(1, 5) :
+        for i in range(1, 3) :
             # 加载数据
             if wv.load_words(f"..\\..\\json\\words{i}.json") <= 0 :
                 # 打印信息
