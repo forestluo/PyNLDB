@@ -62,7 +62,7 @@ class WordVectorization(WordVector) :
         # 创建矩阵
         gammas = self._new_gamma()
         # 进度条
-        pb = ProgressBar(slef.wsize)
+        pb = ProgressBar(self.wsize)
         # 开始
         pb.begin(f"WordVectorization.get_gammas : building matrix !")
         # 初始化相关系数
