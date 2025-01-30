@@ -200,7 +200,7 @@ class WordVectorization(WordVector) :
 def main() :
 
     # 生成对象
-    wv = WordVectorization(32)
+    wv = WordVectorization(64)
 
     # 选项
     options = 2
@@ -234,7 +234,7 @@ def main() :
             print("WordVectorization.main : fail to load cores.json !")
             return
         # 循环处理
-        for i in range(1, 3) :
+        for i in range(1, 4) :
             # 加载数据
             if wv.load_words(f"..\\..\\json\\words{i}.json") <= 0 :
                 # 打印信息
