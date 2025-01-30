@@ -218,7 +218,7 @@ def main() :
         print("WordVectorization.main : successfully initialized !")
     elif options == 2 :
         # 加载数据
-        if wv.load_vectors("..\\..\\json\\vectors.json") <= 0 :
+        if wv.load_vectors("..\\..\\json\\words1.json", False) <= 0 :
             # 打印信息
             print("WordVectorization.main : fail to load vectors.json !")
             return
